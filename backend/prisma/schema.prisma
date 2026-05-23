@@ -43,102 +43,100 @@ enum VoucherApplicableTo {
 // ─── Models ───────────────────────────────────────────────────────────────────
 
 model User {
-  id                Int           @id @default(autoincrement())
-  name              String
-  email             String        @unique
-  password          String?
-  phone             String?
-  profilePicture    String?
-  role              Role          @default(USER)
-  emailVerified     Boolean       @default(false)
-  authProvider      String?       @default("CREDENTIALS")
-  authProviderId    String?
-  storeId           Int?
-  referralCode      String?       @unique
-  referredBy        Int?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id             Int      @id @default(autoincrement())
+  name           String
+  email          String   @unique
+  password       String?
+  phone          String?
+  profilePicture String?
+  role           Role     @default(USER)
+  emailVerified  Boolean  @default(false)
+  authProvider   String?  @default("CREDENTIALS")
+  authProviderId String?
+  storeId        Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  store             Store?        @relation("StoreAdmin", fields: [storeId], references: [id])
-  addresses         UserAddress[]
-  orders            Order[]
-  vouchers          Voucher[]
-  referrals         User[]        @relation("Referral")
-  referredByUser    User?         @relation("Referral", fields: [referredBy], references: [id])
+  store          Store?         @relation("StoreAdmin", fields: [storeId], references: [id])
+  addresses      UserAddress[]
+  orders         Order[]
+  vouchers       Voucher[]
+  referralCode   ReferralCode?  @relation("ReferralCodeOwner")
+  referralUsages ReferralUsage? @relation("ReferralUsageUser")
 
   @@map("users")
 }
 
 model Store {
-  id                Int           @id @default(autoincrement())
-  name              String
-  slug              String        @unique
-  description       String?
-  image             String?
-  latitude          Float
-  longitude         Float
-  address           String
-  city              String
-  province          String
-  postalCode        String?
-  phone             String?
-  serviceRadius     Float         @default(50) // dalam KM
-  status            Boolean       @default(true)
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id            Int      @id @default(autoincrement())
+  name          String
+  slug          String   @unique
+  description   String?
+  image         String?
+  latitude      Float
+  longitude     Float
+  address       String
+  city          String
+  province      String
+  postalCode    String?
+  phone         String?
+  serviceRadius Float    @default(50) // dalam KM
+  status        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  admins            User[]        @relation("StoreAdmin")
-  stocks            Stock[]
-  orders            Order[]
+  admins User[]  @relation("StoreAdmin")
+  stocks Stock[]
+  orders Order[]
 
   @@map("stores")
 }
 
 model Category {
-  id                Int           @id @default(autoincrement())
-  name              String        @unique
-  slug              String        @unique
-  icon              String?
-  description       String?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  slug        String   @unique
+  icon        String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  products          Product[]
+  products Product[]
 
   @@map("categories")
 }
 
 model Product {
-  id                Int           @id @default(autoincrement())
-  name              String
-  slug              String        @unique
-  description       String?
-  image             String?
-  categoryId        Int
-  basePrice         Float
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id          Int      @id @default(autoincrement())
+  name        String
+  slug        String   @unique
+  description String?
+  image       String?
+  categoryId  Int
+  basePrice   Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  category          Category      @relation(fields: [categoryId], references: [id])
-  stocks            Stock[]
-  orderItems        OrderItem[]
-  discounts         Discount[]
-  vouchers          Voucher[]
+  category   Category    @relation(fields: [categoryId], references: [id])
+  stocks     Stock[]
+  orderItems OrderItem[]
+  discounts  Discount[]
+  vouchers   Voucher[]
 
   @@index([categoryId])
   @@map("products")
 }
 
 model Stock {
-  id                Int           @id @default(autoincrement())
-  productId         Int
-  storeId           Int
-  quantity          Int           @default(0)
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id        Int      @id @default(autoincrement())
+  productId Int
+  storeId   Int
+  quantity  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  product           Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
-  store             Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  store   Store   @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
   @@unique([productId, storeId])
   @@index([storeId])
@@ -146,44 +144,44 @@ model Stock {
 }
 
 model UserAddress {
-  id                Int           @id @default(autoincrement())
-  userId            Int
-  recipientName     String
-  phone             String
-  address           String
-  city              String
-  province          String
-  postalCode        String?
-  latitude          Float?
-  longitude         Float?
-  isPrimary         Boolean       @default(false)
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  recipientName String
+  phone         String
+  address       String
+  city          String
+  province      String
+  postalCode    String?
+  latitude      Float?
+  longitude     Float?
+  isPrimary     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("user_addresses")
 }
 
 model Order {
-  id                Int           @id @default(autoincrement())
-  userId            Int
-  storeId           Int
-  status            OrderStatus   @default(PENDING_PAYMENT)
-  totalAmount       Float
-  shippingCost      Float         @default(0)
-  discountAmount    Float         @default(0)
-  voucherId         Int?
-  paymentProof      String?
-  notes             String?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id             Int         @id @default(autoincrement())
+  userId         Int
+  storeId        Int
+  status         OrderStatus @default(PENDING_PAYMENT)
+  totalAmount    Float
+  shippingCost   Float       @default(0)
+  discountAmount Float       @default(0)
+  voucherId      Int?
+  paymentProof   String?
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
-  user              User          @relation(fields: [userId], references: [id])
-  store             Store         @relation(fields: [storeId], references: [id])
-  voucher           Voucher?      @relation(fields: [voucherId], references: [id])
-  items             OrderItem[]
+  user    User        @relation(fields: [userId], references: [id])
+  store   Store       @relation(fields: [storeId], references: [id])
+  voucher Voucher?    @relation(fields: [voucherId], references: [id])
+  items   OrderItem[]
 
   @@index([userId])
   @@index([storeId])
@@ -191,17 +189,17 @@ model Order {
 }
 
 model OrderItem {
-  id                Int           @id @default(autoincrement())
-  orderId           Int
-  productId         Int
-  quantity          Int
-  priceAtTime       Float
-  discountAmount    Float         @default(0)
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id             Int      @id @default(autoincrement())
+  orderId        Int
+  productId      Int
+  quantity       Int
+  priceAtTime    Float
+  discountAmount Float    @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  order             Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product           Product       @relation(fields: [productId], references: [id])
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
 
   @@index([orderId])
   @@index([productId])
@@ -209,45 +207,45 @@ model OrderItem {
 }
 
 model Discount {
-  id                Int           @id @default(autoincrement())
-  productId         Int
-  name              String
-  description       String?
-  discountType      DiscountType
-  discountValue     Float
-  minPurchase       Float         @default(0)
-  maxDiscount       Float?
-  startDate         DateTime
-  endDate           DateTime
-  isActive          Boolean       @default(true)
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id            Int          @id @default(autoincrement())
+  productId     Int
+  name          String
+  description   String?
+  discountType  DiscountType
+  discountValue Float
+  minPurchase   Float        @default(0)
+  maxDiscount   Float?
+  startDate     DateTime
+  endDate       DateTime
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 
-  product           Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
   @@map("discounts")
 }
 
 model Voucher {
-  id                Int           @id @default(autoincrement())
-  code              String        @unique
-  userId            Int
-  productId         Int?
-  name              String
-  discountType      DiscountType
-  discountValue     Float
-  maxDiscount       Float?
-  applicableTo      VoucherApplicableTo @default(ALL_PRODUCTS)
-  expiredAt         DateTime
-  used              Boolean       @default(false)
-  usedAt            DateTime?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id            Int                 @id @default(autoincrement())
+  code          String              @unique
+  userId        Int
+  productId     Int?
+  name          String
+  discountType  DiscountType
+  discountValue Float
+  maxDiscount   Float?
+  applicableTo  VoucherApplicableTo @default(ALL_PRODUCTS)
+  expiredAt     DateTime
+  used          Boolean             @default(false)
+  usedAt        DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
 
-  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product           Product?      @relation(fields: [productId], references: [id])
-  orders            Order[]
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id])
+  orders  Order[]
 
   @@index([userId])
   @@index([code])
@@ -255,45 +253,59 @@ model Voucher {
 }
 
 model ReferralCode {
-  id                Int           @id @default(autoincrement())
-  userId            Int
-  code              String        @unique
-  usedBy            Int?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique // satu user hanya punya satu kode
+  code      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@index([userId])
+  user   User            @relation("ReferralCodeOwner", fields: [userId], references: [id], onDelete: Cascade)
+  usages ReferralUsage[]
+
   @@map("referral_codes")
 }
 
+model ReferralUsage {
+  id             Int      @id @default(autoincrement())
+  referralCodeId Int
+  usedByUserId   Int      @unique // satu user hanya bisa pakai 1 kode referral
+  createdAt      DateTime @default(now())
+
+  referralCode ReferralCode @relation(fields: [referralCodeId], references: [id], onDelete: Cascade)
+  usedBy       User         @relation("ReferralUsageUser", fields: [usedByUserId], references: [id], onDelete: Cascade)
+
+  @@index([referralCodeId])
+  @@map("referral_usages")
+}
+
 model VerificationToken {
-  id        Int      @id @default(autoincrement())
-  email     String
-  token     String   @unique
-  expires   DateTime
-  
+  id      Int      @id @default(autoincrement())
+  email   String
+  token   String   @unique
+  expires DateTime
+
   @@unique([email, token])
   @@map("verification_tokens")
 }
 
 model ResetPasswordToken {
-  id        Int      @id @default(autoincrement())
-  email     String
-  token     String   @unique
-  expires   DateTime
-  
+  id      Int      @id @default(autoincrement())
+  email   String
+  token   String   @unique
+  expires DateTime
+
   @@unique([email, token])
   @@map("reset_password_tokens")
 }
 
 model Banner {
-  id          Int      @id @default(autoincrement())
-  title       String
-  imageUrl    String
-  linkUrl     String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  title     String
+  imageUrl  String
+  linkUrl   String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("banners")
 }
