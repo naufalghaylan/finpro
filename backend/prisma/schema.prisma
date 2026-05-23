@@ -51,6 +51,8 @@ model User {
   profilePicture    String?
   role              Role          @default(USER)
   emailVerified     Boolean       @default(false)
+  authProvider      String?       @default("CREDENTIALS")
+  authProviderId    String?
   storeId           Int?
   referralCode      String?       @unique
   referredBy        Int?
@@ -262,4 +264,36 @@ model ReferralCode {
 
   @@index([userId])
   @@map("referral_codes")
+}
+
+model VerificationToken {
+  id        Int      @id @default(autoincrement())
+  email     String
+  token     String   @unique
+  expires   DateTime
+  
+  @@unique([email, token])
+  @@map("verification_tokens")
+}
+
+model ResetPasswordToken {
+  id        Int      @id @default(autoincrement())
+  email     String
+  token     String   @unique
+  expires   DateTime
+  
+  @@unique([email, token])
+  @@map("reset_password_tokens")
+}
+
+model Banner {
+  id          Int      @id @default(autoincrement())
+  title       String
+  imageUrl    String
+  linkUrl     String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("banners")
 }
