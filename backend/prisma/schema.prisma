@@ -13,7 +13,7 @@ datasource db {
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
 enum Role {
-  USER
+  CUSTOMER
   SUPER_ADMIN
   STORE_ADMIN
 }
@@ -50,7 +50,7 @@ model User {
   password       String?
   phone          String?
   profilePicture String?
-  role           Role     @default(USER)
+  role           Role     @default(CUSTOMER)
   emailVerified  Boolean  @default(false)
   authProvider   String?  @default("CREDENTIALS")
   authProviderId String?
