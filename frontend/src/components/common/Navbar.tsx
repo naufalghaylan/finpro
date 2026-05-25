@@ -2,14 +2,12 @@ import { Link } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import type { NavLink } from '../../types/home/home'
 
-type HomeNavbarProps = {
+type NavbarProps = {
   brandName: string
   links: NavLink[]
-  cartCount: number
-  isLoadingCartCount: boolean
 }
 
-export const HomeNavbar = ({ brandName, links }: HomeNavbarProps) => {
+export const Navbar = ({ brandName, links }: NavbarProps) => {
   const { user, isAuthenticated, logout } = useAuthStore()
 
   const getInitial = (name?: string) => {
@@ -17,18 +15,14 @@ export const HomeNavbar = ({ brandName, links }: HomeNavbarProps) => {
     return name.charAt(0).toUpperCase()
   }
 
-export const HomeNavbar = ({
-  brandName,
-  links,
-  cartCount,
-  isLoadingCartCount,
-}: HomeNavbarProps) => {
   return (
     <header className="nav">
       <div className="shell nav-inner">
         <div className="logo">
-          <span className="logo-mark"></span>
-          <span>{brandName}</span>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', color: 'inherit' }}>
+            <span className="logo-mark"></span>
+            <span>{brandName}</span>
+          </Link>
         </div>
         <nav className="nav-links" aria-label="Main navigation">
           {links.map((link) => (
@@ -96,14 +90,6 @@ export const HomeNavbar = ({
           )}
           <button type="button" className="button primary">
             Mulai belanja
-          <button type="button" className="button ghost">
-            Masuk
-          </button>
-          <button type="button" className="button primary cart-button">
-            Keranjang
-            <span className="cart-badge" aria-live="polite">
-              {isLoadingCartCount ? '...' : cartCount}
-            </span>
           </button>
           <button type="button" className="menu-button" aria-label="Buka menu">
             Menu
