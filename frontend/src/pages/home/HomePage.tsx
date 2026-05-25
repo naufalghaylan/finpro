@@ -19,6 +19,7 @@ import {
   valueProps,
 } from '../../data/home/homeData'
 import { useLocationSelection } from '../../hooks/home/useLocationSelection'
+import { useCartCount } from '../../hooks/home/useCartCount'
 import { findNearestStore } from '../../utils/home/geo'
 
 const getMainStore = () =>
@@ -33,6 +34,7 @@ export default function HomePage() {
     fallbackToMainStore,
     isFallback,
   } = useLocationSelection()
+  const { cartCount, isLoadingCartCount } = useCartCount()
 
   const mainStore = getMainStore()
 
@@ -52,7 +54,12 @@ export default function HomePage() {
 
   return (
     <div className="page">
-      <HomeNavbar brandName={BRAND.name} links={navLinks} />
+      <HomeNavbar
+        brandName={BRAND.name}
+        links={navLinks}
+        cartCount={cartCount}
+        isLoadingCartCount={isLoadingCartCount}
+      />
       <main className="page-main">
         <HeroCarousel slides={heroSlides} storeName={activeStore.name} />
         <section className="category-strip">
