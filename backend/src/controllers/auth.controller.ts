@@ -166,6 +166,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return
     }
 
+    if (!user.password) {
+      res.status(401).json({ message: 'Invalid credentials' })
+      return
+    }
+
     const isMatch = await bcrypt.compare(password, user.password)
     if (!isMatch) {
       res.status(401).json({ message: 'Invalid credentials' })
@@ -246,7 +251,12 @@ export const socialLogin = async (req: Request, res: Response): Promise<void> =>
 // ── Get current user ──────────────────────────────────────────────────────
 export const getMe = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = (req as any).user?.userId
+    const userId = req.user?.userId
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized: Login required' })
+      return
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { id: true, name: true, email: true, role: true, emailVerified: true, createdAt: true },

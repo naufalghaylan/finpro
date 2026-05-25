@@ -19,7 +19,17 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
   }
   try {
     const decoded = jwt.verify(token, JWT_SECRET)
-    ;(req as any).user = decoded
+    if (typeof decoded === 'string' || !decoded || !('userId' in decoded)) {
+      res.status(401).json({ message: 'Unauthorized: Invalid token payload' })
+      return
+    }
+
+    req.user = {
+      userId: Number(decoded.userId),
+      role: String(decoded.role),
+      iat: decoded.iat,
+      exp: decoded.exp,
+    }
     next()
   } catch {
     res.status(401).json({ message: 'Unauthorized: Invalid or expired token' })

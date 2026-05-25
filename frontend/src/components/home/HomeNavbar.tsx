@@ -5,6 +5,8 @@ import type { NavLink } from '../../types/home/home'
 type HomeNavbarProps = {
   brandName: string
   links: NavLink[]
+  cartCount: number
+  isLoadingCartCount: boolean
 }
 
 export const HomeNavbar = ({ brandName, links }: HomeNavbarProps) => {
@@ -15,6 +17,12 @@ export const HomeNavbar = ({ brandName, links }: HomeNavbarProps) => {
     return name.charAt(0).toUpperCase()
   }
 
+export const HomeNavbar = ({
+  brandName,
+  links,
+  cartCount,
+  isLoadingCartCount,
+}: HomeNavbarProps) => {
   return (
     <header className="nav">
       <div className="shell nav-inner">
@@ -88,6 +96,14 @@ export const HomeNavbar = ({ brandName, links }: HomeNavbarProps) => {
           )}
           <button type="button" className="button primary">
             Mulai belanja
+          <button type="button" className="button ghost">
+            Masuk
+          </button>
+          <button type="button" className="button primary cart-button">
+            Keranjang
+            <span className="cart-badge" aria-live="polite">
+              {isLoadingCartCount ? '...' : cartCount}
+            </span>
           </button>
           <button type="button" className="menu-button" aria-label="Buka menu">
             Menu
