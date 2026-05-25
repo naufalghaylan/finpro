@@ -10,3 +10,4 @@ reference-shop
 frontend/.env
 backend/.env
 project_scope.md
+backend/docs/Finpro_API_Collection.postman_collection.json
