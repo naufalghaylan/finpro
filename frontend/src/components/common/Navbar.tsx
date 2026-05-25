@@ -1,5 +1,7 @@
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
+import { useCartCount } from '../../hooks/home/useCartCount'
 import type { NavLink } from '../../types/home/home'
 
 type NavbarProps = {
@@ -9,6 +11,27 @@ type NavbarProps = {
 
 export const Navbar = ({ brandName, links }: NavbarProps) => {
   const { user, isAuthenticated, logout } = useAuthStore()
+  const { cartCount, isLoadingCartCount } = useCartCount()
+  const navigate = useNavigate()
+
+  const handleCartClick = () => {
+    if (!isAuthenticated) {
+      navigate('/login')
+    } else {
+      navigate('/cart')
+    }
+  }
+
+  const [isScrolled, setIsScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20)
+    }
+    
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const getInitial = (name?: string) => {
     if (!name) return 'U'
@@ -16,7 +39,7 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
   }
 
   return (
-    <header className="nav">
+    <header className={`nav ${isScrolled ? 'scrolled' : ''}`}>
       <div className="shell nav-inner">
         <div className="logo">
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', color: 'inherit' }}>
@@ -88,8 +111,11 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
               Masuk
             </Link>
           )}
-          <button type="button" className="button primary">
-            Mulai belanja
+          <button type="button" className="button primary cart-button" onClick={handleCartClick}>
+            Keranjang
+            <span className="cart-badge" aria-live="polite">
+              {isLoadingCartCount ? '...' : cartCount}
+            </span>
           </button>
           <button type="button" className="menu-button" aria-label="Buka menu">
             Menu
