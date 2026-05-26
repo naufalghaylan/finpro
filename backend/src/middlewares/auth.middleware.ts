@@ -19,3 +19,14 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
     res.status(401).json({ message: 'Unauthorized: Invalid or expired token' })
   }
 }
+
+export const authorize = (...roles: string[]) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const user = (req as any).user
+    if (!user || !roles.includes(user.role)) {
+      res.status(403).json({ message: 'Forbidden: Insufficient permissions' })
+      return
+    }
+    next()
+  }
+}
