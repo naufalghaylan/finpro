@@ -31,13 +31,42 @@ enum DiscountType {
   PERCENTAGE
   NOMINAL
   BUY_ONE_GET_ONE
-  FREE_SHIPPING
 }
 
 enum VoucherApplicableTo {
   ALL_PRODUCTS
   SPECIFIC_PRODUCT
   SHIPPING
+}
+
+enum VoucherSource {
+  REFERRAL
+  MIN_PURCHASE_REWARD
+  PROMO
+  FREE_SHIPPING_REWARD
+}
+
+enum StockJournalType {
+  IN
+  OUT
+  ADJUSTMENT
+  ORDER
+  CANCEL_RETURN
+  MUTATION_IN
+  MUTATION_OUT
+}
+
+enum MutationStatus {
+  PENDING
+  APPROVED
+  IN_TRANSIT
+  COMPLETED
+  REJECTED
+}
+
+enum PaymentMethod {
+  MANUAL_TRANSFER
+  PAYMENT_GATEWAY
 }
 
 // ─── Models ───────────────────────────────────────────────────────────────────
@@ -58,13 +87,16 @@ model User {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  store          Store?         @relation("StoreAdmin", fields: [storeId], references: [id])
-  addresses      UserAddress[]
-  orders         Order[]
-  cart           Cart?
-  vouchers       Voucher[]
-  referralCode   ReferralCode?  @relation("ReferralCodeOwner")
-  referralUsages ReferralUsage? @relation("ReferralUsageUser")
+  store              Store?          @relation("StoreAdmin", fields: [storeId], references: [id])
+  addresses          UserAddress[]
+  orders             Order[]
+  cart               Cart?
+  vouchers           Voucher[]
+  referralCode       ReferralCode?   @relation("ReferralCodeOwner")
+  referralUsages     ReferralUsage?  @relation("ReferralUsageUser")
+  stockJournals      StockJournal[]
+  requestedMutations StockMutation[] @relation("MutationRequester")
+  approvedMutations  StockMutation[] @relation("MutationApprover")
 
   @@map("users")
 }
@@ -79,7 +111,9 @@ model Store {
   longitude     Float
   address       String
   city          String
+  cityId        String? // untuk integrasi API pengiriman (RajaOngkir)
   province      String
+  provinceId    String? // untuk integrasi API pengiriman (RajaOngkir)
   postalCode    String?
   phone         String?
   serviceRadius Float    @default(50) // dalam KM
@@ -87,9 +121,13 @@ model Store {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  admins User[]  @relation("StoreAdmin")
-  stocks Stock[]
-  orders Order[]
+  admins               User[]          @relation("StoreAdmin")
+  stocks               Stock[]
+  orders               Order[]
+  carts                Cart[]
+  discounts            Discount[]
+  sourceMutations      StockMutation[] @relation("MutationSource")
+  destinationMutations StockMutation[] @relation("MutationDestination")
 
   @@map("stores")
 }
@@ -110,33 +148,51 @@ model Category {
 
 model Product {
   id          Int      @id @default(autoincrement())
-  name        String
+  name        String   @unique // tidak boleh ada produk dengan nama yang sama
   slug        String   @unique
   description String?
-  image       String?
   categoryId  Int
   basePrice   Float
+  weight      Float    @default(0) // dalam gram, untuk kalkulasi ongkir
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  category   Category    @relation(fields: [categoryId], references: [id])
-  stocks     Stock[]
-  cartItems  CartItem[]
-  orderItems OrderItem[]
-  discounts  Discount[]
-  vouchers   Voucher[]
+  category       Category       @relation(fields: [categoryId], references: [id])
+  images         ProductImage[]
+  stocks         Stock[]
+  cartItems      CartItem[]
+  orderItems     OrderItem[]
+  discounts      Discount[]
+  vouchers       Voucher[]
+  stockMutations StockMutation[]
 
   @@index([categoryId])
   @@map("products")
 }
 
+model ProductImage {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  imageUrl  String
+  isPrimary Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("product_images")
+}
+
 model Cart {
   id        Int      @id @default(autoincrement())
   userId    Int      @unique
+  storeId   Int? // cart terikat ke toko terdekat user
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store Store?     @relation(fields: [storeId], references: [id])
   items CartItem[]
 
   @@map("carts")
@@ -167,12 +223,62 @@ model Stock {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  store   Store   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product  Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  store    Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  journals StockJournal[]
 
   @@unique([productId, storeId])
   @@index([storeId])
   @@map("stocks")
+}
+
+// Jurnal perubahan stok — setiap perubahan stok HARUS melalui jurnal
+model StockJournal {
+  id             Int              @id @default(autoincrement())
+  stockId        Int
+  orderId        Int? // nullable, hanya diisi jika terkait order
+  quantityChange Int // positif = penambahan, negatif = pengurangan
+  quantityBefore Int
+  quantityAfter  Int
+  type           StockJournalType
+  description    String?
+  createdBy      Int // user (admin) yang membuat perubahan
+  createdAt      DateTime         @default(now())
+
+  stock   Stock  @relation(fields: [stockId], references: [id], onDelete: Cascade)
+  order   Order? @relation(fields: [orderId], references: [id])
+  creator User   @relation(fields: [createdBy], references: [id])
+
+  @@index([stockId])
+  @@index([orderId])
+  @@index([createdAt])
+  @@map("stock_journals")
+}
+
+// Mutasi stok antar gudang/toko
+model StockMutation {
+  id                 Int            @id @default(autoincrement())
+  sourceStoreId      Int
+  destinationStoreId Int
+  productId          Int
+  quantity           Int
+  status             MutationStatus @default(PENDING)
+  requestedBy        Int
+  approvedBy         Int?
+  notes              String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  sourceStore      Store   @relation("MutationSource", fields: [sourceStoreId], references: [id])
+  destinationStore Store   @relation("MutationDestination", fields: [destinationStoreId], references: [id])
+  product          Product @relation(fields: [productId], references: [id])
+  requester        User    @relation("MutationRequester", fields: [requestedBy], references: [id])
+  approver         User?   @relation("MutationApprover", fields: [approvedBy], references: [id])
+
+  @@index([sourceStoreId])
+  @@index([destinationStoreId])
+  @@index([productId])
+  @@map("stock_mutations")
 }
 
 model UserAddress {
@@ -182,7 +288,10 @@ model UserAddress {
   phone         String
   address       String
   city          String
+  cityId        String? // untuk integrasi API pengiriman (RajaOngkir)
   province      String
+  provinceId    String? // untuk integrasi API pengiriman (RajaOngkir)
+  district      String? // kecamatan
   postalCode    String?
   latitude      Float?
   longitude     Float?
@@ -190,45 +299,63 @@ model UserAddress {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
 
   @@index([userId])
   @@map("user_addresses")
 }
 
 model Order {
-  id             Int         @id @default(autoincrement())
-  userId         Int
-  storeId        Int
-  status         OrderStatus @default(PENDING_PAYMENT)
-  totalAmount    Float
-  shippingCost   Float       @default(0)
-  discountAmount Float       @default(0)
-  voucherId      Int?
-  paymentProof   String?
-  notes          String?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  id                 Int           @id @default(autoincrement())
+  orderNumber        String        @unique // nomor order yang mudah dibaca, untuk pencarian
+  userId             Int
+  storeId            Int
+  addressId          Int // alamat pengiriman yang dipilih saat checkout
+  status             OrderStatus   @default(PENDING_PAYMENT)
+  totalProductAmount Float         @default(0) // subtotal produk sebelum diskon & ongkir
+  totalAmount        Float // total akhir yang harus dibayar
+  shippingCost       Float         @default(0)
+  discountAmount     Float         @default(0)
+  shippingMethod     String? // nama kurir (JNE, TIKI, dll)
+  shippingService    String? // tipe layanan (REG, YES, dll)
+  voucherId          Int?
+  paymentMethod      PaymentMethod @default(MANUAL_TRANSFER)
+  paymentProof       String?
+  paymentGatewayId   String? // referensi transaksi payment gateway
+  paymentDeadline    DateTime? // batas waktu upload bukti bayar (~1 jam)
+  shippedAt          DateTime? // waktu pesanan dikirim (untuk hitung auto-confirm)
+  confirmedAt        DateTime? // waktu pesanan dikonfirmasi user
+  cancelledAt        DateTime?
+  cancelReason       String?
+  notes              String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
-  user    User        @relation(fields: [userId], references: [id])
-  store   Store       @relation(fields: [storeId], references: [id])
-  voucher Voucher?    @relation(fields: [voucherId], references: [id])
-  items   OrderItem[]
+  user          User           @relation(fields: [userId], references: [id])
+  store         Store          @relation(fields: [storeId], references: [id])
+  address       UserAddress    @relation(fields: [addressId], references: [id])
+  voucher       Voucher?       @relation(fields: [voucherId], references: [id])
+  items         OrderItem[]
+  stockJournals StockJournal[]
 
   @@index([userId])
   @@index([storeId])
+  @@index([orderNumber])
+  @@index([createdAt])
   @@map("orders")
 }
 
 model OrderItem {
-  id             Int      @id @default(autoincrement())
-  orderId        Int
-  productId      Int
-  quantity       Int
-  priceAtTime    Float
-  discountAmount Float    @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                  Int      @id @default(autoincrement())
+  orderId             Int
+  productId           Int
+  quantity            Int
+  priceAtTime         Float // harga produk saat pemesanan
+  discountAmount      Float    @default(0)
+  discountDescription String? // catatan diskon apa yang diterapkan (untuk laporan)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id])
@@ -238,9 +365,11 @@ model OrderItem {
   @@map("order_items")
 }
 
+// Diskon yang dikelola per toko — setiap toko bisa atur diskon masing-masing
 model Discount {
   id            Int          @id @default(autoincrement())
-  productId     Int
+  storeId       Int // diskon dikelola per toko
+  productId     Int? // nullable: bisa diskon per produk atau tanpa produk tertentu
   name          String
   description   String?
   discountType  DiscountType
@@ -253,8 +382,10 @@ model Discount {
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  store   Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
 
+  @@index([storeId])
   @@index([productId])
   @@map("discounts")
 }
@@ -268,7 +399,9 @@ model Voucher {
   discountType  DiscountType
   discountValue Float
   maxDiscount   Float?
+  minPurchase   Float               @default(0) // minimal pembelanjaan untuk pakai voucher
   applicableTo  VoucherApplicableTo @default(ALL_PRODUCTS)
+  source        VoucherSource       @default(PROMO) // asal voucher: referral, reward, promo, dll
   expiredAt     DateTime
   used          Boolean             @default(false)
   usedAt        DateTime?
@@ -315,6 +448,7 @@ model VerificationToken {
   email   String
   token   String   @unique
   expires DateTime
+  used    Boolean  @default(false) // verifikasi hanya boleh dilakukan sekali
 
   @@unique([email, token])
   @@map("verification_tokens")
@@ -325,6 +459,7 @@ model ResetPasswordToken {
   email   String
   token   String   @unique
   expires DateTime
+  used    Boolean  @default(false) // reset hanya boleh dilakukan sekali per request
 
   @@unique([email, token])
   @@map("reset_password_tokens")
@@ -336,6 +471,7 @@ model Banner {
   imageUrl  String
   linkUrl   String?
   isActive  Boolean  @default(true)
+  sortOrder Int      @default(0) // urutan tampil di carousel
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
