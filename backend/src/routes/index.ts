@@ -1,12 +1,19 @@
 import { Router } from 'express'
 import authRouter from './auth.routes'
-import productRoutes from './product.routes'
-import categoryRoutes from './category.routes'
+import storeRouter from './store.routes'
+import productRouter from './product.routes'
+import promotionRouter from './promotion.routes'
+import cartRouter from './cart.routes'
 
 const router = Router()
 
 router.use('/auth', authRouter)
-router.use('/products', productRoutes)
-router.use('/categories', categoryRoutes)
+router.use('/stores', storeRouter)
+router.use('/products', productRouter)
+router.use('/promotions', promotionRouter)
+router.use('/cart', cartRouter)
+
+// ── Placeholder for future routes ──────────────────────────────────────────
+// router.use('/users', userRouter)
 
 export default router

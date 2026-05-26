@@ -3,7 +3,7 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: hidden;
+  overflow: clip;
 }
 
 .page::before {
@@ -33,10 +33,17 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgba(247, 241, 230, 0.86);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  border-bottom: 1px solid transparent;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav.scrolled {
+  background: rgba(255, 255, 255, 0.45);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
 }
 
 .nav-inner {
@@ -138,6 +145,27 @@
   color: #fff;
   border-color: transparent;
   box-shadow: var(--shadow-soft);
+}
+
+.cart-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cart-badge {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ink);
+  background: #fff;
 }
 
 .button.ghost {
@@ -888,9 +916,12 @@
 }
 
 @media (max-width: 720px) {
-  .nav-actions .button.primary,
   .nav-actions .button.ghost {
     display: none;
+  }
+
+  .nav-actions .cart-button {
+    display: inline-flex;
   }
 
   .hero {

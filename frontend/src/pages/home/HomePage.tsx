@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { HeroCarousel } from '../../components/home/HeroCarousel'
 import { HomeFooter } from '../../components/home/HomeFooter'
-import { HomeNavbar } from '../../components/home/HomeNavbar'
+import { Navbar } from '../../components/common/Navbar'
 import { LocationPanel } from '../../components/home/LocationPanel'
 import { ProductGrid } from '../../components/home/ProductGrid'
 import { StoreShowcase } from '../../components/home/StoreShowcase'
@@ -52,7 +52,10 @@ export default function HomePage() {
 
   return (
     <div className="page">
-      <HomeNavbar brandName={BRAND.name} links={navLinks} />
+      <Navbar
+        brandName={BRAND.name}
+        links={navLinks}
+      />
       <main className="page-main">
         <HeroCarousel slides={heroSlides} storeName={activeStore.name} />
         <section className="category-strip">
