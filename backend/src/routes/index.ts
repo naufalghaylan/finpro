@@ -16,4 +16,4 @@ router.use('/cart', cartRouter)
 // ── Placeholder for future routes ──────────────────────────────────────────
 // router.use('/users', userRouter)
 
-export { router }
+export default router
