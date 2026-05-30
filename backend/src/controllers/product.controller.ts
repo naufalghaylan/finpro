@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express'
 import * as productService from '../lib/product.service'
 import { z } from 'zod'
+import 'multer'
+
 
 const createProductSchema = z.object({
   name: z.string().min(1, 'Nama produk wajib diisi'),
@@ -224,6 +226,38 @@ export async function deleteCategory(req: Request, res: Response, next: NextFunc
   } catch (error) {
     if (error instanceof Error && error.message === 'Category not found') {
       return res.status(404).json({ success: false, error: 'Category not found' })
+    }
+    next(error)
+  }
+}
+
+// ─── Admin: Product Images ─────────────────────────────────────────────────
+
+export async function uploadProductImage(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { id } = req.params
+    if (!req.file) return res.status(400).json({ success: false, error: 'Tidak ada file yang diupload' })
+
+    const product = await productService.getProductById(parseInt(id))
+    const isPrimary = product.images.length === 0
+    const sortOrder = product.images.length
+    const imageUrl = `/uploads/${req.file.filename}`
+
+    const image = await productService.addProductImage(parseInt(id), imageUrl, isPrimary, sortOrder)
+    res.status(201).json({ success: true, data: image })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function deleteProductImage(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { imageId } = req.params
+    await productService.removeProductImage(parseInt(imageId))
+    res.json({ success: true, message: 'Foto berhasil dihapus' })
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Image not found') {
+      return res.status(404).json({ success: false, error: 'Foto tidak ditemukan' })
     }
     next(error)
   }

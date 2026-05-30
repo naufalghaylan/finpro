@@ -176,3 +176,46 @@ export async function updateProduct(id: number, data: {
 
   return await prisma.product.update({ where: { id }, data })
 }
+
+export async function deleteProduct(id: number) {
+  const product = await prisma.product.findUnique({ where: { id } })
+  if (!product) throw new Error('Product not found')
+  await prisma.product.delete({ where: { id } })
+}
+
+// ─── Admin: Category CRUD ──────────────────────────────────────────────────
+
+export async function createCategory(data: { name: string; slug: string; icon?: string; description?: string }) {
+  const existing = await prisma.category.findFirst({ where: { name: data.name } })
+  if (existing) throw new Error('Kategori dengan nama yang sama sudah ada')
+  return await prisma.category.create({ data })
+}
+
+export async function updateCategory(id: number, data: { name?: string; slug?: string; icon?: string; description?: string }) {
+  const category = await prisma.category.findUnique({ where: { id } })
+  if (!category) throw new Error('Category not found')
+  if (data.name && data.name !== category.name) {
+    const existing = await prisma.category.findFirst({ where: { name: data.name } })
+    if (existing) throw new Error('Kategori dengan nama yang sama sudah ada')
+  }
+  return await prisma.category.update({ where: { id }, data })
+}
+
+export async function deleteCategory(id: number) {
+  const category = await prisma.category.findUnique({ where: { id } })
+  if (!category) throw new Error('Category not found')
+  await prisma.category.delete({ where: { id } })
+}
+
+// ─── Product Images ────────────────────────────────────────────────────────
+
+export async function addProductImage(productId: number, imageUrl: string, isPrimary: boolean, sortOrder: number) {
+  return await prisma.productImage.create({ data: { productId, imageUrl, isPrimary, sortOrder } })
+}
+
+export async function removeProductImage(imageId: number) {
+  const image = await prisma.productImage.findUnique({ where: { id: imageId } })
+  if (!image) throw new Error('Image not found')
+  await prisma.productImage.delete({ where: { id: imageId } })
+  return image
+}

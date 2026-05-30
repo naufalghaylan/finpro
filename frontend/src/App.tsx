@@ -9,6 +9,9 @@ import './App.css'
 import CatalogPage from './pages/catalog/CatalogPage'
 import SearchPage from './pages/search/SearchPage'
 import ProductDetailPage from './pages/product/ProductDetailPage'
+import AdminCategoryPage from './pages/admin/AdminCategoryPage'
+import AdminProductPage from './pages/admin/AdminProductPage'
+
 
 
 function App() {
@@ -26,18 +29,20 @@ function App() {
     )
   }
 
-  return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/catalog" element={<CatalogPage />} />
-      <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />} />
-      <Route path="/register" element={isAuthenticated ? <Navigate to="/" replace /> : <RegisterPage />} />
-      <Route path="/verify" element={<VerifyAccountPage />} />
-      <Route path="/search" element={<SearchPage />} />
-      <Route path="/products/:id" element={<ProductDetailPage />} />
+ return (
+  <Routes>
+    <Route path="/" element={<HomePage />} />
+    <Route path="/catalog" element={<CatalogPage />} />
+    <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />} />
+    <Route path="/register" element={isAuthenticated ? <Navigate to="/" replace /> : <RegisterPage />} />
+    <Route path="/verify" element={<VerifyAccountPage />} />
+    <Route path="/search" element={<SearchPage />} />
+    <Route path="/products/:id" element={<ProductDetailPage />} />
+    <Route path="/admin/products" element={<AdminProductPage />} />
+    <Route path="/admin/categories" element={<AdminCategoryPage />} />
+  </Routes>
+)
 
-    </Routes>
-  )
 }
 
 export default App
