@@ -928,3 +928,13 @@
     padding-top: 40px;
   }
 }
+
+.desktop-only {
+  display: inline;
+}
+
+@media (max-width: 720px) {
+  .desktop-only {
+    display: none;
+  }
+}
