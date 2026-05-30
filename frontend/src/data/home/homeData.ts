@@ -17,7 +17,7 @@ export const MAIN_STORE_ID = 'store-main'
 export const SERVICE_RANGE_KM = 12
 
 export const navLinks: NavLink[] = [
-  { id: 'belanja', label: 'Belanja', href: '#products' },
+  { id: 'katalog', label: 'Katalog', href: '/catalog' },
   { id: 'promo', label: 'Promo Harian', href: '#deals' },
   { id: 'toko', label: 'Toko', href: '#stores' },
   { id: 'bantuan', label: 'Bantuan', href: '#help' },

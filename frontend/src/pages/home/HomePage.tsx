@@ -81,11 +81,8 @@ export default function HomePage() {
           onUseMainStore={fallbackToMainStore}
         />
         <ValueStrip items={valueProps} sectionId="deals" />
-        <ProductGrid
-          products={products}
-          storeId={activeStore.id}
-          storeName={activeStore.name}
-        />
+        <ProductGrid />
+          
         <StoreShowcase
           stores={storeLocations}
           activeStoreId={activeStore.id}
