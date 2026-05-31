@@ -5,6 +5,7 @@ import HomePage from './pages/home/HomePage'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
 import VerifyAccountPage from './pages/auth/VerifyAccountPage'
+import CartPage from './pages/cart/CartPage'
 import './App.css'
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
       <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />} />
       <Route path="/register" element={isAuthenticated ? <Navigate to="/" replace /> : <RegisterPage />} />
       <Route path="/verify" element={<VerifyAccountPage />} />
+      <Route path="/cart" element={isAuthenticated ? <CartPage /> : <Navigate to="/login" replace />} />
     </Routes>
   )
 }
