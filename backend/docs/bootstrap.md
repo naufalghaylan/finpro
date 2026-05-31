@@ -129,36 +129,64 @@ import { PrismaClient } from '../generated/prisma/client'
 
 ### Base URL: `http://localhost:5000/api`
 
-#### Authentication Endpoints
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| `POST` | `/api/auth/register` | ❌ | Register user (username + email + password) |
-| `POST` | `/api/auth/verify` | ❌ | Verify email using token |
-| `POST` | `/api/auth/login` | ❌ | Login with email/username + password, sets cookie |
-| `POST` | `/api/auth/social-login` | ❌ | OAuth registration/login from frontend |
-| `POST` | `/api/auth/logout` | ❌ | Logout (clears session cookie) |
-| `GET` | `/api/auth/me` | ✅ Session | Get current user details |
+| `GET` | `/health` | ❌ | Health check |
+| `POST` | `/api/auth/register` | ❌ | Register a new user |
+| `POST` | `/api/auth/login` | ❌ | Login, returns JWT token |
+| `GET` | `/api/auth/me` | ✅ Bearer | Get current user profile |
 
-#### Homepage / Store Endpoints
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| `GET` | `/api/stores/nearest` | ❌ | Find nearest store by lat/lng |
-| `GET` | `/api/products` | ❌ | List products, option to filter by store |
-| `GET` | `/api/promotions` | ❌ | Get active promotions for carousel |
+### Example: Register
+```http
+POST /api/auth/register
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "password123"
+}
+```
+
+### Example: Login
+```http
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "password123"
+}
+```
+
+### Example: Get Me (protected)
+```http
+GET /api/auth/me
+Authorization: Bearer <token>
+```
 
 ---
 
-## Database Schema Overview
+## Database Schema
 
-We have defined models to support core e-commerce, multi-store warehousing, and marketing functionalities:
+```prisma
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-- **User**: Represents customers and admins (`Role` is `USER`, `SUPER_ADMIN`, or `STORE_ADMIN`).
-- **Store**: Physical store branches with location coords, service radius, and details.
-- **Product**: Catalog items belonging to a `Category` with basic details.
-- **Stock**: Branch-specific quantity mapping between `Product` and `Store`.
-- **Discount**: Product discounts with custom type, value, and validity range.
-- **VerificationToken**: Account activation tokens mapped to email.
-- **ResetPasswordToken**: Password recovery tokens mapped to email.
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+```
 
 ---
 

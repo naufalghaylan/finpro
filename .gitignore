@@ -2,12 +2,3 @@
 .agents
 AGENTS.md
 .qodo
-skills-lock.json
-skills.json
-reference-shop
-.env
-.instructions.md
-frontend/.env
-backend/.env
-project_scope.md
-backend/docs/Finpro_API_Collection.postman_collection.json
