@@ -3,7 +3,7 @@ import path from 'path'
 
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
-import { router } from './routes'
+import router from './routes'
 
 const app = express()
 
