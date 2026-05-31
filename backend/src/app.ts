@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import cookieParser from 'cookie-parser'
 import { router } from './routes'
 
 const app = express()
@@ -9,11 +10,12 @@ app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
   credentials: true,
 }))
+app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 // ── Routes ─────────────────────────────────────────────────────────────────
-app.use('/api', router)
+app.use('/', router)
 
 // ── Health check ───────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
