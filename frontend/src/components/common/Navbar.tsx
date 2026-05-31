@@ -23,6 +23,8 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
   }
 
   const [isScrolled, setIsScrolled] = useState(false)
+  const [keyword, setKeyword] = useState('')
+
 
   useEffect(() => {
     const handleScroll = () => {
@@ -48,21 +50,36 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
           </Link>
         </div>
         <nav className="nav-links" aria-label="Main navigation">
-          {links.map((link) => (
-            <a key={link.id} href={link.href}>
-              {link.label}
-            </a>
-          ))}
+          {links.map((link) =>
+            link.href.startsWith('/') ? (
+              <Link key={link.id} to={link.href}>
+                {link.label}
+              </Link>
+            ) : (
+              <a key={link.id} href={link.href}>
+                {link.label}
+              </a>
+            )
+          )}
         </nav>
         <div className="nav-search">
           <label className="sr-only" htmlFor="home-search">
             Cari produk
           </label>
-          <input
-            id="home-search"
-            type="search"
-            placeholder="Cari sayur, buah, bumbu"
-          />
+        <input
+  id="home-search"
+  type="search"
+  placeholder="Cari sayur, buah, bumbu"
+  value={keyword}
+  onChange={e => setKeyword(e.target.value)}
+  onKeyDown={e => {
+    if (e.key === 'Enter' && keyword.trim()) {
+      navigate(`/search?keyword=${encodeURIComponent(keyword.trim())}`)
+      setKeyword('')
+    }
+  }}
+/>
+
         </div>
         <div className="nav-actions">
           {isAuthenticated && user ? (

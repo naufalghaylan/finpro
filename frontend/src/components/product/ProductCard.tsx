@@ -1,0 +1,76 @@
+import type { Product } from '../../types/product'
+
+type ProductCardProps = {
+  product: Product
+  onAddToCart?: (product: Product) => void
+  onClick?: (product: Product) => void
+}
+
+export function ProductCard({ product, onAddToCart, onClick }: ProductCardProps) {
+  const primaryImage = product.images?.find(img => img.isPrimary) ?? product.images?.[0]
+  const totalStock = product.stocks?.reduce((sum, s) => sum + s.quantity, 0) ?? 0
+
+  return (
+    <article
+      className="product-card"
+      onClick={() => onClick?.(product)}
+      style={{ cursor: onClick ? 'pointer' : 'default' }}
+    >
+      {/* Gambar produk */}
+      <div style={{
+        borderRadius: '12px',
+        overflow: 'hidden',
+        background: 'var(--surface-muted)',
+        minHeight: '140px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        {primaryImage ? (
+          <img
+            src={primaryImage.imageUrl}
+            alt={product.name}
+            style={{ width: '100%', height: '140px', objectFit: 'cover' }}
+          />
+        ) : (
+          <span style={{ color: 'var(--ink-soft)', fontSize: '0.85rem' }}>Tidak ada gambar</span>
+        )}
+      </div>
+
+      <div className="product-meta">
+        <div className="product-header">
+          <h3>{product.name}</h3>
+          <span className="product-tag">{product.category.name}</span>
+        </div>
+        <p className="product-price">Rp {product.basePrice.toLocaleString('id-ID')}</p>
+
+        {/* Stok */}
+        <span className={`product-stock ${totalStock > 0 ? 'stock-ok' : 'stock-out'}`}>
+          {totalStock > 0 ? `${totalStock} tersedia` : 'Stok habis'}
+        </span>
+      </div>
+
+      <div className="product-footer">
+        <button
+          className="button primary"
+          disabled={totalStock === 0}
+          onClick={e => {
+            e.stopPropagation()
+            onAddToCart?.(product)
+          }}
+        >
+          Tambah
+        </button>
+        <button
+          className="button ghost"
+          onClick={e => {
+            e.stopPropagation()
+            onClick?.(product)
+          }}
+        >
+          Detail
+        </button>
+      </div>
+    </article>
+  )
+}
