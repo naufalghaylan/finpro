@@ -4,6 +4,7 @@ import storeRouter from './store.routes'
 import productRouter from './product.routes'
 import promotionRouter from './promotion.routes'
 import cartRouter from './cart.routes'
+import profileRouter from './profile.routes'
 
 const router = Router()
 
@@ -12,6 +13,7 @@ router.use('/stores', storeRouter)
 router.use('/products', productRouter)
 router.use('/promotions', promotionRouter)
 router.use('/cart', cartRouter)
+router.use('/profile', profileRouter)
 
 // ── Placeholder for future routes ──────────────────────────────────────────
 // router.use('/users', userRouter)

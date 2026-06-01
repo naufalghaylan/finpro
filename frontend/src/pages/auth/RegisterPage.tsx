@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import GoogleLoginButton from '../../components/auth/GoogleLoginButton';
+import { ChevronLeft } from 'lucide-react';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [role, setRole] = useState('CUSTOMER');
   
   const { register } = useAuthStore();
+  const navigate = useNavigate();
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,7 +23,7 @@ export default function RegisterPage() {
     setError('');
     setIsSubmitting(true);
     try {
-      await register({ name, username, email, role });
+      await register({ name, username, email, role, referralCode: referralCode || undefined });
       setIsSuccess(true);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registrasi gagal. Silakan periksa kembali data Anda.');
@@ -31,9 +35,12 @@ export default function RegisterPage() {
   return (
     <div className="page">
       <main className="page-main">
-        <div className="shell" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100svh', padding: '40px 0' }}>
-          <div className="hero-card" style={{ width: '100%', maxWidth: '460px', padding: '40px 32px' }}>
-            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+        <div className="shell auth-shell" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100svh', padding: 'clamp(24px, 5vw, 40px) clamp(16px, 5vw, 40px)' }}>
+          <div className="hero-card auth-card" style={{ width: '100%', maxWidth: '460px', padding: 'clamp(24px, 5vw, 40px) clamp(16px, 5vw, 32px)' }}>
+            <div className="auth-header" style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <button className="mobile-back-btn" onClick={() => navigate(-1)} type="button" aria-label="Go back">
+                <ChevronLeft size={24} />
+              </button>
               <Link to="/" style={{ textDecoration: 'none', display: 'inline-block' }}>
                 <div className="logo" style={{ justifyContent: 'center', marginBottom: '20px' }}>
                   <span className="logo-mark"></span>
@@ -119,6 +126,19 @@ export default function RegisterPage() {
                     <option value="STORE_ADMIN">Pengelola Toko (Store Admin)</option>
                   </select>
                 </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label htmlFor="referralCode" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--ink)' }}>Kode Referral (Opsional)</label>
+                  <input
+                    id="referralCode"
+                    type="text"
+                    value={referralCode}
+                    onChange={(e) => setReferralCode(e.target.value)}
+                    style={{ width: '100%', borderRadius: '14px', border: '1px solid var(--line)', padding: '14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
+                    placeholder="Masukkan kode referral teman Anda"
+                  />
+                  <span style={{ fontSize: '0.8rem', color: 'var(--ink-soft)' }}>Dapatkan voucher diskon Rp 20.000 jika menggunakan kode valid!</span>
+                </div>
                 
                 <button 
                   type="submit" 
@@ -132,9 +152,19 @@ export default function RegisterPage() {
             )}
             
             {!isSuccess && (
-              <div style={{ marginTop: '32px', textAlign: 'center', fontSize: '0.95rem', color: 'var(--ink-soft)' }}>
-                Sudah punya akun? <Link to="/login" style={{ color: 'var(--accent-strong)', fontWeight: 600, textDecoration: 'none' }}>Masuk di sini</Link>
-              </div>
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', margin: '24px 0' }}>
+                  <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--line)' }}></div>
+                  <span style={{ padding: '0 12px', fontSize: '0.9rem', color: 'var(--ink-soft)' }}>atau daftar dengan</span>
+                  <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--line)' }}></div>
+                </div>
+
+                <GoogleLoginButton onError={setError} />
+
+                <div style={{ marginTop: '32px', textAlign: 'center', fontSize: '0.95rem', color: 'var(--ink-soft)' }}>
+                  Sudah punya akun? <Link to="/login" style={{ color: 'var(--accent-strong)', fontWeight: 600, textDecoration: 'none' }}>Masuk di sini</Link>
+                </div>
+              </>
             )}
           </div>
         </div>

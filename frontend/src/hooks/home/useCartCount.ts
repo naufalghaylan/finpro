@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react'
-
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000'
+import api from '../../api/axios'
+import { useAuthStore } from '../../store/authStore'
 
 export const useCartCount = () => {
   const [count, setCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const { isAuthenticated } = useAuthStore()
 
   useEffect(() => {
     let isMounted = true
 
     const loadCartCount = async () => {
-      const token = localStorage.getItem('token')
-      if (!token) {
+      if (!isAuthenticated) {
         if (isMounted) {
           setCount(0)
           setIsLoading(false)
@@ -20,20 +20,8 @@ export const useCartCount = () => {
       }
 
       try {
-        const response = await fetch(`${API_URL}/api/cart/count`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-        if (!response.ok) {
-          if (isMounted) {
-            setCount(0)
-          }
-          return
-        }
-
-        const data = (await response.json()) as { count?: number }
+        const response = await api.get('/cart/count')
+        const data = response.data
 
         if (isMounted) {
           setCount(typeof data.count === 'number' ? data.count : 0)
@@ -54,7 +42,7 @@ export const useCartCount = () => {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [isAuthenticated])
 
   return { cartCount: count, isLoadingCartCount: isLoading }
 }
