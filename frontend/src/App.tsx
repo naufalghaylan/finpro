@@ -11,7 +11,16 @@ import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import ProfilePage from './pages/profile/ProfilePage'
 import SocialOnboardingPage from './pages/auth/SocialOnboardingPage'
+import CartPage from './pages/cart/CartPage'
+import CatalogPage from './pages/catalog/CatalogPage'
+import SearchPage from './pages/search/SearchPage'
+import ProductDetailPage from './pages/product/ProductDetailPage'
+import AdminCategoryPage from './pages/admin/AdminCategoryPage'
+import AdminProductPage from './pages/admin/AdminProductPage'
 import './App.css'
+
+
+
 
 function App() {
   const { checkAuth, isLoading } = useAuthStore()
@@ -32,16 +41,29 @@ function App() {
     <ToastProvider>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/catalog" element={<CatalogPage />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/products/:id" element={<ProductDetailPage />} />
+        
+        {/* Guest Routes */}
         <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
         <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
         <Route path="/verify" element={<VerifyAccountPage />} />
         <Route path="/forgot-password" element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
         <Route path="/reset-password" element={<GuestRoute><ResetPasswordPage /></GuestRoute>} />
+        
+        {/* Protected Routes */}
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/onboarding" element={<ProtectedRoute><SocialOnboardingPage /></ProtectedRoute>} />
+        <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
+        
+        {/* Admin Routes */}
+        <Route path="/admin/products" element={<AdminProductPage />} />
+        <Route path="/admin/categories" element={<AdminCategoryPage />} />
       </Routes>
     </ToastProvider>
   )
+
 }
 
 export default App

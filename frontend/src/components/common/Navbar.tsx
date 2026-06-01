@@ -15,6 +15,7 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
   const navigate = useNavigate()
 
   const [isScrolled, setIsScrolled] = useState(false)
+  const [keyword, setKeyword] = useState('')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const mobileMenuRef = useRef<HTMLDivElement>(null)
 
@@ -77,18 +78,36 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
 
           {/* Desktop nav links */}
           <nav className="nav-links" aria-label="Main navigation">
-            {links.map((link) => (
-              <a key={link.id} href={link.href}>{link.label}</a>
-            ))}
+            {links.map((link) =>
+              link.href.startsWith('/') ? (
+                <Link key={link.id} to={link.href}>
+                  {link.label}
+                </Link>
+              ) : (
+                <a key={link.id} href={link.href}>
+                  {link.label}
+                </a>
+              )
+            )}
           </nav>
 
           {/* Search bar */}
           <div className="nav-search">
-            <label className="sr-only" htmlFor="home-search">Cari produk</label>
+            <label className="sr-only" htmlFor="home-search">
+              Cari produk
+            </label>
             <input
               id="home-search"
               type="search"
               placeholder="Cari sayur, buah, bumbu"
+              value={keyword}
+              onChange={e => setKeyword(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && keyword.trim()) {
+                  navigate(`/search?keyword=${encodeURIComponent(keyword.trim())}`)
+                  setKeyword('')
+                }
+              }}
             />
           </div>
 
@@ -190,6 +209,15 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
                 id="mobile-search"
                 type="search"
                 placeholder="Cari sayur, buah, bumbu"
+                value={keyword}
+                onChange={e => setKeyword(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && keyword.trim()) {
+                    navigate(`/search?keyword=${encodeURIComponent(keyword.trim())}`)
+                    setKeyword('')
+                    closeMobileMenu()
+                  }
+                }}
                 style={{
                   width: '100%',
                   borderRadius: '999px',
@@ -204,9 +232,17 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
             {/* Nav links */}
             {links.length > 0 && (
               <nav className="mobile-nav-links" aria-label="Mobile navigation">
-                {links.map((link) => (
-                  <a key={link.id} href={link.href} onClick={closeMobileMenu}>{link.label}</a>
-                ))}
+                {links.map((link) =>
+                  link.href.startsWith('/') ? (
+                    <Link key={link.id} to={link.href} onClick={closeMobileMenu}>
+                      {link.label}
+                    </Link>
+                  ) : (
+                    <a key={link.id} href={link.href} onClick={closeMobileMenu}>
+                      {link.label}
+                    </a>
+                  )
+                )}
               </nav>
             )}
 
