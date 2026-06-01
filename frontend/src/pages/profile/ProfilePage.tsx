@@ -11,7 +11,7 @@ export default function ProfilePage() {
   const { fetchProfile, isLoading } = useProfileStore()
 
   useEffect(() => {
-    fetchProfile()
+    void fetchProfile().catch(console.error)
   }, [fetchProfile])
 
   return (

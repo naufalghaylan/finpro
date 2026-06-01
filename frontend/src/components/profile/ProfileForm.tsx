@@ -207,7 +207,7 @@ export const ProfileForm = () => {
               type="button"
               onClick={() => setShowCurrentPassword(!showCurrentPassword)}
               style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-              tabIndex={-1}
+              aria-label={showCurrentPassword ? "Sembunyikan password" : "Tampilkan password"}
             >
               {showCurrentPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
@@ -229,7 +229,7 @@ export const ProfileForm = () => {
               type="button"
               onClick={() => setShowNewPassword(!showNewPassword)}
               style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-              tabIndex={-1}
+              aria-label={showNewPassword ? "Sembunyikan password" : "Tampilkan password"}
             >
               {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>

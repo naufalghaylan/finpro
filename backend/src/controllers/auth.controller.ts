@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { registerSchema, loginSchema, verifyAccountSchema, socialLoginSchema, resendVerificationSchema, forgotPasswordSchema, resetPasswordSchema, completeOnboardingSchema } from '../validations/auth.validation'
+import { registerSchema, loginSchema, verifyAccountSchema, socialLoginSchema, resendVerificationSchema, completeOnboardingSchema } from '../validations/auth.validation'
 import { AppError } from '../utils/AppError'
 import * as authService from '../services/auth'
 import { setAuthCookies, clearAuthCookies } from '../utils/cookie.util'

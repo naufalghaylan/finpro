@@ -20,9 +20,14 @@ export const VoucherSection = () => {
             <button 
               className="button secondary"
               style={{ padding: '8px 16px', borderRadius: '8px' }}
-              onClick={() => {
-                navigator.clipboard.writeText(profile.referralCode?.code || '');
-                alert('Kode referral berhasil disalin!');
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(profile.referralCode?.code || '');
+                  alert('Kode referral berhasil disalin!');
+                } catch (err) {
+                  console.error('Failed to copy code', err);
+                  alert('Gagal menyalin kode. Silakan salin secara manual.');
+                }
               }}
             >
               Salin Kode

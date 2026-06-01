@@ -8,7 +8,7 @@ export const startVoucherCron = () => {
     try {
       const now = new Date();
       // Check for vouchers that are not used but expired
-      const expiredVouchers = await prisma.voucher.findMany({
+      const expiredVoucherCount = await prisma.voucher.count({
         where: {
           used: false,
           expiredAt: {
@@ -17,8 +17,8 @@ export const startVoucherCron = () => {
         },
       });
 
-      if (expiredVouchers.length > 0) {
-        console.log(`Found ${expiredVouchers.length} expired vouchers.`);
+      if (expiredVoucherCount > 0) {
+        console.log(`Found ${expiredVoucherCount} expired vouchers.`);
         // Note: The system already checks 'expiredAt' directly in queries, 
         // so no explicit database update is strictly required here unless a status field is added.
       } else {

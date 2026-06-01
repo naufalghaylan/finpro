@@ -7,12 +7,20 @@ import App from './App.tsx'
 
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
 
+const app = (
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>
+)
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <GoogleOAuthProvider clientId={clientId}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </GoogleOAuthProvider>
+    {clientId ? (
+      <GoogleOAuthProvider clientId={clientId}>
+        {app}
+      </GoogleOAuthProvider>
+    ) : (
+      app
+    )}
   </StrictMode>,
 )

@@ -59,10 +59,14 @@ export default function SocialOnboardingPage() {
     }
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(myReferralCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(myReferralCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy to clipboard', err);
+    }
   };
 
   return (

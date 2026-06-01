@@ -121,7 +121,7 @@ export default function VerifyAccountPage() {
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
                           style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-                          tabIndex={-1}
+                          aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
                         >
                           {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                         </button>
@@ -145,7 +145,7 @@ export default function VerifyAccountPage() {
                           type="button"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                           style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-                          tabIndex={-1}
+                          aria-label={showConfirmPassword ? "Sembunyikan password" : "Tampilkan password"}
                         >
                           {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                         </button>
