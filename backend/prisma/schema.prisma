@@ -97,6 +97,7 @@ model User {
   stockJournals      StockJournal[]
   requestedMutations StockMutation[] @relation("MutationRequester")
   approvedMutations  StockMutation[] @relation("MutationApprover")
+  refreshTokens      RefreshToken[]
 
   @@map("users")
 }
@@ -307,61 +308,60 @@ model UserAddress {
 }
 
 model Order {
-  id                 Int           @id @default(autoincrement())
-  orderNumber        String        @unique // nomor order yang mudah dibaca, untuk pencarian
-  userId             Int
-  storeId            Int
-  addressId          Int // alamat pengiriman yang dipilih saat checkout
-  status             OrderStatus   @default(PENDING_PAYMENT)
-  totalProductAmount Float         @default(0) // subtotal produk sebelum diskon & ongkir
-  totalAmount        Float // total akhir yang harus dibayar
-  shippingCost       Float         @default(0)
-  discountAmount     Float         @default(0)
-  shippingMethod     String? // nama kurir (JNE, TIKI, dll)
-  shippingService    String? // tipe layanan (REG, YES, dll)
-  voucherId          Int?
-  paymentMethod      PaymentMethod @default(MANUAL_TRANSFER)
-  paymentProof       String?
-  paymentGatewayId   String? // referensi transaksi payment gateway
-  paymentDeadline    DateTime? // batas waktu upload bukti bayar (~1 jam)
-  shippedAt          DateTime? // waktu pesanan dikirim (untuk hitung auto-confirm)
-  confirmedAt        DateTime? // waktu pesanan dikonfirmasi user
-  cancelledAt        DateTime?
-  cancelReason       String?
-  notes              String?
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
+  id                   Int           @id @default(autoincrement())
+  order_number         String        @unique // nomor order yang mudah dibaca, untuk pencarian
+  user_id              Int
+  store_id             Int
+  address_id           Int // alamat pengiriman yang dipilih saat checkout
+  status               OrderStatus   @default(PENDING_PAYMENT)
+  total_product_amount Float         @default(0) // subtotal produk sebelum diskon & ongkir
+  total_amount         Float // total akhir yang harus dibayar 
+  shipping_cost        Float         @default(0)
+  discount_amount      Float         @default(0) // orderitem diskon dipindahkan ke order
+  shipping_method      String? // nama kurir (JNE, TIKI, dll)
+  shipping_service     String? // tipe layanan (REG, YES, dll)
+  voucher_id           Int?
+  payment_method       PaymentMethod @default(MANUAL_TRANSFER)
+  payment_proof        String?
+  payment_gateway_id   String? // referensi transaksi payment gateway
+  payment_deadline     DateTime? // batas waktu upload bukti bayar (~1 jam)
+  shipped_at           DateTime? // waktu pesanan dikirim (untuk hitung auto-confirm)
+  confirmed_at         DateTime? // waktu pesanan dikonfirmasi user
+  cancelled_at         DateTime?
+  cancel_reason        String?
+  notes                String?
+  created_at           DateTime      @default(now())
+  updated_at           DateTime      @updatedAt
 
-  user          User           @relation(fields: [userId], references: [id])
-  store         Store          @relation(fields: [storeId], references: [id])
-  address       UserAddress    @relation(fields: [addressId], references: [id])
-  voucher       Voucher?       @relation(fields: [voucherId], references: [id])
-  items         OrderItem[]
-  stockJournals StockJournal[]
+  user           User           @relation(fields: [user_id], references: [id])
+  store          Store          @relation(fields: [store_id], references: [id])
+  address        UserAddress    @relation(fields: [address_id], references: [id])
+  voucher        Voucher?       @relation(fields: [voucher_id], references: [id])
+  items          OrderItem[]
+  stock_journals StockJournal[]
 
-  @@index([userId])
-  @@index([storeId])
-  @@index([orderNumber])
-  @@index([createdAt])
+  @@index([user_id])
+  @@index([store_id])
+  @@index([order_number])
+  @@index([created_at])
   @@map("orders")
 }
 
 model OrderItem {
-  id                  Int      @id @default(autoincrement())
-  orderId             Int
-  productId           Int
-  quantity            Int
-  priceAtTime         Float // harga produk saat pemesanan
-  discountAmount      Float    @default(0)
-  discountDescription String? // catatan diskon apa yang diterapkan (untuk laporan)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id                   Int      @id @default(autoincrement())
+  order_id             Int
+  product_id           Int
+  quantity             Int
+  price_at_time        Float // harga produk saat pemesanan
+  subtotal             Float    // dipindah ke OrderItem sebagai subtotal
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
 
-  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id])
+  order   Order   @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [product_id], references: [id])
 
-  @@index([orderId])
-  @@index([productId])
+  @@index([order_id])
+  @@index([product_id])
   @@map("order_items")
 }
 
@@ -476,4 +476,17 @@ model Banner {
   updatedAt DateTime @updatedAt
 
   @@map("banners")
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
 }

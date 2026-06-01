@@ -1,15 +1,9 @@
 import { Request, Response } from 'express'
-import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
-import crypto from 'crypto'
-import prisma from '../lib/prisma'
-import { registerSchema, loginSchema, verifyAccountSchema, socialLoginSchema, resendVerificationSchema } from '../validations/auth.validation'
-import { sendVerificationEmail } from '../lib/mailer'
+import { registerSchema, loginSchema, verifyAccountSchema, socialLoginSchema, resendVerificationSchema, forgotPasswordSchema, resetPasswordSchema, completeOnboardingSchema } from '../validations/auth.validation'
+import { AppError } from '../utils/AppError'
+import * as authService from '../services/auth'
+import { setAuthCookies, clearAuthCookies } from '../utils/cookie.util'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret'
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d'
-
-// ── Register ─────────────────────────────────────────────────────────────
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const parsed = registerSchema.safeParse(req.body)
@@ -18,42 +12,18 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return
     }
 
-    const { name, username, email, role } = parsed.data
-
-    const existingEmail = await prisma.user.findUnique({ where: { email } })
-    if (existingEmail) {
-      res.status(409).json({ message: 'Email already registered' })
-      return
-    }
-
-    const existingUsername = await prisma.user.findUnique({ where: { username } })
-    if (existingUsername) {
-      res.status(409).json({ message: 'Username already taken' })
-      return
-    }
-
-    const user = await prisma.user.create({
-      data: { name, username, email, password: null, role: role || 'CUSTOMER', emailVerified: false },
-      select: { id: true, name: true, username: true, email: true, role: true, createdAt: true },
-    })
-
-    const tokenStr = crypto.randomBytes(32).toString('hex')
-    const expires = new Date(Date.now() + 60 * 60 * 1000)
-
-    await prisma.verificationToken.create({
-      data: { email, token: tokenStr, expires }
-    })
-
-    await sendVerificationEmail(email, tokenStr)
-
+    const user = await authService.registerUser(parsed.data)
     res.status(201).json({ message: 'User registered successfully. Please verify your account.', user })
-  } catch (err) {
-    console.error('[register]', err)
-    res.status(500).json({ message: 'Internal server error' })
+  } catch (err: any) {
+    if (err instanceof AppError) {
+      res.status(err.statusCode).json({ message: err.message })
+    } else {
+      console.error('[register]', err)
+      res.status(500).json({ message: 'Internal server error' })
+    }
   }
 }
 
-// ── Verify Account ────────────────────────────────────────────────────────
 export const verifyAccount = async (req: Request, res: Response): Promise<void> => {
   try {
     const parsed = verifyAccountSchema.safeParse(req.body)
@@ -62,41 +32,18 @@ export const verifyAccount = async (req: Request, res: Response): Promise<void> 
       return
     }
 
-    const { token, password } = parsed.data
-
-    const verificationRecord = await prisma.verificationToken.findUnique({
-      where: { token }
-    })
-
-    if (!verificationRecord) {
-      res.status(400).json({ message: 'Invalid token' })
-      return
-    }
-
-    if (verificationRecord.expires < new Date()) {
-      res.status(400).json({ message: 'Token expired' })
-      return
-    }
-
-    const hashed = await bcrypt.hash(password, 10)
-
-    await prisma.user.update({
-      where: { email: verificationRecord.email },
-      data: { emailVerified: true, password: hashed }
-    })
-
-    await prisma.verificationToken.delete({
-      where: { id: verificationRecord.id }
-    })
-
+    await authService.verifyAccountService(parsed.data)
     res.json({ message: 'Account verified successfully. You can now login.' })
-  } catch (err) {
-    console.error('[verifyAccount]', err)
-    res.status(500).json({ message: 'Internal server error' })
+  } catch (err: any) {
+    if (err instanceof AppError) {
+      res.status(err.statusCode).json({ message: err.message })
+    } else {
+      console.error('[verifyAccount]', err)
+      res.status(500).json({ message: 'Internal server error' })
+    }
   }
 }
 
-// ── Resend Verification ───────────────────────────────────────────────────
 export const resendVerification = async (req: Request, res: Response): Promise<void> => {
   try {
     const parsed = resendVerificationSchema.safeParse(req.body)
@@ -105,40 +52,19 @@ export const resendVerification = async (req: Request, res: Response): Promise<v
       return
     }
     
-    const { email } = parsed.data
-    
-    const user = await prisma.user.findUnique({ where: { email } })
-    if (!user) {
-      res.json({ message: 'If your email is registered and not verified, a new verification link will be sent.' })
-      return
-    }
-    
-    if (user.emailVerified) {
-      res.status(400).json({ message: 'Account is already verified.' })
-      return
-    }
-    
-    await prisma.verificationToken.deleteMany({
-      where: { email }
-    })
-    
-    const tokenStr = crypto.randomBytes(32).toString('hex')
-    const expires = new Date(Date.now() + 60 * 60 * 1000)
-
-    await prisma.verificationToken.create({
-      data: { email, token: tokenStr, expires }
-    })
-
-    await sendVerificationEmail(email, tokenStr)
-    
+    await authService.resendVerificationService(parsed.data.email)
     res.json({ message: 'Verification email resent successfully.' })
-  } catch (err) {
-    console.error('[resendVerification]', err)
-    res.status(500).json({ message: 'Internal server error' })
+  } catch (err: any) {
+    if (err instanceof AppError) {
+      // Return 200 for resend verification to not leak user existence, or whatever was set in service
+      res.status(err.statusCode).json({ message: err.message })
+    } else {
+      console.error('[resendVerification]', err)
+      res.status(500).json({ message: 'Internal server error' })
+    }
   }
 }
 
-// ── Login ─────────────────────────────────────────────────────────────────
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const parsed = loginSchema.safeParse(req.body)
@@ -146,61 +72,22 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       res.status(400).json({ message: 'Validation failed', errors: parsed.error.issues })
       return
     }
-    const { emailOrUsername, password } = parsed.data
 
-    const user = await prisma.user.findFirst({ 
-      where: { 
-        OR: [
-          { email: emailOrUsername },
-          { username: emailOrUsername }
-        ]
-      } 
-    })
-    if (!user || !user.password) {
-      res.status(401).json({ message: 'Invalid credentials' })
-      return
+    const { accessToken, refreshToken, user } = await authService.loginService(parsed.data)
+
+    setAuthCookies(res, accessToken, refreshToken, parsed.data.rememberMe)
+
+    res.json({ message: 'Login successful', user })
+  } catch (err: any) {
+    if (err instanceof AppError) {
+      res.status(err.statusCode).json({ message: err.message })
+    } else {
+      console.error('[login]', err)
+      res.status(500).json({ message: 'Internal server error' })
     }
-
-    if (!user.emailVerified) {
-      res.status(401).json({ message: 'Please check your email to verify your account.' })
-      return
-    }
-
-    if (!user.password) {
-      res.status(401).json({ message: 'Invalid credentials' })
-      return
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password)
-    if (!isMatch) {
-      res.status(401).json({ message: 'Invalid credentials' })
-      return
-    }
-
-    const token = jwt.sign(
-      { userId: user.id, role: user.role, emailVerified: user.emailVerified }, 
-      JWT_SECRET, 
-      { expiresIn: JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'] }
-    )
-
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    })
-
-    res.json({
-      message: 'Login successful',
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, emailVerified: user.emailVerified },
-    })
-  } catch (err) {
-    console.error('[login]', err)
-    res.status(500).json({ message: 'Internal server error' })
   }
 }
 
-// ── Social Login ──────────────────────────────────────────────────────────
 export const socialLogin = async (req: Request, res: Response): Promise<void> => {
   try {
     const parsed = socialLoginSchema.safeParse(req.body)
@@ -209,75 +96,126 @@ export const socialLogin = async (req: Request, res: Response): Promise<void> =>
       return
     }
 
-    const { email, name, provider, providerId } = parsed.data
+    const { accessToken, refreshToken, user, isNewUser } = await authService.socialLoginService(parsed.data)
 
-    let user = await prisma.user.findUnique({ where: { email } })
+    setAuthCookies(res, accessToken, refreshToken)
 
-    if (!user) {
-      user = await prisma.user.create({
-        data: { 
-          name, 
-          email, 
-          emailVerified: true, 
-          authProvider: provider, 
-          authProviderId: providerId 
-        }
-      })
+    res.json({ message: 'Social login successful', user, isNewUser })
+  } catch (err: any) {
+    if (err instanceof AppError) {
+      res.status(err.statusCode).json({ message: err.message })
+    } else {
+      console.error('[socialLogin]', err)
+      res.status(500).json({ message: 'Internal server error' })
     }
-
-    const token = jwt.sign(
-      { userId: user.id, role: user.role, emailVerified: user.emailVerified }, 
-      JWT_SECRET, 
-      { expiresIn: JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'] }
-    )
-
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    })
-
-    res.json({
-      message: 'Social login successful',
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, emailVerified: user.emailVerified },
-    })
-  } catch (err) {
-    console.error('[socialLogin]', err)
-    res.status(500).json({ message: 'Internal server error' })
   }
 }
 
-// ── Get current user ──────────────────────────────────────────────────────
+
+export const logout = async (req: Request, res: Response): Promise<void> => {
+  const refreshTokenCookie = req.cookies?.refreshToken;
+  
+  await authService.logoutService(refreshTokenCookie);
+
+  clearAuthCookies(res);
+  
+  res.json({ message: 'Logout successful' })
+}
+
+export const refreshToken = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const token = req.cookies?.refreshToken;
+    if (!token) {
+      res.status(401).json({ message: 'Refresh token not found' });
+      return;
+    }
+
+    const { newAccessToken } = await authService.refreshTokenService(token);
+
+    // Note: Re-setting the refresh token creates a rolling/sliding session
+    setAuthCookies(res, newAccessToken, token);
+
+    res.json({ message: 'Token refreshed successfully' });
+  } catch (err: any) {
+    if (err instanceof AppError) {
+      res.status(err.statusCode).json({ message: err.message });
+    } else {
+      console.error('[refreshToken]', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+}
+
 export const getMe = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.userId
     if (!userId) {
-      res.status(401).json({ message: 'Unauthorized: Login required' })
+      res.status(401).json({ message: 'Unauthorized' })
       return
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, name: true, email: true, role: true, emailVerified: true, createdAt: true },
-    })
-    if (!user) {
-      res.status(404).json({ message: 'User not found' })
-      return
-    }
+    const user = await authService.getMeService(userId)
     res.json(user)
-  } catch (err) {
-    console.error('[getMe]', err)
-    res.status(500).json({ message: 'Internal server error' })
+  } catch (err: any) {
+    if (err instanceof AppError) {
+      res.status(err.statusCode).json({ message: err.message })
+    } else {
+      console.error('[getMe]', err)
+      res.status(500).json({ message: 'Internal server error' })
+    }
   }
 }
 
-// ── Logout ────────────────────────────────────────────────────────────────
-export const logout = async (_req: Request, res: Response): Promise<void> => {
-  res.clearCookie('token', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-  })
-  res.json({ message: 'Logout successful' })
+export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    await authService.forgotPasswordService(req.body.email)
+    res.json({ message: 'If the email exists, a password reset link has been sent.' })
+  } catch (err: any) {
+    if (err instanceof AppError) {
+      res.status(err.statusCode).json({ message: err.message })
+    } else {
+      console.error('[forgotPassword]', err)
+      res.status(500).json({ message: 'Internal server error' })
+    }
+  }
+}
+
+export const resetPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    await authService.resetPasswordService(req.body)
+    res.json({ message: 'Password reset successful. You can now login with your new password.' })
+  } catch (err: any) {
+    if (err instanceof AppError) {
+      res.status(err.statusCode).json({ message: err.message })
+    } else {
+      console.error('[resetPassword]', err)
+      res.status(500).json({ message: 'Internal server error' })
+    }
+  }
+}
+
+export const completeOnboarding = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.userId
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' })
+      return
+    }
+
+    const parsed = completeOnboardingSchema.safeParse(req.body)
+    if (!parsed.success) {
+      res.status(400).json({ message: 'Validation failed', errors: parsed.error.issues })
+      return
+    }
+
+    const result = await authService.completeOnboardingService({ userId, ...parsed.data })
+    res.json({ message: 'Onboarding complete', ...result })
+  } catch (err: any) {
+    if (err instanceof AppError) {
+      res.status(err.statusCode).json({ message: err.message })
+    } else {
+      console.error('[completeOnboarding]', err)
+      res.status(500).json({ message: 'Internal server error' })
+    }
+  }
 }

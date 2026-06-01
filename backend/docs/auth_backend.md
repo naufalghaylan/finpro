@@ -3,6 +3,7 @@
 This document describes the API endpoints and middlewares for User Registration (passwordless), Email Verification (with password setup), Login, and Authorization.
 
 ## Table of Contents
+- [Architecture Overview](#architecture-overview)
 - [Middlewares](#middlewares)
   - [1. Authenticate Middleware (`authenticate`)](#1-authenticate-middleware-authenticate)
   - [2. Require Verified Middleware (`requireVerified`)](#2-require-verified-middleware-requireverified)
@@ -14,6 +15,19 @@ This document describes the API endpoints and middlewares for User Registration 
   - [5. Social Login](#5-social-login)
   - [6. Get Current User ("Me")](#6-get-current-user-me)
   - [7. Log Out](#7-log-out)
+  - [8. Request Password Reset (Forgot Password)](#8-request-password-reset-forgot-password)
+  - [9. Confirm/Execute Password Reset](#9-confirmexecute-password-reset)
+
+---
+
+## Architecture Overview
+
+The Authentication module follows a layered architecture to keep the codebase clean, modular, and easy to test:
+
+- **Controllers (`src/controllers/auth.controller.ts`)**: Keep routes thin. They are solely responsible for handling HTTP requests, validating input payloads (using Zod schemas), and sending HTTP responses.
+- **Services (`src/services/auth/`)**: Contain all the core business logic. The logic is separated into specific service files (`register.service.ts`, `login.service.ts`, `logout.service.ts`, `get-me.service.ts`, etc.) to adhere to the Single Responsibility Principle.
+- **Utilities (`src/utils/cookie.util.ts`)**: Contains helper functions to standardize HTTP-only cookie configuration (`setAuthCookies` and `clearAuthCookies`) for token issuance and revocation.
+- **Middlewares (`src/middlewares/auth.middleware.ts`)**: Reusable functions that intercept requests to enforce authentication, session verification, and authorization checks.
 
 ---
 
@@ -128,12 +142,13 @@ This document describes the API endpoints and middlewares for User Registration 
 
 ### 4. Log In
 - **Endpoint:** `POST /auth/login`
-- **Description:** Logs in a user. Generates a JWT token and returns it inside an HTTP-only cookie.
+- **Description:** Logs in a user. Generates both an Access JWT and a Refresh JWT, returning them inside HTTP-only cookies.
 - **Request Body:**
   ```json
   {
     "emailOrUsername": "johndoe",
-    "password": "mySecurePassword123"
+    "password": "mySecurePassword123",
+    "rememberMe": true
   }
   ```
 - **Response (Success - 200 OK):**
@@ -150,7 +165,8 @@ This document describes the API endpoints and middlewares for User Registration 
   }
   ```
 - **Cookies Set:**
-  - `token`: HTTP-Only cookie containing the JWT session token (expires in 7 days).
+  - `accessToken`: HTTP-Only cookie containing the short-lived JWT session token (expires in 15 minutes).
+  - `refreshToken`: HTTP-Only cookie containing the long-lived JWT refresh token (expires in 30 days if `rememberMe` is true, otherwise 7 days).
 - **Errors:**
   - `401 Unauthorized`: Invalid credentials (incorrect password, unregistered email, or password not set).
   - `401 Unauthorized`: `"Please check your email to verify your account."` (email is registered but `emailVerified` is false).
@@ -159,14 +175,12 @@ This document describes the API endpoints and middlewares for User Registration 
 
 ### 5. Social Login
 - **Endpoint:** `POST /auth/social-login`
-- **Description:** Handles social login providers (e.g. Google). If the email does not exist, it registers the user with `emailVerified: true` and a `null` password.
+- **Description:** Handles social login (Google). It expects a Google ID token from the frontend. The backend verifies this token directly using `google-auth-library` to extract the user's `email`, `name`, and `authProviderId`. If the email does not exist, it registers a new user with `emailVerified: true`, `authProvider: 'GOOGLE'`, and a `null` password. If the email exists, it logs the user in and links the account to Google.
 - **Request Body:**
   ```json
   {
-    "email": "social.user@example.com",
-    "name": "Social User",
-    "provider": "GOOGLE",
-    "providerId": "123456789"
+    "token": "eyJhbGciOiJSUzI1NiIsImtpZC...",
+    "provider": "GOOGLE"
   }
   ```
 - **Response (Success - 200 OK):**
@@ -182,12 +196,18 @@ This document describes the API endpoints and middlewares for User Registration 
     }
   }
   ```
+- **Cookies Set:**
+  - `accessToken`: HTTP-Only cookie containing the short-lived JWT session token (expires in 15 minutes).
+  - `refreshToken`: HTTP-Only cookie containing the long-lived JWT refresh token (expires in 7 days).
+- **Errors:**
+  - `400 Bad Request`: Validation failure (missing token or invalid provider).
+  - `401 Unauthorized`: Token verification with Google failed.
 
 ---
 
 ### 6. Get Current User ("Me")
 - **Endpoint:** `GET /auth/me`
-- **Headers:** `Authorization: Bearer <token>` or JWT token cookie.
+- **Headers:** `Authorization: Bearer <accessToken>` or `accessToken` cookie.
 - **Response (Success - 200 OK):**
   ```json
   {
@@ -204,10 +224,54 @@ This document describes the API endpoints and middlewares for User Registration 
 
 ### 7. Log Out
 - **Endpoint:** `POST /auth/logout`
-- **Description:** Clears the HTTP-only `token` cookie.
+- **Description:** Clears the HTTP-only `accessToken` and `refreshToken` cookies, and removes the refresh token from the database.
 - **Response (Success - 200 OK):**
   ```json
   {
     "message": "Logout successful"
   }
   ```
+
+---
+
+### 8. Request Password Reset (Forgot Password)
+- **Endpoint:** `POST /auth/forgot-password`
+- **Description:** Initiates the password reset process by generating a unique secure token and sending a password reset email. If the email doesn't exist, it returns a generic success message to prevent user enumeration. Only users who registered via Email & Password (`authProvider: 'CREDENTIALS'`) can use this feature.
+- **Request Body:**
+  ```json
+  {
+    "email": "john.doe@example.com"
+  }
+  ```
+- **Response (Success - 200 OK):**
+  ```json
+  {
+    "message": "If the email exists, a password reset link has been sent."
+  }
+  ```
+- **Errors:**
+  - `400 Bad Request`: Validation failure (e.g. invalid email format) or the user is registered via social login (Google).
+  - `500 Internal Server Error`: Generic internal server error.
+
+---
+
+### 9. Confirm/Execute Password Reset
+- **Endpoint:** `POST /auth/reset-password`
+- **Description:** Verifies the reset token, hashes the new password, updates the user's password in the database, and marks the token as used (preventing reuse).
+- **Request Body:**
+  ```json
+  {
+    "token": "4e723cf23a8db8...",
+    "newPassword": "newSecurePassword123"
+  }
+  ```
+- **Response (Success - 200 OK):**
+  ```json
+  {
+    "message": "Password reset successful. You can now login with your new password."
+  }
+  ```
+- **Errors:**
+  - `400 Bad Request`: Validation failure, or the token is invalid, expired, or has already been used.
+  - `404 Not Found`: User associated with the token does not exist.
+  - `500 Internal Server Error`: Generic internal server error.
