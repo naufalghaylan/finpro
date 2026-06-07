@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getProductById } from '../../api/product.api'
+import { useAddToCart } from '../../hooks/useAddToCart'
 import { Navbar } from '../../components/common/Navbar'
 import { HomeFooter } from '../../components/home/HomeFooter'
 import { BRAND, navLinks, footerSections } from '../../data/home/homeData'
@@ -11,6 +12,7 @@ import type { Product } from '../../types/product'
 export default function ProductDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { addToCart, addingProductId } = useAddToCart()
 
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
@@ -29,6 +31,8 @@ export default function ProductDetailPage() {
 
     if (loading) return <div className="page"><p style={{ padding: '48px' }}>Memuat produk...</p></div>
   if (error || !product) return <div className="page"><p style={{ padding: '48px', color: 'var(--accent)' }}>{error}</p></div>
+
+  const totalStock = product.stocks?.reduce((sum, stock) => sum + stock.quantity, 0) ?? 0
 
   return (
     <div className="page">
@@ -83,8 +87,13 @@ export default function ProductDetailPage() {
                   </div>
                 )}
 
-                <button className="button primary" style={{ marginTop: '8px' }}>
-                  Tambah ke Keranjang
+                <button
+                  className="button primary"
+                  style={{ marginTop: '8px' }}
+                  disabled={addingProductId === product.id || totalStock <= 0}
+                  onClick={() => void addToCart(product)}
+                >
+                  {addingProductId === product.id ? 'Menambahkan...' : 'Tambah ke Keranjang'}
                 </button>
               </div>
             </div>

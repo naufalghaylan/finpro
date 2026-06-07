@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProducts } from '../../hooks/useProducts'
 import { useCategories } from '../../hooks/useCategories'
+import { useAddToCart } from '../../hooks/useAddToCart'
 import { Navbar } from '../../components/common/Navbar'
 import { HomeFooter } from '../../components/home/HomeFooter'
 import { ProductCard } from '../../components/product/ProductCard'
@@ -18,14 +19,14 @@ export default function CatalogPage() {
 
   const { products, total, loading, error } = useProducts(filters)
   const { categories } = useCategories()
+  const { addToCart } = useAddToCart()
 
   const handleFilterChange = (newFilters: Partial<ProductFilters>) => {
     setFilters(prev => ({ ...prev, ...newFilters, offset: 0 }))
   }
 
   const handleAddToCart = (product: Product) => {
-    // TODO: connect ke cart API
-    alert(`"${product.name}" ditambahkan ke keranjang`)
+    void addToCart(product)
   }
 
   const currentPage = Math.floor((filters.offset ?? 0) / (filters.limit ?? 20)) + 1

@@ -1,9 +1,11 @@
 import { useNavigate } from 'react-router-dom'
 import { useProducts } from '../../hooks/useProducts'
+import { useAddToCart } from '../../hooks/useAddToCart'
 
 export const ProductGrid = () => {
   const navigate = useNavigate()
   const { products, loading, error } = useProducts({ limit: 8, sortBy: 'newest' })
+  const { addToCart, addingProductId } = useAddToCart()
 
   if (loading) return (
     <section className="section" id="products">
@@ -52,8 +54,13 @@ export const ProductGrid = () => {
                 </p>
               </div>
               <div className="product-footer">
-                <button type="button" className="button primary">
-                  Tambah ke daftar
+                <button
+                  type="button"
+                  className="button primary"
+                  disabled={addingProductId === product.id}
+                  onClick={() => void addToCart(product)}
+                >
+                  {addingProductId === product.id ? 'Menambahkan...' : 'Tambah ke daftar'}
                 </button>
                 <button
                   type="button"
