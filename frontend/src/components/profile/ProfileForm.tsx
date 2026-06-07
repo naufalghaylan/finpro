@@ -88,13 +88,17 @@ export const ProfileForm = () => {
         return
       }
 
-      setSuccessMsg('Profil berhasil diperbarui.')
+      setSuccessMsg('Profil berhasil diperbarui. Halaman akan dimuat ulang...')
       setFormData(prev => ({ ...prev, currentPassword: '', newPassword: '' }))
       setSelectedFile(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
       
       // Update global auth store as well so the navbar updates
       checkAuth()
+
+      setTimeout(() => {
+        window.location.reload()
+      }, 1500)
     } catch (err: any) {
       // Error is handled in the store
     }
