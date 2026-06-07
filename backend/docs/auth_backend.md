@@ -25,7 +25,11 @@ This document describes the API endpoints and middlewares for User Registration 
 The Authentication module follows a layered architecture to keep the codebase clean, modular, and easy to test:
 
 - **Controllers (`src/controllers/auth.controller.ts`)**: Keep routes thin. They are solely responsible for handling HTTP requests, validating input payloads (using Zod schemas), and sending HTTP responses.
-- **Services (`src/services/auth/`)**: Contain all the core business logic. The logic is separated into specific service files (`register.service.ts`, `login.service.ts`, `logout.service.ts`, `get-me.service.ts`, etc.) to adhere to the Single Responsibility Principle.
+- **Services (`src/services/auth/`)**: Contain all the core business logic, consolidated into domain-specific classes to keep the codebase maintainable:
+  - `AuthService` (`auth.service.ts`): Handles core authentication flows (login, register, logout).
+  - `CredentialService` (`credential.service.ts`): Handles token-based account recovery and verification (forgot password, reset password, verify account, resend verification).
+  - `SessionService` (`session.service.ts`): Handles active session data and token refresh (getMe, refreshToken).
+  - Others like `social-login.service.ts` and `complete-onboarding.service.ts` are kept separate for their specific external integrations.
 - **Utilities (`src/utils/cookie.util.ts`)**: Contains helper functions to standardize HTTP-only cookie configuration (`setAuthCookies` and `clearAuthCookies`) for token issuance and revocation.
 - **Middlewares (`src/middlewares/auth.middleware.ts`)**: Reusable functions that intercept requests to enforce authentication, session verification, and authorization checks.
 
@@ -52,6 +56,17 @@ The Authentication module follows a layered architecture to keep the codebase cl
     "message": "Forbidden: Email not verified. Please verify your email to access this feature."
   }
   ```
+
+### 3. Check Duplicate User Middleware (`checkDuplicateUser`)
+- **File Path:** `src/middlewares/checkDuplicateUser.middleware.ts`
+- **Description:** Intercepts the registration request to check if the provided email or username already exists in the database.
+- **Response (409 Conflict):**
+  ```json
+  {
+    "message": "Email already registered" 
+  }
+  ```
+  *(or `"Username already taken"`)*
 
 ---
 
