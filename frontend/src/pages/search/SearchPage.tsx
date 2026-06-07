@@ -6,6 +6,7 @@ import { Navbar } from '../../components/common/Navbar'
 import { HomeFooter } from '../../components/home/HomeFooter'
 import { ProductCard } from '../../components/product/ProductCard'
 import { BRAND, navLinks, footerSections } from '../../data/home/homeData'
+import { useAddToCart } from '../../hooks/useAddToCart'
 import type { Product, SearchFilters } from '../../types/product'
 
 const LIMIT = 20
@@ -26,6 +27,7 @@ export default function SearchPage() {
   })
 
   const { categories } = useCategories()
+  const { addToCart } = useAddToCart()
 
   useEffect(() => {
     if (!keyword) return
@@ -45,7 +47,7 @@ export default function SearchPage() {
   }
 
   const handleAddToCart = (product: Product) => {
-    alert(`"${product.name}" ditambahkan ke keranjang`)
+    void addToCart(product)
   }
 
   const currentPage = Math.floor((filters.offset ?? 0) / LIMIT) + 1

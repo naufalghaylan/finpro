@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { ArrowRight, Eye, ShoppingCart } from 'lucide-react'
 import { useProducts } from '../../hooks/useProducts'
 import type { Product } from '../../types/product'
 
@@ -6,6 +7,7 @@ type ProductGridProps = {
   products?: Product[] | any[]
   storeId?: string
 }
+import { useAddToCart } from '../../hooks/useAddToCart'
 
 export const ProductGrid = ({ products: initialProducts, storeId }: ProductGridProps) => {
   const navigate = useNavigate()
@@ -16,7 +18,7 @@ export const ProductGrid = ({ products: initialProducts, storeId }: ProductGridP
   )
   
   const products = initialProducts || fetchedProducts
-
+  const { addToCart, addingProductId } = useAddToCart()
   if (!initialProducts && loading) return (
     <section className="section" id="products">
       <div className="shell">
@@ -46,7 +48,8 @@ export const ProductGrid = ({ products: initialProducts, storeId }: ProductGridP
             className="button ghost"
             onClick={() => navigate('/catalog')}
           >
-            Lihat semua
+            <span>Lihat semua</span>
+            <ArrowRight className="button-icon" aria-hidden="true" />
           </button>
         </div>
         <div className="product-grid">
@@ -64,15 +67,22 @@ export const ProductGrid = ({ products: initialProducts, storeId }: ProductGridP
                 </p>
               </div>
               <div className="product-footer">
-                <button type="button" className="button primary">
-                  Tambah ke daftar
+                <button
+                  type="button"
+                  className="button primary"
+                  disabled={addingProductId === product.id}
+                  onClick={() => void addToCart(product)}
+                >
+                  <ShoppingCart className="button-icon" aria-hidden="true" />
+                  <span>{addingProductId === product.id ? 'Menambahkan...' : 'Tambah'}</span>
                 </button>
                 <button
                   type="button"
                   className="button ghost"
                   onClick={() => navigate(`/products/${product.id}`)}
                 >
-                  Detail
+                  <Eye className="button-icon" aria-hidden="true" />
+                  <span>Detail</span>
                 </button>
               </div>
             </article>

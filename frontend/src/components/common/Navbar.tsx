@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { ShoppingCart } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useCartCount } from '../../hooks/home/useCartCount'
 import type { NavLink } from '../../types/home/home'
@@ -171,8 +172,13 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
             ) : (
               <Link to="/login" className="button ghost">Masuk</Link>
             )}
-            <button type="button" className="button primary cart-button" onClick={handleCartClick}>
-              Keranjang
+            <button
+              type="button"
+              className="button primary cart-button cart-button-icon-only"
+              onClick={handleCartClick}
+              aria-label={`Keranjang belanja, ${isLoadingCartCount ? 'memuat jumlah item' : `${cartCount} item`}`}
+            >
+              <ShoppingCart className="button-icon" aria-hidden="true" />
               <span className="cart-badge" aria-live="polite">
                 {isLoadingCartCount ? '...' : cartCount}
               </span>
@@ -285,7 +291,8 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
 
             {/* Cart button */}
             <button type="button" className="button primary cart-button" style={{ width: '100%', justifyContent: 'center' }} onClick={handleCartClick}>
-              Keranjang
+              <ShoppingCart className="button-icon" aria-hidden="true" />
+              <span>Keranjang</span>
               <span className="cart-badge" aria-live="polite">
                 {isLoadingCartCount ? '...' : cartCount}
               </span>

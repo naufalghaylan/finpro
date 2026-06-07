@@ -1,3 +1,4 @@
+import { Eye, ShoppingCart } from 'lucide-react'
 import type { Product } from '../../types/product'
 
 type ProductCardProps = {
@@ -59,7 +60,8 @@ export function ProductCard({ product, onAddToCart, onClick }: ProductCardProps)
             onAddToCart?.(product)
           }}
         >
-          Tambah
+          <ShoppingCart className="button-icon" aria-hidden="true" />
+          <span>Tambah</span>
         </button>
         <button
           className="button ghost"
@@ -68,7 +70,8 @@ export function ProductCard({ product, onAddToCart, onClick }: ProductCardProps)
             onClick?.(product)
           }}
         >
-          Detail
+          <Eye className="button-icon" aria-hidden="true" />
+          <span>Detail</span>
         </button>
       </div>
     </article>
