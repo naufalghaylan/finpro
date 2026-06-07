@@ -12,8 +12,8 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [role, setRole] = useState('CUSTOMER');
   
+
   const { register } = useAuthStore();
   const navigate = useNavigate();
 
@@ -23,7 +23,7 @@ export default function RegisterPage() {
     setError('');
     setIsSubmitting(true);
     try {
-      await register({ name, username, email, role, referralCode: referralCode || undefined });
+      await register({ name, username, email, role: 'CUSTOMER', referralCode: referralCode || undefined });
       setIsSuccess(true);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registrasi gagal. Silakan periksa kembali data Anda.');
@@ -31,6 +31,7 @@ export default function RegisterPage() {
       setIsSubmitting(false);
     }
   };
+
 
   return (
     <div className="page">
@@ -112,19 +113,6 @@ export default function RegisterPage() {
                     placeholder="Masukkan alamat email"
                     required
                   />
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label htmlFor="role" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--ink)' }}>Daftar Sebagai</label>
-                  <select
-                    id="role"
-                    value={role}
-                    onChange={(e) => setRole(e.target.value)}
-                    style={{ width: '100%', borderRadius: '14px', border: '1px solid var(--line)', padding: '14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none', cursor: 'pointer', appearance: 'auto' }}
-                  >
-                    <option value="CUSTOMER">Pembeli (Customer)</option>
-                    <option value="STORE_ADMIN">Pengelola Toko (Store Admin)</option>
-                  </select>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

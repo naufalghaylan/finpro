@@ -12,7 +12,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return
     }
 
-    const user = await authService.registerUser(parsed.data)
+    const user = await authService.AuthService.register(parsed.data)
     res.status(201).json({ message: 'User registered successfully. Please verify your account.', user })
   } catch (err: any) {
     if (err instanceof AppError) {
@@ -32,7 +32,7 @@ export const verifyAccount = async (req: Request, res: Response): Promise<void> 
       return
     }
 
-    await authService.verifyAccountService(parsed.data)
+    await authService.CredentialService.verifyAccount(parsed.data)
     res.json({ message: 'Account verified successfully. You can now login.' })
   } catch (err: any) {
     if (err instanceof AppError) {
@@ -52,7 +52,7 @@ export const resendVerification = async (req: Request, res: Response): Promise<v
       return
     }
     
-    await authService.resendVerificationService(parsed.data.email)
+    await authService.CredentialService.resendVerification(parsed.data.email)
     res.json({ message: 'Verification email resent successfully.' })
   } catch (err: any) {
     if (err instanceof AppError) {
@@ -73,7 +73,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return
     }
 
-    const { accessToken, refreshToken, user } = await authService.loginService(parsed.data)
+    const { accessToken, refreshToken, user } = await authService.AuthService.login(parsed.data)
 
     setAuthCookies(res, accessToken, refreshToken, parsed.data.rememberMe)
 
@@ -115,7 +115,7 @@ export const socialLogin = async (req: Request, res: Response): Promise<void> =>
 export const logout = async (req: Request, res: Response): Promise<void> => {
   const refreshTokenCookie = req.cookies?.refreshToken;
   
-  await authService.logoutService(refreshTokenCookie);
+  await authService.AuthService.logout(refreshTokenCookie);
 
   clearAuthCookies(res);
   
@@ -130,7 +130,7 @@ export const refreshToken = async (req: Request, res: Response): Promise<void> =
       return;
     }
 
-    const { newAccessToken } = await authService.refreshTokenService(token);
+    const { newAccessToken } = await authService.SessionService.refreshToken(token);
 
     // Note: Re-setting the refresh token creates a rolling/sliding session
     setAuthCookies(res, newAccessToken, token);
@@ -154,7 +154,7 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
       return
     }
 
-    const user = await authService.getMeService(userId)
+    const user = await authService.SessionService.getMe(userId)
     res.json(user)
   } catch (err: any) {
     if (err instanceof AppError) {
@@ -168,7 +168,7 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
 
 export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
   try {
-    await authService.forgotPasswordService(req.body.email)
+    await authService.CredentialService.forgotPassword(req.body.email)
     res.json({ message: 'If the email exists, a password reset link has been sent.' })
   } catch (err: any) {
     if (err instanceof AppError) {
@@ -182,7 +182,7 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
 
 export const resetPassword = async (req: Request, res: Response): Promise<void> => {
   try {
-    await authService.resetPasswordService(req.body)
+    await authService.CredentialService.resetPassword(req.body)
     res.json({ message: 'Password reset successful. You can now login with your new password.' })
   } catch (err: any) {
     if (err instanceof AppError) {

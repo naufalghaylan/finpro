@@ -2,11 +2,12 @@ import { Router } from 'express'
 import { register, login, logout, verifyAccount, socialLogin, resendVerification, getMe, forgotPassword, resetPassword, completeOnboarding, refreshToken } from '../controllers/auth.controller'
 import { authenticate } from '../middlewares/auth.middleware'
 import { validateRequest } from '../middlewares/validation.middleware'
+import { checkDuplicateUser } from '../middlewares/checkDuplicateUser.middleware'
 import { forgotPasswordSchema, resetPasswordSchema } from '../validations/auth.validation'
 
 const authRouter = Router()
 
-authRouter.post('/register', register)
+authRouter.post('/register', checkDuplicateUser, register)
 authRouter.post('/verify', verifyAccount)
 authRouter.post('/resend-verification', resendVerification)
 authRouter.post('/login', login)

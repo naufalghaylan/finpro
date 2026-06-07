@@ -8,7 +8,7 @@ const createProductSchema = z.object({
   name: z.string().min(1, 'Nama produk wajib diisi'),
   description: z.string().optional(),
   image: z.string().optional(),
-  categoryId: z.number({ required_error: 'Kategori wajib dipilih' }),
+  categoryId: z.number(),
   basePrice: z.number().positive('Harga harus lebih dari 0'),
 })
 
@@ -35,12 +35,12 @@ export async function getAllProducts(req: Request, res: Response, next: NextFunc
     } = req.query
 
     const filters = {
-      categoryId: categoryId ? parseInt(categoryId as string) : undefined,
-      minPrice: minPrice ? parseFloat(minPrice as string) : undefined,
-      maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined,
-      storeId: storeId ? parseInt(storeId as string) : undefined,
-      limit: Math.min(parseInt(limit as string) || 20, 100),
-      offset: parseInt(offset as string) || 0,
+      categoryId: categoryId ? parseInt(String(categoryId)) : undefined,
+      minPrice: minPrice ? parseFloat(String(minPrice)) : undefined,
+      maxPrice: maxPrice ? parseFloat(String(maxPrice)) : undefined,
+      storeId: storeId ? parseInt(String(storeId)) : undefined,
+      limit: Math.min(parseInt(String(limit)) || 20, 100),
+      offset: parseInt(String(offset)) || 0,
       sortBy: (sortBy as any) || 'newest'
     }
 
@@ -60,13 +60,13 @@ export async function searchProducts(req: Request, res: Response, next: NextFunc
     }
 
     const filters = {
-      keyword: keyword as string,
-      categoryId: categoryId ? parseInt(categoryId as string) : undefined,
-      minPrice: minPrice ? parseFloat(minPrice as string) : undefined,
-      maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined,
-      storeId: storeId ? parseInt(storeId as string) : undefined,
-      limit: Math.min(parseInt(limit as string) || 20, 100),
-      offset: parseInt(offset as string) || 0
+      keyword: String(keyword),
+      categoryId: categoryId ? parseInt(String(categoryId)) : undefined,
+      minPrice: minPrice ? parseFloat(String(minPrice)) : undefined,
+      maxPrice: maxPrice ? parseFloat(String(maxPrice)) : undefined,
+      storeId: storeId ? parseInt(String(storeId)) : undefined,
+      limit: Math.min(parseInt(String(limit)) || 20, 100),
+      offset: parseInt(String(offset)) || 0
     }
 
     const result = await productService.searchProducts(filters.keyword, filters)
@@ -79,7 +79,7 @@ export async function searchProducts(req: Request, res: Response, next: NextFunc
 export async function getProductById(req: Request, res: Response, next: NextFunction) {
   try {
     const { id } = req.params
-    const product = await productService.getProductById(parseInt(id))
+    const product = await productService.getProductById(parseInt(String(id)))
     res.json({ success: true, data: product })
   } catch (error) {
     if (error instanceof Error && error.message === 'Product not found') {
@@ -101,7 +101,7 @@ export async function getCategories(req: Request, res: Response, next: NextFunct
 export async function getCategoryById(req: Request, res: Response, next: NextFunction) {
   try {
     const { id } = req.params
-    const category = await productService.getCategoryById(parseInt(id))
+    const category = await productService.getCategoryById(parseInt(String(id)))
     res.json({ success: true, data: category })
   } catch (error) {
     if (error instanceof Error && error.message === 'Category not found') {
@@ -117,12 +117,12 @@ export async function getProductsByCategory(req: Request, res: Response, next: N
     const { limit = 20, offset = 0, sortBy = 'newest' } = req.query
 
     const filters = {
-      limit: Math.min(parseInt(limit as string) || 20, 100),
-      offset: parseInt(offset as string) || 0,
+      limit: Math.min(parseInt(String(limit)) || 20, 100),
+      offset: parseInt(String(offset)) || 0,
       sortBy: (sortBy as any) || 'newest'
     }
 
-    const result = await productService.getProductsByCategory(parseInt(categoryId), filters)
+    const result = await productService.getProductsByCategory(parseInt(String(categoryId)), filters)
     res.json({ success: true, data: result })
   } catch (error) {
     next(error)
@@ -155,7 +155,7 @@ export async function updateProduct(req: Request, res: Response, next: NextFunct
       return res.status(400).json({ success: false, errors: parsed.error.flatten().fieldErrors })
     }
     const slug = parsed.data.name ? parsed.data.name.toLowerCase().replace(/\s+/g, '-') : undefined
-    const product = await productService.updateProduct(parseInt(req.params.id), { ...parsed.data, slug })
+    const product = await productService.updateProduct(parseInt(String(req.params.id)), { ...parsed.data, slug })
     res.json({ success: true, data: product })
   } catch (error) {
     if (error instanceof Error && error.message === 'Product not found') {
@@ -170,7 +170,7 @@ export async function updateProduct(req: Request, res: Response, next: NextFunct
 
 export async function deleteProduct(req: Request, res: Response, next: NextFunction) {
   try {
-    await productService.deleteProduct(parseInt(req.params.id))
+    await productService.deleteProduct(parseInt(String(req.params.id)))
     res.json({ success: true, message: 'Produk berhasil dihapus' })
   } catch (error) {
     if (error instanceof Error && error.message === 'Product not found') {
@@ -206,7 +206,7 @@ export async function updateCategory(req: Request, res: Response, next: NextFunc
       return res.status(400).json({ success: false, errors: parsed.error.flatten().fieldErrors })
     }
     const slug = parsed.data.name ? parsed.data.name.toLowerCase().replace(/\s+/g, '-') : undefined
-    const category = await productService.updateCategory(parseInt(req.params.id), { ...parsed.data, slug })
+    const category = await productService.updateCategory(parseInt(String(req.params.id)), { ...parsed.data, slug })
     res.json({ success: true, data: category })
   } catch (error) {
     if (error instanceof Error && error.message === 'Category not found') {
@@ -221,7 +221,7 @@ export async function updateCategory(req: Request, res: Response, next: NextFunc
 
 export async function deleteCategory(req: Request, res: Response, next: NextFunction) {
   try {
-    await productService.deleteCategory(parseInt(req.params.id))
+    await productService.deleteCategory(parseInt(String(req.params.id)))
     res.json({ success: true, message: 'Kategori berhasil dihapus' })
   } catch (error) {
     if (error instanceof Error && error.message === 'Category not found') {
@@ -238,12 +238,12 @@ export async function uploadProductImage(req: Request, res: Response, next: Next
     const { id } = req.params
     if (!req.file) return res.status(400).json({ success: false, error: 'Tidak ada file yang diupload' })
 
-    const product = await productService.getProductById(parseInt(id))
+    const product = await productService.getProductById(parseInt(String(id)))
     const isPrimary = product.images.length === 0
     const sortOrder = product.images.length
     const imageUrl = `/uploads/${req.file.filename}`
 
-    const image = await productService.addProductImage(parseInt(id), imageUrl, isPrimary, sortOrder)
+    const image = await productService.addProductImage(parseInt(String(id)), imageUrl, isPrimary, sortOrder)
     res.status(201).json({ success: true, data: image })
   } catch (error) {
     next(error)
@@ -253,7 +253,7 @@ export async function uploadProductImage(req: Request, res: Response, next: Next
 export async function deleteProductImage(req: Request, res: Response, next: NextFunction) {
   try {
     const { imageId } = req.params
-    await productService.removeProductImage(parseInt(imageId))
+    await productService.removeProductImage(parseInt(String(imageId)))
     res.json({ success: true, message: 'Foto berhasil dihapus' })
   } catch (error) {
     if (error instanceof Error && error.message === 'Image not found') {
