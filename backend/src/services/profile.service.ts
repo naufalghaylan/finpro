@@ -67,7 +67,23 @@ export const updateProfileService = async (userId: number, data: Record<string, 
   return await prisma.user.update({
     where: { id: userId },
     data: updateData,
-    select: { id: true, name: true, email: true, phone: true, profilePicture: true, role: true, emailVerified: true, createdAt: true },
+    select: { 
+      id: true, 
+      name: true, 
+      email: true, 
+      phone: true, 
+      profilePicture: true, 
+      role: true, 
+      emailVerified: true, 
+      createdAt: true,
+      referralCode: {
+        select: { code: true }
+      },
+      vouchers: {
+        where: { used: false, expiredAt: { gt: new Date() } },
+        select: { id: true, code: true, name: true, discountType: true, discountValue: true, minPurchase: true, expiredAt: true }
+      }
+    },
   })
 }
 
