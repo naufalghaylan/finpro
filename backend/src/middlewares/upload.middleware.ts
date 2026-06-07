@@ -1,9 +1,10 @@
+import { Request } from 'express'
 import multer from 'multer'
 import { AppError } from '../utils/AppError'
 
 const storage = multer.memoryStorage()
 
-const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   const allowedExtensions = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
   
   if (allowedExtensions.includes(file.mimetype)) {

@@ -71,8 +71,8 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
         <div className="shell nav-inner">
           {/* Logo */}
           <div className="logo">
-            <Link to="/" onClick={closeMobileMenu} style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', color: 'inherit' }}>
-              <span className="logo-mark"></span>
+            <Link to="/home" onClick={closeMobileMenu} style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', color: 'inherit' }}>
+              <img src="/PanenMartLogo.svg" alt="Logo" style={{ height: '32px', width: 'auto' }} />
               <span>{brandName}</span>
             </Link>
           </div>

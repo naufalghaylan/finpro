@@ -6,7 +6,7 @@ import { AppError } from '../../utils/AppError'
 import { generateVerificationTokenJWT } from './jwt.service'
 
 export class CredentialService {
-  static async verifyAccount(data: any) {
+  static async verifyAccount(data: { token: string; password?: string }) {
     const { token, password } = data;
 
     const verificationRecord = await prisma.verificationToken.findUnique({
@@ -21,11 +21,11 @@ export class CredentialService {
       throw new AppError(400, 'Token expired');
     }
 
-    const hashed = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password as string, 10);
 
     await prisma.user.update({
       where: { email: verificationRecord.email },
-      data: { emailVerified: true, password: hashed }
+      data: { emailVerified: true, password: hashedPassword }
     });
 
     await prisma.verificationToken.delete({
@@ -84,7 +84,7 @@ export class CredentialService {
     await sendResetPasswordEmail(email, tokenStr)
   }
 
-  static async resetPassword(data: any) {
+  static async resetPassword(data: { token: string; newPassword?: string }) {
     const { token, newPassword } = data
 
     const resetToken = await prisma.resetPasswordToken.findUnique({
@@ -108,7 +108,7 @@ export class CredentialService {
       throw new AppError(404, 'User not found')
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10)
+    const hashedPassword = await bcrypt.hash(newPassword as string, 10)
 
     // Transaction to update password and mark token as used
     await prisma.$transaction([

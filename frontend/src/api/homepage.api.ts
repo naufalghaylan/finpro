@@ -1,8 +1,13 @@
 import api from './axios';
 import type { HomepageResponse } from '../types/home/homepage';
 
+interface HomepageParams {
+  lat?: number;
+  lng?: number;
+}
+
 export const getHomepageData = async (lat?: number, lng?: number): Promise<HomepageResponse> => {
-  const params: any = {};
+  const params: HomepageParams = {};
   if (lat !== undefined && lng !== undefined) {
     params.lat = lat;
     params.lng = lng;

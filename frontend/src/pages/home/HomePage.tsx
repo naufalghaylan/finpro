@@ -18,14 +18,36 @@ import {
 } from '../../data/home/homeData'
 import { useLocationSelection } from '../../hooks/home/useLocationSelection'
 import { useHomepageData } from '../../hooks/home/useHomepageData'
+import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
+import {
+  ShoppingBag, Tag, MapPin, HelpCircle,
+  Carrot, Apple, Beef, Milk, Flame, ChefHat, LayoutGrid
+} from 'lucide-react'
+import type { HomepageStore, HomepageBanner, HomepageCategory, HomepageFooterSocial } from '../../types/home/homepage'
+import type { NavLink } from '../../types/home/home'
 
-//TODO: tambahkan icon2 ke homepage, biar tidak teks semua, misal di category strip, tambahkan icon untuk setiap kategori, bisa pakai icon gratisan dari heroicons atau fontawesome. Bisa juga tambahkan badge "terdekat" di store yang paling dekat dengan user di store showcase. Di hero carousel juga bisa tambahkan badge "promo" di banner yang sedang promo. Di value strip juga bisa tambahkan icon untuk setiap value propnya, misal icon kualitas untuk "Produk Segar Berkualitas", icon harga untuk "Harga Bersaing", dll. Icon bisa menambah daya tarik visual dan membantu user memahami informasi dengan lebih cepat.
-
+const getCategoryIcon = (label: string) => {
+  const normalizedLabel = label.toLowerCase()
+  if (normalizedLabel.includes('katalog')) return <ShoppingBag size={18} style={{ marginRight: 8 }} />
+  if (normalizedLabel.includes('promo')) return <Tag size={18} style={{ marginRight: 8 }} />
+  if (normalizedLabel.includes('toko') || normalizedLabel.includes('store')) return <MapPin size={18} style={{ marginRight: 8 }} />
+  if (normalizedLabel.includes('bantuan') || normalizedLabel.includes('help')) return <HelpCircle size={18} style={{ marginRight: 8 }} />
+  if (normalizedLabel.includes('sayur')) return <Carrot size={18} style={{ marginRight: 8 }} />
+  if (normalizedLabel.includes('buah')) return <Apple size={18} style={{ marginRight: 8 }} />
+  if (normalizedLabel.includes('protein') || normalizedLabel.includes('daging')) return <Beef size={18} style={{ marginRight: 8 }} />
+  if (normalizedLabel.includes('dairy') || normalizedLabel.includes('susu')) return <Milk size={18} style={{ marginRight: 8 }} />
+  if (normalizedLabel.includes('bumbu')) return <Flame size={18} style={{ marginRight: 8 }} />
+  if (normalizedLabel.includes('siap')) return <ChefHat size={18} style={{ marginRight: 8 }} />
+  return <LayoutGrid size={18} style={{ marginRight: 8 }} />
+}
 
 const getMainStore = () =>
   defaultStores.find((store) => store.id === MAIN_STORE_ID) ?? defaultStores[0]
 
 export default function HomePage() {
+  const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null)
+
   const {
     status,
     coords,
@@ -37,8 +59,22 @@ export default function HomePage() {
 
   const { data, loading, error: apiError } = useHomepageData(coords?.lat, coords?.lng)
 
+  const location = useLocation()
+
+  useEffect(() => {
+    if (!loading && location.hash) {
+      const id = location.hash.replace('#', '')
+      const el = document.getElementById(id)
+      if (el) {
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: 'smooth' })
+        }, 100)
+      }
+    }
+  }, [location.hash, loading])
+
   const activeStores = data?.stores && data.stores.length > 0
-    ? data.stores.map((s: any) => ({
+    ? data.stores.map((s: HomepageStore) => ({
         id: s.id.toString(),
         name: s.name,
         city: s.city,
@@ -51,16 +87,20 @@ export default function HomePage() {
 
   const mainStore = getMainStore()
 
-  const activeStore = data?.storeInfo 
-    ? activeStores.find((s: any) => s.id === data.storeInfo?.id?.toString()) || mainStore
-    : mainStore
+  const isManuallySelected = selectedStoreId && selectedStoreId !== data?.storeInfo?.id?.toString()
 
-  const distanceKm = data?.storeInfo?.distance ?? null
-  const serviceable = data?.storeInfo ? !data.storeInfo.isOutOfRange : true
+  const activeStore = selectedStoreId 
+    ? activeStores.find((s: { id: string }) => s.id === selectedStoreId) || mainStore
+    : data?.storeInfo 
+      ? activeStores.find((s: { id: string }) => s.id === data.storeInfo?.id?.toString()) || mainStore
+      : mainStore
+
+  const distanceKm = isManuallySelected ? null : (data?.storeInfo?.distance ?? null)
+  const serviceable = isManuallySelected ? true : (data?.storeInfo ? !data.storeInfo.isOutOfRange : true)
 
   // Fallbacks if data is missing
   const activeBanners = data?.banners && data.banners.length > 0 
-    ? data.banners.map((b: any) => ({
+    ? data.banners.map((b: HomepageBanner) => ({
         id: b.id.toString(),
         kicker: "Promo Spesial",
         title: b.title,
@@ -74,7 +114,7 @@ export default function HomePage() {
     : defaultSlides;
 
   const activeNavLinks = data?.categories && data.categories.length > 0
-    ? data.categories.map((c: any) => ({
+    ? data.categories.map((c: HomepageCategory) => ({
         id: c.id.toString(),
         label: c.name,
         href: `/catalog?category=${c.slug}`,
@@ -100,7 +140,7 @@ export default function HomePage() {
         {
           id: 'socials',
           title: 'Media Sosial',
-          links: data.footer.socials.map((s: any) => ({ label: s.name, href: s.url }))
+          links: data.footer.socials.map((s: HomepageFooterSocial) => ({ label: s.name, href: s.url }))
         }
       ]
     : defaultFooter;
@@ -124,9 +164,13 @@ export default function HomePage() {
             <section className="category-strip">
               <div className="shell">
                 <div className="category-row">
-                  {activeNavLinks.map((link: any) => (
-                    <span key={link.id} className="category-chip">
-                      {link.icon && <img src={link.icon} alt="" style={{width: 20, height: 20, marginRight: 8, borderRadius: '50%'}} />}
+                  {activeNavLinks.map((link: NavLink) => (
+                    <span key={link.id} className="category-chip" style={{ display: 'flex', alignItems: 'center' }}>
+                      {link.icon ? (
+                        <img src={link.icon} alt="" style={{width: 18, height: 18, marginRight: 8, borderRadius: '50%'}} />
+                      ) : (
+                        getCategoryIcon(link.label)
+                      )}
                       {link.label}
                     </span>
                   ))}
@@ -152,11 +196,12 @@ export default function HomePage() {
             Since ProductGrid uses useProducts natively, let's update ProductGrid to take storeId,
             or just pass the products array if ProductGrid is modified.
         */}
-        <ProductGrid products={data?.products} storeId={data?.storeInfo?.id?.toString()} />
+        <ProductGrid products={isManuallySelected ? undefined : data?.products} storeId={activeStore.id} />
           
         <StoreShowcase
           stores={activeStores}
           activeStoreId={activeStore.id}
+          onSelectStore={setSelectedStoreId}
         />
         <section className="section help-section" id="help">
           <div className="shell help-card">

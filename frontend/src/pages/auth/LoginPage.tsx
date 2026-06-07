@@ -26,12 +26,13 @@ export default function LoginPage() {
     try {
       await login({ emailOrUsername: identifier, password, rememberMe });
       navigate(from);
-    } catch (err: any) {
-      if (err.response?.status === 403 && err.response?.data?.message === 'Account not verified') {
+    } catch (err: unknown) {
+      const error = err as { response?: { status?: number, data?: { message?: string } } };
+      if (error.response?.status === 403 && error.response?.data?.message === 'Account not verified') {
         showToast('Akun belum diverifikasi. Silakan verifikasi ulang.', 'warning');
         navigate('/verify', { state: { email: identifier } });
       } else {
-        setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+        setError(error.response?.data?.message || 'Login failed. Please check your credentials.');
       }
     } finally {
       setIsSubmitting(false);

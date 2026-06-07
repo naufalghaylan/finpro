@@ -14,7 +14,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     const user = await authService.AuthService.register(parsed.data)
     res.status(201).json({ message: 'User registered successfully. Please verify your account.', user })
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (err instanceof AppError) {
       res.status(err.statusCode).json({ message: err.message })
     } else {
@@ -34,7 +34,7 @@ export const verifyAccount = async (req: Request, res: Response): Promise<void> 
 
     await authService.CredentialService.verifyAccount(parsed.data)
     res.json({ message: 'Account verified successfully. You can now login.' })
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (err instanceof AppError) {
       res.status(err.statusCode).json({ message: err.message })
     } else {
@@ -54,7 +54,7 @@ export const resendVerification = async (req: Request, res: Response): Promise<v
     
     await authService.CredentialService.resendVerification(parsed.data.email)
     res.json({ message: 'Verification email resent successfully.' })
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (err instanceof AppError) {
       // Return 200 for resend verification to not leak user existence, or whatever was set in service
       res.status(err.statusCode).json({ message: err.message })
@@ -78,7 +78,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     setAuthCookies(res, accessToken, refreshToken, parsed.data.rememberMe)
 
     res.json({ message: 'Login successful', user })
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (err instanceof AppError) {
       res.status(err.statusCode).json({ message: err.message })
     } else {
@@ -101,7 +101,7 @@ export const socialLogin = async (req: Request, res: Response): Promise<void> =>
     setAuthCookies(res, accessToken, refreshToken)
 
     res.json({ message: 'Social login successful', user, isNewUser })
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (err instanceof AppError) {
       res.status(err.statusCode).json({ message: err.message })
     } else {
@@ -136,7 +136,7 @@ export const refreshToken = async (req: Request, res: Response): Promise<void> =
     setAuthCookies(res, newAccessToken, token);
 
     res.json({ message: 'Token refreshed successfully' });
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (err instanceof AppError) {
       res.status(err.statusCode).json({ message: err.message });
     } else {
@@ -156,7 +156,7 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
 
     const user = await authService.SessionService.getMe(userId)
     res.json(user)
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (err instanceof AppError) {
       res.status(err.statusCode).json({ message: err.message })
     } else {
@@ -170,7 +170,7 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
   try {
     await authService.CredentialService.forgotPassword(req.body.email)
     res.json({ message: 'If the email exists, a password reset link has been sent.' })
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (err instanceof AppError) {
       res.status(err.statusCode).json({ message: err.message })
     } else {
@@ -184,7 +184,7 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
   try {
     await authService.CredentialService.resetPassword(req.body)
     res.json({ message: 'Password reset successful. You can now login with your new password.' })
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (err instanceof AppError) {
       res.status(err.statusCode).json({ message: err.message })
     } else {
@@ -210,7 +210,7 @@ export const completeOnboarding = async (req: Request, res: Response): Promise<v
 
     const result = await authService.completeOnboardingService({ userId, ...parsed.data })
     res.json({ message: 'Onboarding complete', ...result })
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (err instanceof AppError) {
       res.status(err.statusCode).json({ message: err.message })
     } else {

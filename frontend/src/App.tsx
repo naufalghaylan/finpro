@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import { ToastProvider } from './components/common/Toast'
 import { ProtectedRoute, GuestRoute } from './components/common/RouteGuard'
@@ -40,7 +40,8 @@ function App() {
   return (
     <ToastProvider>
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<Navigate to="/home" replace />} />
+        <Route path="/home" element={<HomePage />} />
         <Route path="/catalog" element={<CatalogPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />

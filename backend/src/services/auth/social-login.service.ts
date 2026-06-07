@@ -58,7 +58,7 @@ export const socialLoginService = async (payload: SocialLoginPayload) => {
       })
     } else {
       // If user exists but is logging in with Google, you might want to link accounts
-      const updateData: any = {}
+      const updateData: Record<string, unknown> = {}
       if (user.authProvider !== 'GOOGLE') {
         updateData.authProvider = 'GOOGLE'
         updateData.authProviderId = googleId
@@ -105,7 +105,8 @@ export const socialLoginService = async (payload: SocialLoginPayload) => {
       isNewUser
     }
 
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const error = err as Error;
     console.error('[socialLoginService] Error:', error)
     if (error instanceof AppError) throw error
     throw new AppError(401, 'Failed to verify Google token')

@@ -39,21 +39,21 @@ export const getProfileService = async (userId: number) => {
   return user
 }
 
-export const updateProfileService = async (userId: number, data: any, file?: Express.Multer.File) => {
+export const updateProfileService = async (userId: number, data: Record<string, unknown>, file?: Express.Multer.File) => {
   const { name, phone, currentPassword, newPassword } = data
   const user = await prisma.user.findUnique({ where: { id: userId } })
   
   if (!user) throw new AppError(404, 'User not found')
 
-  const updateData: any = {}
+  const updateData: Record<string, unknown> = {}
   if (name !== undefined) updateData.name = name
   if (phone !== undefined) updateData.phone = phone
 
   if (newPassword) {
     if (!user.password) throw new AppError(400, 'Current account does not have a password set. Please use the verify account flow or reset password.')
     if (!currentPassword) throw new AppError(400, 'Current password is required')
-    if (!(await bcrypt.compare(currentPassword, user.password))) throw new AppError(401, 'Invalid current password')
-    updateData.password = await bcrypt.hash(newPassword, 10)
+    if (!(await bcrypt.compare(currentPassword as string, user.password))) throw new AppError(401, 'Invalid current password')
+    updateData.password = await bcrypt.hash(newPassword as string, 10)
   }
 
   if (file) {

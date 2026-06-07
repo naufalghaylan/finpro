@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { ArrowRight, Eye, ShoppingCart } from 'lucide-react'
 import { useProducts } from '../../hooks/useProducts'
 import type { Product } from '../../types/product'
@@ -17,9 +18,19 @@ export const ProductGrid = ({ products: initialProducts, storeId }: ProductGridP
     initialProducts ? undefined : { limit: 8, sortBy: 'newest', storeId }
   )
   
-  const products = initialProducts || fetchedProducts
+  const [displayProducts, setDisplayProducts] = useState<Product[] | any[]>(initialProducts || [])
+
+  useEffect(() => {
+    if (initialProducts) {
+      setDisplayProducts(initialProducts)
+    } else if (!loading && fetchedProducts) {
+      setDisplayProducts(fetchedProducts)
+    }
+  }, [initialProducts, fetchedProducts, loading])
+
   const { addToCart, addingProductId } = useAddToCart()
-  if (!initialProducts && loading) return (
+
+  if (displayProducts.length === 0 && loading) return (
     <section className="section" id="products">
       <div className="shell">
         <p>Memuat produk...</p>
@@ -27,7 +38,7 @@ export const ProductGrid = ({ products: initialProducts, storeId }: ProductGridP
     </section>
   )
 
-  if (!initialProducts && error) return (
+  if (displayProducts.length === 0 && error) return (
     <section className="section" id="products">
       <div className="shell">
         <p style={{ color: 'var(--accent)' }}>{error}</p>
@@ -52,8 +63,8 @@ export const ProductGrid = ({ products: initialProducts, storeId }: ProductGridP
             <ArrowRight className="button-icon" aria-hidden="true" />
           </button>
         </div>
-        <div className="product-grid">
-          {products.map((product) => (
+        <div className="product-grid" style={{ opacity: (!initialProducts && loading) ? 0.5 : 1, transition: 'opacity 0.2s', pointerEvents: (!initialProducts && loading) ? 'none' : 'auto' }}>
+          {displayProducts.map((product) => (
             <article key={product.id} className="product-card">
               <div className="product-swatch swatch-olive">
                 <span>{product.category?.name || product.categoryName}</span>

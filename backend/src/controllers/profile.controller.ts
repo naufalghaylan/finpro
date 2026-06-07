@@ -3,7 +3,7 @@ import { updateProfileSchema, updateEmailSchema } from '../validations/profile.v
 import { AppError } from '../utils/AppError'
 import * as profileService from '../services/profile.service'
 
-const handleError = (res: Response, err: any, context: string) => {
+const handleError = (res: Response, err: unknown, context: string) => {
   if (err instanceof AppError) return res.status(err.statusCode).json({ message: err.message })
   console.error(`[${context}]`, err)
   res.status(500).json({ message: 'Internal server error' })

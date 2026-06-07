@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Tag } from 'lucide-react'
 import type { PromoSlide } from '../../types/home/home'
 
 type HeroCarouselProps = {
@@ -27,7 +28,10 @@ export const HeroCarousel = ({ slides, storeName }: HeroCarouselProps) => {
     <section className="hero" aria-label="Promo mingguan">
       <div className="shell hero-grid">
         <div className="hero-copy">
-          <span className="pill fade-in delay-1">{activeSlide.kicker}</span>
+          <span className="pill fade-in delay-1" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <Tag size={14} />
+            {activeSlide.kicker}
+          </span>
           <h1 className="hero-title fade-in delay-2">{activeSlide.title}</h1>
           <p className="hero-body fade-in delay-3">{activeSlide.description}</p>
           <div className="hero-actions fade-in delay-4">
@@ -57,9 +61,13 @@ export const HeroCarousel = ({ slides, storeName }: HeroCarouselProps) => {
             ))}
           </div>
         </div>
-        <div className="hero-visual">
+          <div className="hero-visual">
           <div className="hero-orb orb-1"></div>
           <div className="hero-orb orb-2"></div>
+          <div className="hero-badge" style={{ top: '1rem', right: '1rem', left: 'auto', backgroundColor: '#ef4444', color: 'white', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Tag size={16} />
+            Promo
+          </div>
           <div className="hero-badge">Kirim dari {storeName}</div>
           <div className="hero-stack">
             <div className="hero-card top">
