@@ -17,8 +17,9 @@ export default function ForgotPasswordPage() {
     try {
       const response = await api.post('/auth/forgot-password', { email });
       setSuccess(response.data.message || 'Jika email terdaftar, link reset password telah dikirim ke email Anda.');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Gagal memproses permintaan. Silakan coba lagi.');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Terjadi kesalahan saat memproses permintaan Anda.');
     } finally {
       setIsSubmitting(false);
     }

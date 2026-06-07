@@ -36,8 +36,9 @@ export default function SocialOnboardingPage() {
       setMyReferralCode(res.data.referralCode);
       setVoucherEarned(res.data.referralCodeUsed === true);
       setStep('referral-code');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Terjadi kesalahan. Silakan coba lagi.');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Terjadi kesalahan. Silakan coba lagi.');
     } finally {
       setIsSubmitting(false);
     }
@@ -52,8 +53,9 @@ export default function SocialOnboardingPage() {
       setMyReferralCode(res.data.referralCode);
       setVoucherEarned(false);
       setStep('referral-code');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Terjadi kesalahan.');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Terjadi kesalahan.');
     } finally {
       setIsSubmitting(false);
     }

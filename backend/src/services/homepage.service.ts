@@ -38,7 +38,7 @@ export const getHomepageDataService = async (lat?: number, lng?: number) => {
 
   // 3. Find Nearest Store and Product List
   let nearestStore = null;
-  let products: any[] = [];
+  let products: Record<string, unknown>[] = [];
   let storeInfo = null;
 
   // Fetch all active stores for StoreShowcase

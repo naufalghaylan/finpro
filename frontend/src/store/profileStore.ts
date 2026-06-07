@@ -11,7 +11,7 @@ interface UserProfile {
   emailVerified: boolean
   createdAt: string
   referralCode?: { code: string } | null
-  vouchers?: any[]
+  vouchers?: Record<string, unknown>[]
 }
 
 interface ProfileState {
@@ -36,7 +36,8 @@ export const useProfileStore = create<ProfileState>((set) => ({
     try {
       const response = await api.get('/profile')
       set({ profile: response.data, isLoading: false })
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
       set({ 
         error: error.response?.data?.message || 'Failed to fetch profile',
         isLoading: false 
@@ -54,7 +55,8 @@ export const useProfileStore = create<ProfileState>((set) => ({
         },
       })
       set({ profile: response.data.user, isUpdating: false })
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
       set({ 
         error: error.response?.data?.message || 'Failed to update profile',
         isUpdating: false 
@@ -70,7 +72,8 @@ export const useProfileStore = create<ProfileState>((set) => ({
       // Email updated successfully, we need to refresh the profile to get the new emailVerified status
       const response = await api.get('/profile')
       set({ profile: response.data, isUpdating: false })
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
       set({ 
         error: error.response?.data?.message || 'Failed to update email',
         isUpdating: false 
@@ -84,7 +87,8 @@ export const useProfileStore = create<ProfileState>((set) => ({
     try {
       await api.post('/profile/reverify-email')
       set({ isUpdating: false })
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
       set({ 
         error: error.response?.data?.message || 'Failed to resend verification',
         isUpdating: false 

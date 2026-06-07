@@ -70,6 +70,9 @@ export const LocationPanel = ({
           <button type="button" className="button subtle" onClick={onUseMainStore}>
             Pakai toko utama
           </button>
+          <a href="#stores" className="button subtle">
+            Pilih toko lain
+          </a>
         </div>
         {error ? <p className="location-error">{error}</p> : null}
         {!serviceable ? (

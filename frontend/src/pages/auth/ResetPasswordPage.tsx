@@ -48,8 +48,9 @@ export default function ResetPasswordPage() {
       await api.post('/auth/reset-password', { token, newPassword });
       setSuccess('Password berhasil direset! Anda akan dialihkan ke halaman login...');
       setTimeout(() => navigate('/login'), 3000);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Gagal mereset password. Token mungkin sudah kadaluarsa.');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Gagal mereset password. Token mungkin sudah kadaluarsa.');
     } finally {
       setIsSubmitting(false);
     }

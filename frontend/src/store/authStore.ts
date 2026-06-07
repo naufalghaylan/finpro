@@ -16,7 +16,7 @@ interface AuthState {
   isLoading: boolean;
   login: (credentials: { emailOrUsername: string; password: string; rememberMe?: boolean }) => Promise<void>;
   socialLogin: (payload: { token: string, provider: 'GOOGLE' }) => Promise<{ isNewUser: boolean }>;
-  register: (userData: any) => Promise<void>;
+  register: (userData: Record<string, unknown>) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
 }
@@ -37,12 +37,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   register: async (userData) => {
-    try {
-      await api.post('/auth/register', userData);
-      // Do not set user as they need to verify their email first
-    } catch (error) {
-      throw error;
-    }
+    await api.post('/auth/register', userData);
+    // Do not set user as they need to verify their email first
   },
 
   logout: async () => {

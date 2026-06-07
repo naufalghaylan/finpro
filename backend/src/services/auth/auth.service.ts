@@ -6,7 +6,7 @@ import { generateAccessToken, generateRefreshToken, generateVerificationTokenJWT
 import { sendVerificationEmail } from '../../lib/mailer';
 
 export class AuthService {
-  static async login(data: any) {
+  static async login(data: { emailOrUsername: string; password: string; rememberMe?: boolean }) {
     const { emailOrUsername, password, rememberMe } = data;
 
     const user = await prisma.user.findFirst({ 
@@ -62,7 +62,7 @@ export class AuthService {
     };
   }
 
-  static async register(data: any) {
+  static async register(data: { name: string; username: string; email: string; role?: string; referralCode?: string }) {
     const { name, username, email, role, referralCode } = data;
 
     let validReferralCode = null;
@@ -75,7 +75,7 @@ export class AuthService {
 
     const user = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
-        data: { name, username, email, password: null, role: role || 'CUSTOMER', emailVerified: false },
+        data: { name, username, email, password: null, role: (role || 'CUSTOMER') as import('../../generated/prisma/client').Role, emailVerified: false },
         select: { id: true, name: true, username: true, email: true, role: true, createdAt: true },
       });
 

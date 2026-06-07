@@ -9,7 +9,7 @@ type Role = 'CUSTOMER' | 'SUPER_ADMIN' | 'STORE_ADMIN'
  */
 export const requireRole = (roles: Role[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
-    const user = (req as any).user
+    const user = req.user
 
     if (!user) {
       res.status(401).json({ message: 'Unauthorized: User not authenticated' })

@@ -3,9 +3,10 @@ import type { StoreLocation } from '../../types/home/home'
 type StoreShowcaseProps = {
   stores: StoreLocation[]
   activeStoreId: string
+  onSelectStore?: (id: string) => void
 }
 
-export const StoreShowcase = ({ stores, activeStoreId }: StoreShowcaseProps) => {
+export const StoreShowcase = ({ stores, activeStoreId, onSelectStore }: StoreShowcaseProps) => {
   return (
     <section className="section" id="stores">
       <div className="shell">
@@ -20,9 +21,16 @@ export const StoreShowcase = ({ stores, activeStoreId }: StoreShowcaseProps) => 
             <article
               key={store.id}
               className={`store-card ${store.id === activeStoreId ? 'active' : ''}`}
+              onClick={() => onSelectStore?.(store.id)}
+              style={{ cursor: onSelectStore ? 'pointer' : 'default' }}
             >
-              <div className="store-chip">
-                {store.isMain ? 'Utama' : 'Cabang'}
+              <div className="store-chip" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>{store.isMain ? 'Utama' : 'Cabang'}</span>
+                {store.id === activeStoreId && (
+                  <span style={{ backgroundColor: '#10b981', color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold' }}>
+                    Terdekat
+                  </span>
+                )}
               </div>
               <h3>{store.name}</h3>
               <p>{store.city}</p>

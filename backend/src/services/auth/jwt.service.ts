@@ -18,12 +18,12 @@ export interface AuthTokenPayload {
 }
 
 export const generateAccessToken = (payload: AuthTokenPayload): string => {
-  return jwt.sign(payload, ACCESS_SECRET, { expiresIn: ACCESS_EXPIRY as any });
+  return jwt.sign(payload, ACCESS_SECRET, { expiresIn: ACCESS_EXPIRY as unknown as number });
 };
 
 export const generateRefreshToken = (payload: AuthTokenPayload, rememberMe: boolean = false): string => {
   const expiresIn = rememberMe ? REMEMBER_ME_EXPIRY : REFRESH_EXPIRY;
-  return jwt.sign(payload, REFRESH_SECRET, { expiresIn: expiresIn as any });
+  return jwt.sign(payload, REFRESH_SECRET, { expiresIn: expiresIn as unknown as number });
 };
 
 export const verifyAccessToken = (token: string): AuthTokenPayload => {
@@ -35,7 +35,7 @@ export const verifyRefreshToken = (token: string): AuthTokenPayload => {
 };
 
 export const generateVerificationTokenJWT = (payload: { email: string }): string => {
-  return jwt.sign(payload, VERIFICATION_SECRET, { expiresIn: VERIFICATION_EXPIRY as any });
+  return jwt.sign(payload, VERIFICATION_SECRET, { expiresIn: VERIFICATION_EXPIRY as unknown as number });
 };
 
 export const verifyVerificationTokenJWT = (token: string): { email: string } => {
@@ -43,7 +43,7 @@ export const verifyVerificationTokenJWT = (token: string): { email: string } => 
 };
 
 export const generateResetPasswordTokenJWT = (payload: { email: string }): string => {
-  return jwt.sign(payload, RESET_PASSWORD_SECRET, { expiresIn: RESET_PASSWORD_EXPIRY as any });
+  return jwt.sign(payload, RESET_PASSWORD_SECRET, { expiresIn: RESET_PASSWORD_EXPIRY as unknown as number });
 };
 
 export const verifyResetPasswordTokenJWT = (token: string): { email: string } => {

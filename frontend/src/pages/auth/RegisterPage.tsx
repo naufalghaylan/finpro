@@ -25,8 +25,9 @@ export default function RegisterPage() {
     try {
       await register({ name, username, email, role: 'CUSTOMER', referralCode: referralCode || undefined });
       setIsSuccess(true);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Registrasi gagal. Silakan periksa kembali data Anda.');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Registrasi gagal. Silakan periksa kembali data Anda.');
     } finally {
       setIsSubmitting(false);
     }

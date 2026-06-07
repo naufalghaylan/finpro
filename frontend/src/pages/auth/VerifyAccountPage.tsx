@@ -40,9 +40,10 @@ export default function VerifyAccountPage() {
       setTimeout(() => {
         navigate('/login');
       }, 3000);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Verifikasi gagal. Link mungkin tidak valid atau sudah kadaluarsa.');
-      if (err.response?.data?.message === 'Token expired' || err.response?.data?.message === 'Invalid token') {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Verifikasi gagal. Link mungkin tidak valid atau sudah kadaluarsa.');
+      if (error.response?.data?.message === 'Token expired' || error.response?.data?.message === 'Invalid token') {
         setShowResend(true);
       }
     } finally {
@@ -57,8 +58,9 @@ export default function VerifyAccountPage() {
     try {
       const res = await api.post('/auth/resend-verification', { email: resendEmail });
       setResendMessage(res.data.message || 'Email verifikasi berhasil dikirim ulang.');
-    } catch (err: any) {
-      setResendMessage(err.response?.data?.message || 'Gagal mengirim ulang email.');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setResendMessage(error.response?.data?.message || 'Gagal mengirim ulang email.');
     } finally {
       setIsResending(false);
     }
