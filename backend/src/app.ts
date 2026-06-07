@@ -26,6 +26,11 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
+// ── Root handler for browser ───────────────────────────────────────────────
+app.get('/', (_req, res) => {
+  res.json({ message: 'Welcome to Finpro API' })
+})
+
 // ── 404 handler ────────────────────────────────────────────────────────────
 app.use((_req, res) => {
   res.status(404).json({ message: 'Route not found' })

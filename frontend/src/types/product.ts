@@ -69,6 +69,7 @@ export type ProductFilters = {
   limit?: number
   offset?: number
   sortBy?: 'name' | 'price' | 'newest'
+  storeId?: string
 }
 
 export type SearchFilters = ProductFilters & {

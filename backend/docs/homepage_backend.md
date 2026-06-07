@@ -132,3 +132,88 @@ Fetches active promotions (discounts) to be displayed in the hero section carous
 
 **Notes:**
 - The response includes minimal details of the associated product, which can be used to construct a clickable banner that directs the user to the product's detail page.
+
+---
+
+### 4. Unified Homepage Data
+
+**Endpoint:** `GET /api/homepage`
+
+**Description:**
+Fetches all necessary data for the homepage in a single unified request, including categories for the navigation bar, banners for the hero section, products from the nearest store, and footer information. If no products or stores are found, it provides placeholders to ensure the UI does not break.
+
+**Query Parameters:**
+- `lat` (string, optional): The user's latitude.
+- `lng` (string, optional): The user's longitude.
+
+**Response (Success - 200 OK):**
+```json
+{
+  "message": "Homepage data fetched successfully",
+  "data": {
+    "categories": [
+      {
+        "id": 1,
+        "name": "Vegetables",
+        "slug": "vegetables",
+        "icon": "url-to-icon-or-placeholder"
+      }
+    ],
+    "banners": [
+      {
+        "id": 1,
+        "title": "Welcome Promo",
+        "imageUrl": "url-to-banner-image",
+        "linkUrl": "#",
+        "isActive": true,
+        "sortOrder": 0,
+        "createdAt": "2026-05-23T10:00:00.000Z",
+        "updatedAt": "2026-05-23T10:00:00.000Z"
+      }
+    ],
+    "storeInfo": {
+      "id": 1,
+      "name": "Main Store",
+      "distance": 5.2,
+      "isOutOfRange": false
+    },
+    "products": [
+      {
+        "id": 1,
+        "name": "Fresh Apples",
+        "slug": "fresh-apples",
+        "price": 25000,
+        "categoryName": "Fruits",
+        "imageUrl": "url-to-image",
+        "stock": 150,
+        "storeId": 1
+      }
+    ],
+    "stores": [
+      {
+        "id": 1,
+        "name": "Main Store",
+        "city": "Jakarta",
+        "address": "Jl. Sudirman No. 1",
+        "latitude": -6.200000,
+        "longitude": 106.816666
+      }
+    ],
+    "footer": {
+      "about": "Toko kami menyediakan kebutuhan...",
+      "contact": {
+        "email": "support@toko.com",
+        "phone": "+62 812 3456 7890"
+      },
+      "socials": [
+        { "name": "Instagram", "url": "https://instagram.com/toko" },
+        { "name": "Facebook", "url": "https://facebook.com/toko" }
+      ]
+    }
+  }
+}
+```
+
+**Notes:**
+- If the user's location (`lat`, `lng`) is not provided or the nearest store has no products, the `products` array will contain a placeholder item.
+- Missing banner images or category icons will be supplemented with placeholder URLs automatically.

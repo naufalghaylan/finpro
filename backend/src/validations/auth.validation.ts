@@ -4,7 +4,7 @@ export const registerSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   username: z.string().min(3, 'Username must be at least 3 characters long'),
   email: z.string().email('Invalid email address'),
-  role: z.enum(['CUSTOMER', 'STORE_ADMIN']).optional(),
+  role: z.literal('CUSTOMER').optional(),
   referralCode: z.string().optional()
 })
 
