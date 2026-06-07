@@ -1,24 +1,38 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import GoogleLoginButton from '../../components/auth/GoogleLoginButton';
+import { Eye, EyeOff, ChevronLeft } from 'lucide-react';
+import { useToast } from '../../components/common/Toast';
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { showToast } = useToast();
+  
+  const from = location.state?.from || '/';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsSubmitting(true);
     try {
-      await login({ emailOrUsername: identifier, password });
-      navigate('/');
+      await login({ emailOrUsername: identifier, password, rememberMe });
+      navigate(from);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      if (err.response?.status === 403 && err.response?.data?.message === 'Account not verified') {
+        showToast('Akun belum diverifikasi. Silakan verifikasi ulang.', 'warning');
+        navigate('/verify', { state: { email: identifier } });
+      } else {
+        setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -27,9 +41,12 @@ export default function LoginPage() {
   return (
     <div className="page">
       <main className="page-main">
-        <div className="shell" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100svh' }}>
-          <div className="hero-card" style={{ width: '100%', maxWidth: '420px', padding: '40px 32px' }}>
-            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+        <div className="shell auth-shell" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100svh', padding: 'clamp(16px, 5vw, 40px)' }}>
+          <div className="hero-card auth-card" style={{ width: '100%', maxWidth: '420px', padding: 'clamp(24px, 5vw, 40px) clamp(16px, 5vw, 32px)' }}>
+            <div className="auth-header" style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <button className="mobile-back-btn" onClick={() => navigate(-1)} type="button" aria-label="Go back">
+                <ChevronLeft size={24} />
+              </button>
               <Link to="/" style={{ textDecoration: 'none', display: 'inline-block' }}>
                 <div className="logo" style={{ justifyContent: 'center', marginBottom: '20px' }}>
                   <span className="logo-mark"></span>
@@ -61,15 +78,39 @@ export default function LoginPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <label htmlFor="password" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--ink)' }}>Password</label>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  style={{ width: '100%', borderRadius: '14px', border: '1px solid var(--line)', padding: '14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
-                  placeholder="Masukkan password"
-                  required
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    style={{ width: '100%', borderRadius: '14px', border: '1px solid var(--line)', padding: '14px 48px 14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
+                    placeholder="Masukkan password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                    aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--ink)' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={rememberMe} 
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      style={{ accentColor: 'var(--accent-strong)', width: '16px', height: '16px', cursor: 'pointer' }}
+                    />
+                    Ingat Saya
+                  </label>
+                  <Link to="/forgot-password" style={{ fontSize: '0.9rem', color: 'var(--accent-strong)', fontWeight: 500, textDecoration: 'none' }}>
+                    Lupa Password?
+                  </Link>
+                </div>
               </div>
               
               <button 
@@ -81,6 +122,14 @@ export default function LoginPage() {
                 {isSubmitting ? 'Memproses...' : 'Masuk'}
               </button>
             </form>
+            
+            <div style={{ display: 'flex', alignItems: 'center', margin: '24px 0' }}>
+              <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--line)' }}></div>
+              <span style={{ padding: '0 12px', fontSize: '0.9rem', color: 'var(--ink-soft)' }}>atau masuk dengan</span>
+              <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--line)' }}></div>
+            </div>
+
+            <GoogleLoginButton onError={setError} />
             
             <div style={{ marginTop: '32px', textAlign: 'center', fontSize: '0.95rem', color: 'var(--ink-soft)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div>

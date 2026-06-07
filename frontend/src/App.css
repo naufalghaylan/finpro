@@ -115,13 +115,179 @@
 
 .menu-button {
   display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
   border: none;
-  background: transparent;
-  font-weight: 600;
-  color: var(--ink);
-  padding: 8px 10px;
-  border-radius: 999px;
+  background: var(--surface-muted, #f5f5f5);
+  border-radius: 12px;
   cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+}
+
+.menu-button:hover {
+  background: var(--line, #e8e8e8);
+}
+
+.hamburger-bar {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--ink);
+  border-radius: 2px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, width 0.3s ease;
+  transform-origin: center;
+}
+
+/* Animate to X when open */
+.menu-button.open .hamburger-bar:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.menu-button.open .hamburger-bar:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.menu-button.open .hamburger-bar:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ==============================
+   Mobile Menu Dropdown
+   ============================== */
+
+.mobile-menu {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+  opacity: 0;
+  border-top: 1px solid transparent;
+  background: var(--surface);
+}
+
+.mobile-menu.open {
+  max-height: 600px;
+  opacity: 1;
+  border-top-color: var(--line);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+}
+
+.mobile-menu-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 0 20px;
+}
+
+.mobile-nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mobile-nav-links a {
+  text-decoration: none;
+  color: var(--ink);
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  transition: color 0.2s ease;
+}
+
+.mobile-nav-links a:hover {
+  color: var(--accent-strong);
+}
+
+.mobile-menu-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 4px 0;
+}
+
+.mobile-menu-auth {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mobile-profile-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--ink);
+  padding: 10px 0;
+}
+
+.mobile-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1rem;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.mobile-profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mobile-profile-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.mobile-profile-sub {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.mobile-logout-btn {
+  border: 1px solid #fecaca;
+  background: #fff5f5;
+  color: #e53e3e;
+  border-radius: 12px;
+  padding: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  text-align: center;
+  width: 100%;
+}
+
+.mobile-logout-btn:hover {
+  background: #ffe4e4;
+}
+
+.mobile-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 19;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .button {
@@ -1084,8 +1250,13 @@
   }
 
   .nav-inner {
-    grid-template-columns: auto 1fr auto;
-    row-gap: 12px;
+    grid-template-columns: auto 1fr;
+    justify-content: space-between;
+    row-gap: 0;
+  }
+
+  .nav-actions {
+    justify-content: flex-end;
   }
 
   .nav-links {
@@ -1093,11 +1264,13 @@
   }
 
   .nav-search {
-    grid-column: 1 / -1;
+    display: none;
   }
 
-  .nav-search input {
-    width: 100%;
+  .nav-actions > a.button.ghost,
+  .nav-actions > div,
+  .nav-actions > .cart-button {
+    display: none !important;
   }
 
   .menu-button {
@@ -1142,47 +1315,182 @@
 }
 
 @media (max-width: 720px) {
-  .cart-section {
-    padding: 40px 0;
-  }
-
-  .cart-empty {
-    padding: 28px 20px;
-  }
-
-  .cart-item {
-    grid-template-columns: 88px minmax(0, 1fr);
-    padding: 12px;
-  }
-
-  .cart-item-image {
-    width: 88px;
-    height: 88px;
-  }
-
-  .cart-item-top {
-    display: grid;
-  }
-
-  .cart-item-bottom {
-    grid-template-columns: 1fr;
-  }
-
-  .cart-remove-button,
-  .cart-line-total {
-    justify-self: start;
-  }
-
-  .nav-actions .button.ghost {
-    display: none;
-  }
-
-  .nav-actions .cart-button {
-    display: inline-flex;
-  }
-
   .hero {
     padding-top: 40px;
+  }
+}
+
+/* Auth Pages Specific & Mobile Layout */
+.auth-shell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100svh;
+  padding: clamp(24px, 5vw, 40px);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 460px;
+  padding: clamp(24px, 5vw, 40px) clamp(16px, 5vw, 32px);
+  position: relative;
+}
+
+.mobile-back-btn {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .auth-shell {
+    padding: 0 !important;
+    align-items: flex-start !important;
+    background: #f4f4f5 !important; /* Premium very light grey background */
+  }
+  .auth-card {
+    max-width: 100% !important;
+    min-height: 100svh !important;
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 48px 24px 32px !important;
+    background: transparent !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 24px !important;
+  }
+
+  .auth-header {
+    text-align: left !important;
+    margin-bottom: 0 !important;
+  }
+  
+  .auth-header .logo {
+    display: none !important;
+  }
+
+  .auth-header .hero-card-title {
+    font-size: 2.2rem !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.03em !important;
+    margin-bottom: 8px !important;
+    color: #111 !important;
+  }
+
+  .auth-header .hero-card-sub {
+    font-size: 0.95rem !important;
+    color: #666 !important;
+    line-height: 1.5 !important;
+  }
+
+  .mobile-back-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    color: #111;
+    cursor: pointer;
+    margin-bottom: 24px;
+  }
+
+  /* Form styling for mobile */
+  .auth-card form {
+    gap: 16px !important;
+  }
+  
+  .auth-card form label {
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    color: #555 !important;
+  }
+
+  .auth-card input {
+    background: #fff !important;
+    border: 1px solid rgba(0,0,0,0.05) !important;
+    border-radius: 16px !important;
+    padding: 16px 20px !important;
+    font-size: 1.05rem !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02) !important;
+  }
+
+  .auth-card input:focus {
+    border: 1px solid var(--accent) !important;
+    box-shadow: 0 0 0 4px var(--accent-soft) !important;
+  }
+
+  .auth-card button.primary {
+    padding: 18px !important;
+    font-size: 1.1rem !important;
+    border-radius: 16px !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 12px rgba(232, 107, 79, 0.25) !important;
+    margin-top: 8px !important;
+  }
+}
+
+/* ==============================
+   Profile Page — Responsive
+   ============================== */
+
+.profile-main {
+  padding: 40px 0 60px;
+}
+
+.profile-page-header {
+  margin-bottom: 32px;
+}
+
+.profile-page-title {
+  font-size: 2.4rem;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: 24px;
+  align-items: start;
+}
+
+/* Referral code row — wrappable so code doesn't overflow on narrow screens */
+.referral-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .profile-main {
+    padding: 20px 0 40px;
+  }
+
+  .profile-page-header {
+    margin-bottom: 16px;
+  }
+
+  .profile-page-title {
+    font-size: 1.8rem !important;
+  }
+
+  /* Shrink card padding on mobile */
+  .profile-grid .hero-card {
+    padding: 20px !important;
+  }
+
+  /* Referral code — prevent horizontal overflow */
+  .referral-row code {
+    font-size: 1rem;
+    word-break: break-all;
   }
 }
 

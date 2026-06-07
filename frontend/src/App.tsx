@@ -1,10 +1,16 @@
 import { useEffect } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
+import { ToastProvider } from './components/common/Toast'
+import { ProtectedRoute, GuestRoute } from './components/common/RouteGuard'
 import HomePage from './pages/home/HomePage'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
 import VerifyAccountPage from './pages/auth/VerifyAccountPage'
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
+import ResetPasswordPage from './pages/auth/ResetPasswordPage'
+import ProfilePage from './pages/profile/ProfilePage'
+import SocialOnboardingPage from './pages/auth/SocialOnboardingPage'
 import CartPage from './pages/cart/CartPage'
 import CatalogPage from './pages/catalog/CatalogPage'
 import SearchPage from './pages/search/SearchPage'
@@ -17,7 +23,7 @@ import './App.css'
 
 
 function App() {
-  const { checkAuth, isAuthenticated, isLoading } = useAuthStore()
+  const { checkAuth, isLoading } = useAuthStore()
 
   useEffect(() => {
     checkAuth()
@@ -31,21 +37,32 @@ function App() {
     )
   }
 
-return (
-  <Routes>
-    <Route path="/" element={<HomePage />} />
-    <Route path="/catalog" element={<CatalogPage />} />
-    <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />} />
-    <Route path="/register" element={isAuthenticated ? <Navigate to="/" replace /> : <RegisterPage />} />
-    <Route path="/verify" element={<VerifyAccountPage />} />
-    <Route path="/cart" element={isAuthenticated ? <CartPage /> : <Navigate to="/login" replace />} />
-    <Route path="/search" element={<SearchPage />} />
-    <Route path="/products/:id" element={<ProductDetailPage />} />
-    <Route path="/admin/products" element={<AdminProductPage />} />
-    <Route path="/admin/categories" element={<AdminCategoryPage />} />
-  </Routes>
-)
-
+  return (
+    <ToastProvider>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/catalog" element={<CatalogPage />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/products/:id" element={<ProductDetailPage />} />
+        
+        {/* Guest Routes */}
+        <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
+        <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
+        <Route path="/verify" element={<VerifyAccountPage />} />
+        <Route path="/forgot-password" element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
+        <Route path="/reset-password" element={<GuestRoute><ResetPasswordPage /></GuestRoute>} />
+        
+        {/* Protected Routes */}
+        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/onboarding" element={<ProtectedRoute><SocialOnboardingPage /></ProtectedRoute>} />
+        <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
+        
+        {/* Admin Routes */}
+        <Route path="/admin/products" element={<AdminProductPage />} />
+        <Route path="/admin/categories" element={<AdminCategoryPage />} />
+      </Routes>
+    </ToastProvider>
+  )
 
 }
 

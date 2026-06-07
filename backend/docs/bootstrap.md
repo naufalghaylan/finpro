@@ -65,8 +65,14 @@ backend/
 | `PORT` | `3000` | Port the Express server listens on |
 | `NODE_ENV` | `development` | Environment mode |
 | `DATABASE_URL` | `postgresql://USER:PASS@host:5432/db` | PostgreSQL connection string |
-| `JWT_SECRET` | `some-random-secret` | Secret used to sign/verify JWT tokens |
-| `JWT_EXPIRES_IN` | `7d` | JWT expiry duration |
+| `JWT_ACCESS_SECRET` | `your_access_secret` | Secret used to sign/verify JWT access tokens |
+| `JWT_ACCESS_EXPIRY` | `15m` | JWT access token expiry duration |
+| `JWT_REFRESH_SECRET` | `your_refresh_secret` | Secret used to sign/verify JWT refresh tokens |
+| `JWT_REFRESH_EXPIRY` | `7d` | JWT refresh token expiry duration (or 30d for Remember Me) |
+| `JWT_VERIFICATION_SECRET` | `your_verification_secret` | Secret used for email verification tokens |
+| `JWT_VERIFICATION_EXPIRY` | `1h` | JWT verification token expiry |
+| `JWT_RESET_PASSWORD_SECRET` | `your_reset_secret` | Secret used for password reset tokens |
+| `JWT_RESET_PASSWORD_EXPIRY` | `15m` | JWT password reset token expiry |
 | `CORS_ORIGIN` | `http://localhost:5173` | Allowed frontend origin for CORS |
 
 > ⚠️ Copy `.env` to your local machine and fill in real values. Never commit it to Git.
@@ -183,7 +189,7 @@ We have defined models to support core e-commerce, multi-store warehousing, and 
 npm install
 
 # 2. Configure environment
-cp .env.example .env   # then edit DATABASE_URL and JWT_SECRET
+cp .env.example .env   # then edit DATABASE_URL and JWT_*_SECRET variables
 
 # 3. Generate Prisma Client
 npm run db:generate
