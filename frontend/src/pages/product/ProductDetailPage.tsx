@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { ArrowLeft, ShoppingCart } from 'lucide-react'
 import { getProductById } from '../../api/product.api'
 import { useAddToCart } from '../../hooks/useAddToCart'
 import { Navbar } from '../../components/common/Navbar'
@@ -44,7 +45,8 @@ export default function ProductDetailPage() {
 
             {/* Tombol kembali */}
             <button className="button ghost" onClick={() => navigate(-1)} style={{ marginBottom: '24px' }}>
-              ← Kembali
+              <ArrowLeft className="button-icon" aria-hidden="true" />
+              <span>Kembali</span>
             </button>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', alignItems: 'start' }}>
@@ -93,7 +95,8 @@ export default function ProductDetailPage() {
                   disabled={addingProductId === product.id || totalStock <= 0}
                   onClick={() => void addToCart(product)}
                 >
-                  {addingProductId === product.id ? 'Menambahkan...' : 'Tambah ke Keranjang'}
+                  <ShoppingCart className="button-icon" aria-hidden="true" />
+                  <span>{addingProductId === product.id ? 'Menambahkan...' : 'Tambah ke Keranjang'}</span>
                 </button>
               </div>
             </div>

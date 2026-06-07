@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { isAxiosError } from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { addCartItem } from '../api/cart.api'
+import { useToast } from '../components/common/toastContext'
 import { useAuthStore } from '../store/authStore'
 import { useCartStore } from '../store/cartStore'
 
@@ -38,6 +39,7 @@ const getCartErrorMessage = (error: unknown) => {
 
 export const useAddToCart = () => {
   const navigate = useNavigate()
+  const { showToast } = useToast()
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const setCartCount = useCartStore((state) => state.setCartCount)
   const [addingProductId, setAddingProductId] = useState<number | null>(null)
@@ -49,12 +51,12 @@ export const useAddToCart = () => {
     }
 
     if (hasKnownOutOfStock(product)) {
-      alert('Stok produk sedang habis.')
+      showToast('Stok produk sedang habis.', 'warning')
       return
     }
 
     if (!Number.isInteger(quantity) || quantity <= 0) {
-      alert('Jumlah produk minimal 1.')
+      showToast('Jumlah produk minimal 1.', 'warning')
       return
     }
 
@@ -63,9 +65,9 @@ export const useAddToCart = () => {
     try {
       const result = await addCartItem(product.id, quantity)
       setCartCount(result.cartCount)
-      alert(`"${product.name}" ditambahkan ke keranjang`)
+      showToast(`"${product.name}" ditambahkan ke keranjang`, 'success')
     } catch (error) {
-      alert(getCartErrorMessage(error))
+      showToast(getCartErrorMessage(error), 'error')
     } finally {
       setAddingProductId(null)
     }

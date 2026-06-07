@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { isAxiosError } from 'axios'
 import { Link } from 'react-router-dom'
+import { ArrowLeft, ArrowRight, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
 import { deleteCartItem, getCart, updateCartItem } from '../../api/cart.api'
 import { Navbar } from '../../components/common/Navbar'
+import { useToast } from '../../components/common/toastContext'
 import { HomeFooter } from '../../components/home/HomeFooter'
 import { BRAND, footerSections, navLinks } from '../../data/home/homeData'
 import { useCartStore } from '../../store/cartStore'
@@ -77,10 +79,10 @@ function CartPage() {
   const [quantityDrafts, setQuantityDrafts] = useState<Record<number, string>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [savingItemIds, setSavingItemIds] = useState<Record<number, boolean>>({})
   const [deletingItemId, setDeletingItemId] = useState<number | null>(null)
   const quantitySaveTimers = useRef<Record<number, number>>({})
+  const { showToast } = useToast()
   const setCartCount = useCartStore((state) => state.setCartCount)
 
   const loadCart = useCallback(async (showLoading = true) => {
@@ -192,21 +194,21 @@ function CartPage() {
 
       setItemSaving(item.id, true)
       setError(null)
-      setSuccessMessage(null)
 
       try {
         const result = await updateCartItem(item.id, nextQuantity)
         setCartCount(result.cartCount)
         await loadCart(false)
-        setSuccessMessage('Jumlah produk berhasil diperbarui')
       } catch (updateError) {
-        setError(getErrorMessage(updateError))
+        const message = getErrorMessage(updateError)
+        setError(message)
+        showToast(message, 'error')
         setQuantityDrafts((drafts) => ({ ...drafts, [item.id]: String(item.quantity) }))
       } finally {
         setItemSaving(item.id, false)
       }
     },
-    [clearPendingQuantitySave, loadCart, setCartCount, setItemSaving],
+    [clearPendingQuantitySave, loadCart, setCartCount, setItemSaving, showToast],
   )
 
   const scheduleQuantityUpdate = useCallback(
@@ -214,19 +216,22 @@ function CartPage() {
       clearPendingQuantitySave(item.id)
 
       if (!Number.isInteger(nextQuantity) || nextQuantity <= 0) {
-        setError('Jumlah produk minimal 1')
+        const message = 'Jumlah produk minimal 1'
+        setError(message)
+        showToast(message, 'warning')
         setQuantityDrafts((drafts) => ({ ...drafts, [item.id]: String(item.quantity) }))
         return
       }
 
       if (nextQuantity > item.product.totalStock) {
-        setError(`Stok ${item.product.name} hanya ${item.product.totalStock}`)
+        const message = `Stok ${item.product.name} hanya ${item.product.totalStock}`
+        setError(message)
+        showToast(message, 'warning')
         setQuantityDrafts((drafts) => ({ ...drafts, [item.id]: String(item.quantity) }))
         return
       }
 
       setError(null)
-      setSuccessMessage(null)
 
       if (nextQuantity === item.quantity) {
         return
@@ -236,7 +241,7 @@ function CartPage() {
         void persistQuantityUpdate(item, nextQuantity)
       }, CART_QUANTITY_SAVE_DELAY_MS)
     },
-    [clearPendingQuantitySave, persistQuantityUpdate],
+    [clearPendingQuantitySave, persistQuantityUpdate, showToast],
   )
 
   const handleQuantityDraftChange = (item: CartItem, value: string) => {
@@ -256,13 +261,17 @@ function CartPage() {
 
   const handleQuantityUpdate = (item: CartItem, nextQuantity: number) => {
     if (!Number.isInteger(nextQuantity) || nextQuantity <= 0) {
-      setError('Jumlah produk minimal 1')
+      const message = 'Jumlah produk minimal 1'
+      setError(message)
+      showToast(message, 'warning')
       setQuantityDrafts((drafts) => ({ ...drafts, [item.id]: String(item.quantity) }))
       return
     }
 
     if (nextQuantity > item.product.totalStock) {
-      setError(`Stok ${item.product.name} hanya ${item.product.totalStock}`)
+      const message = `Stok ${item.product.name} hanya ${item.product.totalStock}`
+      setError(message)
+      showToast(message, 'warning')
       setQuantityDrafts((drafts) => ({ ...drafts, [item.id]: String(item.quantity) }))
       return
     }
@@ -284,14 +293,18 @@ function CartPage() {
 
     if (draftQuantity === '' || !Number.isInteger(nextQuantity) || nextQuantity <= 0) {
       clearPendingQuantitySave(item.id)
-      setError('Jumlah produk minimal 1')
+      const message = 'Jumlah produk minimal 1'
+      setError(message)
+      showToast(message, 'warning')
       setQuantityDrafts((drafts) => ({ ...drafts, [item.id]: String(item.quantity) }))
       return
     }
 
     if (nextQuantity > item.product.totalStock) {
       clearPendingQuantitySave(item.id)
-      setError(`Stok ${item.product.name} hanya ${item.product.totalStock}`)
+      const message = `Stok ${item.product.name} hanya ${item.product.totalStock}`
+      setError(message)
+      showToast(message, 'warning')
       setQuantityDrafts((drafts) => ({ ...drafts, [item.id]: String(item.quantity) }))
       return
     }
@@ -303,15 +316,15 @@ function CartPage() {
     clearPendingQuantitySave(item.id)
     setDeletingItemId(item.id)
     setError(null)
-    setSuccessMessage(null)
 
     try {
       const result = await deleteCartItem(item.id)
       setCartCount(result.cartCount)
       await loadCart(false)
-      setSuccessMessage(`${item.product.name} dihapus dari keranjang`)
     } catch (deleteError) {
-      setError(getErrorMessage(deleteError))
+      const message = getErrorMessage(deleteError)
+      setError(message)
+      showToast(message, 'error')
     } finally {
       setDeletingItemId(null)
     }
@@ -330,12 +343,12 @@ function CartPage() {
                 <h2 className="section-title">Keranjang Belanja</h2>
               </div>
               <Link to="/catalog" className="button ghost">
-                Belanja lagi
+                <ArrowLeft className="button-icon" aria-hidden="true" />
+                <span>Belanja lagi</span>
               </Link>
             </div>
 
             {error && <div className="cart-alert error">{error}</div>}
-            {successMessage && <div className="cart-alert success">{successMessage}</div>}
 
             {isLoading && (
               <div className="cart-empty">
@@ -348,7 +361,8 @@ function CartPage() {
                 <h3>Keranjang masih kosong</h3>
                 <p>Pilih produk segar dari katalog untuk mulai belanja.</p>
                 <Link to="/catalog" className="button primary">
-                  Lihat katalog
+                  <ShoppingBag className="button-icon" aria-hidden="true" />
+                  <span>Lihat katalog</span>
                 </Link>
               </div>
             )}
@@ -384,11 +398,16 @@ function CartPage() {
                             </div>
                             <button
                               type="button"
-                              className="button ghost cart-remove-button"
+                              className="button ghost icon-only cart-remove-button"
                               disabled={itemBusy}
+                              aria-label={`Hapus ${item.product.name} dari keranjang`}
+                              title="Hapus"
                               onClick={() => void handleDeleteItem(item)}
                             >
-                              {deletingItemId === item.id ? 'Menghapus...' : 'Hapus'}
+                              <Trash2 className="button-icon" aria-hidden="true" />
+                              <span className="sr-only">
+                                {deletingItemId === item.id ? 'Menghapus...' : 'Hapus'}
+                              </span>
                             </button>
                           </div>
 
@@ -398,10 +417,22 @@ function CartPage() {
                               <button
                                 type="button"
                                 className="button ghost"
-                                disabled={itemBusy || stockUnavailable || item.displayQuantity <= 1}
-                                onClick={() => handleQuantityUpdate(item, item.displayQuantity - 1)}
+                                disabled={itemBusy || (stockUnavailable && item.displayQuantity > 1)}
+                                aria-label={
+                                  item.displayQuantity <= 1
+                                    ? `Hapus ${item.product.name} dari keranjang`
+                                    : `Kurangi jumlah ${item.product.name}`
+                                }
+                                onClick={() => {
+                                  if (item.displayQuantity <= 1) {
+                                    void handleDeleteItem(item)
+                                    return
+                                  }
+
+                                  handleQuantityUpdate(item, item.displayQuantity - 1)
+                                }}
                               >
-                                -
+                                <Minus className="button-icon" aria-hidden="true" />
                               </button>
                               <input
                                 type="text"
@@ -420,9 +451,10 @@ function CartPage() {
                                 type="button"
                                 className="button ghost"
                                 disabled={itemBusy || stockUnavailable || item.displayQuantity >= item.product.totalStock}
+                                aria-label={`Tambah jumlah ${item.product.name}`}
                                 onClick={() => handleQuantityUpdate(item, item.displayQuantity + 1)}
                               >
-                                +
+                                <Plus className="button-icon" aria-hidden="true" />
                               </button>
                             </div>
                             <p className="cart-line-total">{formatCurrency(item.displayLineTotal)}</p>
@@ -442,7 +474,8 @@ function CartPage() {
                     </div>
                   ))}
                   <Link to="/checkout" className="button primary cart-checkout-button">
-                    Checkout
+                    <span>Checkout</span>
+                    <ArrowRight className="button-icon" aria-hidden="true" />
                   </Link>
                 </aside>
               </div>

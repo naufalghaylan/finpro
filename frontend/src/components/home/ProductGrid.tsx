@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { ArrowRight, Eye, ShoppingCart } from 'lucide-react'
 import { useProducts } from '../../hooks/useProducts'
 import type { Product } from '../../types/product'
 
@@ -47,7 +48,8 @@ export const ProductGrid = ({ products: initialProducts, storeId }: ProductGridP
             className="button ghost"
             onClick={() => navigate('/catalog')}
           >
-            Lihat semua
+            <span>Lihat semua</span>
+            <ArrowRight className="button-icon" aria-hidden="true" />
           </button>
         </div>
         <div className="product-grid">
@@ -71,14 +73,16 @@ export const ProductGrid = ({ products: initialProducts, storeId }: ProductGridP
                   disabled={addingProductId === product.id}
                   onClick={() => void addToCart(product)}
                 >
-                  {addingProductId === product.id ? 'Menambahkan...' : 'Tambah ke daftar'}
+                  <ShoppingCart className="button-icon" aria-hidden="true" />
+                  <span>{addingProductId === product.id ? 'Menambahkan...' : 'Tambah'}</span>
                 </button>
                 <button
                   type="button"
                   className="button ghost"
                   onClick={() => navigate(`/products/${product.id}`)}
                 >
-                  Detail
+                  <Eye className="button-icon" aria-hidden="true" />
+                  <span>Detail</span>
                 </button>
               </div>
             </article>
