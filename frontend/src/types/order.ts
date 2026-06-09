@@ -1,0 +1,107 @@
+import type { Cart } from './cart'
+
+export type PaymentMethod = 'MANUAL_TRANSFER' | 'PAYMENT_GATEWAY'
+export type OrderStatus =
+  | 'PENDING_PAYMENT'
+  | 'WAITING_CONFIRMATION'
+  | 'PROCESSING'
+  | 'SHIPPED'
+  | 'CONFIRMED'
+  | 'CANCELLED'
+
+export type CheckoutAddress = {
+  id: number
+  recipientName: string
+  phone: string
+  address: string
+  city: string
+  province: string
+  district: string | null
+  postalCode: string | null
+  latitude: number | null
+  longitude: number | null
+  isPrimary: boolean
+  createdAt?: string
+  updatedAt?: string
+}
+
+export type CheckoutStore = {
+  id: number
+  name: string
+  address: string
+  city: string
+  province: string
+  latitude: number
+  longitude: number
+  serviceRadius: number
+  distance: number
+  isOutOfRange: boolean
+}
+
+export type CheckoutPaymentMethod = {
+  value: PaymentMethod
+  label: string
+  description: string
+}
+
+export type CheckoutPreview = {
+  cart: Cart
+  addresses: CheckoutAddress[]
+  selectedAddress: CheckoutAddress | null
+  nearestStore: CheckoutStore | null
+  paymentMethods: CheckoutPaymentMethod[]
+}
+
+export type CheckoutOrderItem = {
+  id: number
+  quantity: number
+  priceAtTime: number
+  subtotal: number
+  product: {
+    id: number
+    name: string
+    slug: string
+    images: {
+      id: number
+      imageUrl: string
+      isPrimary: boolean
+      sortOrder: number
+    }[]
+  }
+}
+
+export type CheckoutOrder = {
+  id: number
+  orderNumber: string
+  status: OrderStatus
+  totalProductAmount: number
+  totalAmount: number
+  shippingCost: number
+  discountAmount: number
+  paymentMethod: PaymentMethod
+  paymentProof: string | null
+  paymentGatewayId: string | null
+  paymentDeadline: string | null
+  shippedAt: string | null
+  confirmedAt: string | null
+  cancelledAt: string | null
+  cancelReason: string | null
+  notes: string | null
+  createdAt: string
+  updatedAt: string
+  store: Omit<CheckoutStore, 'distance' | 'isOutOfRange'>
+  address: CheckoutAddress
+  items: CheckoutOrderItem[]
+}
+
+export type CreateCheckoutOrderPayload = {
+  addressId: number
+  paymentMethod: PaymentMethod
+  notes?: string
+}
+
+export type CreateCheckoutOrderResult = {
+  order: CheckoutOrder
+  nearestStore: CheckoutStore
+  cartCount: number
+}

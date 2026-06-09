@@ -97,6 +97,8 @@ model User {
   stockJournals      StockJournal[]
   requestedMutations StockMutation[] @relation("MutationRequester")
   approvedMutations  StockMutation[] @relation("MutationApprover")
+  rejectedMutations  StockMutation[] @relation("MutationRejecter")
+  receivedMutations  StockMutation[] @relation("MutationReceiver")
   refreshTokens      RefreshToken[]
 
   @@map("users")
@@ -235,23 +237,29 @@ model Stock {
 
 // Jurnal perubahan stok — setiap perubahan stok HARUS melalui jurnal
 model StockJournal {
-  id             Int              @id @default(autoincrement())
-  stockId        Int              @map("stock_id")
-  orderId        Int?             @map("order_id") // nullable, hanya diisi jika terkait order
-  quantityChange Int              @map("quantity_change") // positif = penambahan, negatif = pengurangan
-  quantityBefore Int              @map("quantity_before")
-  quantityAfter  Int              @map("quantity_after")
-  type           StockJournalType
-  description    String?
-  createdBy      Int              @map("created_by") // user (admin) yang membuat perubahan
-  createdAt      DateTime         @default(now()) @map("created_at")
+  id              Int              @id @default(autoincrement())
+  stockId         Int              @map("stock_id")
+  orderId         Int?             @map("order_id") // nullable, hanya diisi jika terkait order
+  stockMutationId Int?             @map("stock_mutation_id") // nullable, hanya diisi jika terkait mutasi stok
+  quantityChange  Int              @map("quantity_change") // positif = penambahan, negatif = pengurangan
+  quantityBefore  Int              @map("quantity_before")
+  quantityAfter   Int              @map("quantity_after")
+  type            StockJournalType
+  description     String?
+  productSnapshot Json?            @map("product_snapshot")
+  storeSnapshot   Json?            @map("store_snapshot")
+  notes           String?
+  createdBy       Int              @map("created_by") // user (admin) yang membuat perubahan
+  createdAt       DateTime         @default(now()) @map("created_at")
 
-  stock   Stock  @relation(fields: [stockId], references: [id], onDelete: Cascade)
-  order   Order? @relation(fields: [orderId], references: [id])
-  creator User   @relation(fields: [createdBy], references: [id])
+  stock         Stock          @relation(fields: [stockId], references: [id], onDelete: Cascade)
+  order         Order?         @relation(fields: [orderId], references: [id])
+  stockMutation StockMutation? @relation(fields: [stockMutationId], references: [id])
+  creator       User           @relation(fields: [createdBy], references: [id])
 
   @@index([stockId])
   @@index([orderId])
+  @@index([stockMutationId])
   @@index([createdAt])
   @@map("stock_journals")
 }
@@ -259,6 +267,7 @@ model StockJournal {
 // Mutasi stok antar gudang/toko
 model StockMutation {
   id                 Int            @id @default(autoincrement())
+  orderId            Int?           @map("order_id")
   sourceStoreId      Int            @map("source_store_id")
   destinationStoreId Int            @map("destination_store_id")
   productId          Int            @map("product_id")
@@ -266,19 +275,31 @@ model StockMutation {
   status             MutationStatus @default(PENDING)
   requestedBy        Int            @map("requested_by")
   approvedBy         Int?           @map("approved_by")
+  rejectedBy         Int?           @map("rejected_by")
+  receivedBy         Int?           @map("received_by")
   notes              String?
+  approvedAt         DateTime?      @map("approved_at")
+  rejectedAt         DateTime?      @map("rejected_at")
+  sentAt             DateTime?      @map("sent_at")
+  receivedAt         DateTime?      @map("received_at")
   createdAt          DateTime       @default(now()) @map("created_at")
   updatedAt          DateTime       @updatedAt @map("updated_at")
 
-  sourceStore      Store   @relation("MutationSource", fields: [sourceStoreId], references: [id])
-  destinationStore Store   @relation("MutationDestination", fields: [destinationStoreId], references: [id])
-  product          Product @relation(fields: [productId], references: [id])
-  requester        User    @relation("MutationRequester", fields: [requestedBy], references: [id])
-  approver         User?   @relation("MutationApprover", fields: [approvedBy], references: [id])
+  order            Order?         @relation(fields: [orderId], references: [id])
+  sourceStore      Store          @relation("MutationSource", fields: [sourceStoreId], references: [id])
+  destinationStore Store          @relation("MutationDestination", fields: [destinationStoreId], references: [id])
+  product          Product        @relation(fields: [productId], references: [id])
+  requester        User           @relation("MutationRequester", fields: [requestedBy], references: [id])
+  approver         User?          @relation("MutationApprover", fields: [approvedBy], references: [id])
+  rejecter         User?          @relation("MutationRejecter", fields: [rejectedBy], references: [id])
+  receiver         User?          @relation("MutationReceiver", fields: [receivedBy], references: [id])
+  stockJournals    StockJournal[]
 
+  @@index([orderId])
   @@index([sourceStoreId])
   @@index([destinationStoreId])
   @@index([productId])
+  @@index([status])
   @@map("stock_mutations")
 }
 
@@ -333,12 +354,13 @@ model Order {
   createdAt          DateTime      @default(now()) @map("created_at")
   updatedAt          DateTime      @updatedAt @map("updated_at")
 
-  user          User           @relation(fields: [userId], references: [id])
-  store         Store          @relation(fields: [storeId], references: [id])
-  address       UserAddress    @relation(fields: [addressId], references: [id])
-  voucher       Voucher?       @relation(fields: [voucherId], references: [id])
-  items         OrderItem[]
-  stockJournals StockJournal[]
+  user           User            @relation(fields: [userId], references: [id])
+  store          Store           @relation(fields: [storeId], references: [id])
+  address        UserAddress     @relation(fields: [addressId], references: [id])
+  voucher        Voucher?        @relation(fields: [voucherId], references: [id])
+  items          OrderItem[]
+  stockJournals  StockJournal[]
+  stockMutations StockMutation[]
 
   @@index([userId])
   @@index([storeId])
