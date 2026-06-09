@@ -12,6 +12,7 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import ProfilePage from './pages/profile/ProfilePage'
 import SocialOnboardingPage from './pages/auth/SocialOnboardingPage'
 import CartPage from './pages/cart/CartPage'
+import CheckoutPage from './pages/checkout/CheckoutPage'
 import CatalogPage from './pages/catalog/CatalogPage'
 import SearchPage from './pages/search/SearchPage'
 import ProductDetailPage from './pages/product/ProductDetailPage'
@@ -57,6 +58,7 @@ function App() {
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/onboarding" element={<ProtectedRoute><SocialOnboardingPage /></ProtectedRoute>} />
         <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
+        <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
         
         {/* Admin Routes */}
         <Route path="/admin/products" element={<AdminProductPage />} />

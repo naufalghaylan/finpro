@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { isAxiosError } from 'axios'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, ArrowRight, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
 import { deleteCartItem, getCart, updateCartItem } from '../../api/cart.api'
 import { Navbar } from '../../components/common/Navbar'
 import { useToast } from '../../components/common/toastContext'
@@ -152,8 +152,8 @@ function CartPage() {
 
   const summaryRows = useMemo(
     () => [
-      { label: 'Total produk', value: `${cartSummary.totalQuantity} item` },
-      { label: 'Subtotal', value: formatCurrency(cartSummary.subtotal) },
+      { label: `Total harga (${cartSummary.totalQuantity} item)`, value: formatCurrency(cartSummary.subtotal) },
+      { label: 'Ongkir', value: 'Pilih di checkout' },
     ],
     [cartSummary.subtotal, cartSummary.totalQuantity],
   )
@@ -374,6 +374,7 @@ function CartPage() {
                     const image = getPrimaryImage(item)
                     const itemBusy = Boolean(savingItemIds[item.id]) || deletingItemId === item.id
                     const stockUnavailable = item.product.totalStock <= 0
+                    const lowStock = !stockUnavailable && item.product.totalStock <= 2
 
                     return (
                       <article className="cart-item" key={item.id}>
@@ -390,11 +391,18 @@ function CartPage() {
                             <div>
                               <span className="product-tag">{item.product.category.name}</span>
                               <h3>{item.product.name}</h3>
-                              <p className="cart-item-meta">
-                                {stockUnavailable
-                                  ? 'Stok habis'
-                                  : `${item.product.totalStock} stok tersedia`}
-                              </p>
+                              {lowStock ? (
+                                <p className="cart-item-meta warning">
+                                  <AlertTriangle className="button-icon" aria-hidden="true" />
+                                  <span>Stok sisa {item.product.totalStock}</span>
+                                </p>
+                              ) : (
+                                <p className="cart-item-meta">
+                                  {stockUnavailable
+                                    ? 'Stok habis'
+                                    : `${item.product.totalStock} stok tersedia`}
+                                </p>
+                              )}
                             </div>
                             <button
                               type="button"
@@ -466,15 +474,19 @@ function CartPage() {
                 </div>
 
                 <aside className="cart-summary-panel" aria-label="Ringkasan keranjang">
-                  <h3>Ringkasan</h3>
+                  <h3>Rincian Belanja</h3>
                   {summaryRows.map((row) => (
                     <div className="cart-summary-row" key={row.label}>
                       <span>{row.label}</span>
                       <strong>{row.value}</strong>
                     </div>
                   ))}
+                  <div className="cart-summary-row cart-summary-total">
+                    <span>Total sementara</span>
+                    <strong>{formatCurrency(cartSummary.subtotal)}</strong>
+                  </div>
                   <Link to="/checkout" className="button primary cart-checkout-button">
-                    <span>Checkout</span>
+                    <span>Checkout ({cartSummary.totalQuantity})</span>
                     <ArrowRight className="button-icon" aria-hidden="true" />
                   </Link>
                 </aside>
@@ -483,6 +495,18 @@ function CartPage() {
           </div>
         </section>
       </main>
+
+      {!isLoading && hasItems && (
+        <div className="cart-mobile-checkout-bar">
+          <div>
+            <span>Total sementara</span>
+            <strong>{formatCurrency(cartSummary.subtotal)}</strong>
+          </div>
+          <Link to="/checkout" className="button primary">
+            Checkout ({cartSummary.totalQuantity})
+          </Link>
+        </div>
+      )}
 
       <HomeFooter brandName={BRAND.name} sections={footerSections} />
     </div>
