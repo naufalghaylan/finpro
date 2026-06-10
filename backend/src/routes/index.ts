@@ -8,6 +8,7 @@ import cartRouter from './cart.routes'
 import profileRouter from './profile.routes'
 import homepageRouter from './homepage.routes'
 import orderRouter from './order.routes'
+import paymentRouter from './payment.routes'
 
 const router = Router()
 
@@ -20,6 +21,7 @@ router.use('/cart', cartRouter)
 router.use('/profile', profileRouter)
 router.use('/homepage', homepageRouter)
 router.use('/orders', orderRouter)
+router.use('/payments', paymentRouter)
 
 // ── Placeholder for future routes ──────────────────────────────────────────
 // router.use('/users', userRouter)
