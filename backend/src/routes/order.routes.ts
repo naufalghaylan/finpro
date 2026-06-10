@@ -4,12 +4,16 @@ import {
   approveFulfillment,
   cancelOrder,
   createCheckoutOrder,
+  createMidtransPayment,
   getCheckoutPreview,
+  getOrderPaymentDetails,
   receiveFulfillment,
   rejectFulfillment,
   requestOrderFulfillment,
+  uploadManualPaymentProof,
 } from '../controllers/order.controller'
 import { authenticate, authorize } from '../middlewares/auth.middleware'
+import { handlePaymentProofUpload } from '../middlewares/payment-proof-upload.middleware'
 import { requireVerifiedUser } from '../middlewares/verified.middleware'
 
 const orderRouter = Router()
@@ -18,6 +22,9 @@ orderRouter.use(authenticate, requireVerifiedUser)
 
 orderRouter.get('/checkout', getCheckoutPreview)
 orderRouter.post('/checkout', createCheckoutOrder)
+orderRouter.get('/:id/payment', getOrderPaymentDetails)
+orderRouter.post('/:id/payment-gateway', createMidtransPayment)
+orderRouter.post('/:id/payment-proof', handlePaymentProofUpload, uploadManualPaymentProof)
 orderRouter.post('/:id/cancel', cancelOrder)
 orderRouter.post(
   '/admin/:id/cancel',

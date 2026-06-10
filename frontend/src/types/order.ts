@@ -105,3 +105,10 @@ export type CreateCheckoutOrderResult = {
   nearestStore: CheckoutStore
   cartCount: number
 }
+
+export type CreateMidtransPaymentResult = {
+  orderId: number
+  orderNumber: string
+  snapToken: string
+  redirectUrl: string | null
+}
