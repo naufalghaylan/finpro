@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { isAxiosError } from 'axios'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   AlertCircle,
   ArrowLeft,
@@ -81,6 +81,7 @@ function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { showToast } = useToast()
+  const navigate = useNavigate()
   const setCartCount = useCartStore((state) => state.setCartCount)
 
   const loadPreview = useCallback(async (addressId?: number, showInitialLoading = false) => {
@@ -158,6 +159,7 @@ function CheckoutPage() {
       setCreatedOrder(result.order)
       setCartCount(result.cartCount)
       showToast('Pesanan berhasil dibuat', 'success')
+      navigate(`/orders/${result.order.id}/payment`)
     } catch (submitError) {
       showToast(getErrorMessage(submitError), 'error')
     } finally {

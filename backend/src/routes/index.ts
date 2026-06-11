@@ -11,6 +11,7 @@ import profileRouter from './profile.routes'
 import orderRouter from './order.routes'
 import rajaongkirRouter from './rajaongkir.routes'
 import userRouter from './user.routes'
+import paymentRouter from './payment.routes'
 
 const router = Router()
 
@@ -25,6 +26,7 @@ router.use('/stocks', stockRouter)
 router.use('/profile', profileRouter)
 router.use('/orders', orderRouter)
 router.use('/shipping', rajaongkirRouter)
+router.use('/payments', paymentRouter)
 
 // ── Placeholder for future routes ──────────────────────────────────────────
 router.use('/users', userRouter)

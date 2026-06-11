@@ -65,6 +65,7 @@ export const useAddToCart = () => {
     try {
       const result = await addCartItem(product.id, quantity)
       setCartCount(result.cartCount)
+      window.dispatchEvent(new Event('cartUpdated'))
       showToast(`"${product.name}" ditambahkan ke keranjang`, 'success')
     } catch (error) {
       showToast(getCartErrorMessage(error), 'error')

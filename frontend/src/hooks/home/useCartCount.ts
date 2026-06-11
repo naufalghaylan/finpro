@@ -7,40 +7,40 @@ export const useCartCount = () => {
   const [isLoading, setIsLoading] = useState(true)
   const { isAuthenticated } = useAuthStore()
 
+  const loadCart = async () => {
+    if (!isAuthenticated) {
+      setCount(0)
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      const response = await api.get('/cart/count')
+      const data = response.data
+      setCount(typeof data.count === 'number' ? data.count : 0)
+    } catch {
+      setCount(0)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   useEffect(() => {
-    let isMounted = true
+    void loadCart()
+  }, [isAuthenticated])
 
-    const loadCartCount = async () => {
-      if (!isAuthenticated) {
-        if (isMounted) {
-          setCount(0)
-          setIsLoading(false)
-        }
-        return
-      }
-
-      try {
-        const response = await api.get('/cart/count')
-        const data = response.data
-
-        if (isMounted) {
-          setCount(typeof data.count === 'number' ? data.count : 0)
-        }
-      } catch {
-        if (isMounted) {
-          setCount(0)
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false)
-        }
+  // Add event listener for cart updates
+  useEffect(() => {
+    const handleCartUpdated = () => {
+      if (isAuthenticated) {
+        void loadCart()
       }
     }
 
-    void loadCartCount()
+    window.addEventListener('cartUpdated', handleCartUpdated)
 
     return () => {
-      isMounted = false
+      window.removeEventListener('cartUpdated', handleCartUpdated)
     }
   }, [isAuthenticated])
 

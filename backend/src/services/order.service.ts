@@ -7,6 +7,7 @@ import {
   type UserAddress,
 } from '../generated/prisma/client'
 import prisma from '../lib/prisma'
+import { midtransCore, midtransSnap } from '../lib/midtrans'
 import { getCart } from './cart.service'
 
 type DatabaseClient = Prisma.TransactionClient
@@ -25,6 +26,11 @@ export const ORDER_ERRORS = {
   STOCK_MUTATION_INVALID_STATUS: 'STOCK_MUTATION_INVALID_STATUS',
   FULFILLMENT_ACCESS_DENIED: 'FULFILLMENT_ACCESS_DENIED',
   INVALID_FULFILLMENT_REQUEST: 'INVALID_FULFILLMENT_REQUEST',
+  PAYMENT_PROOF_REQUIRED: 'PAYMENT_PROOF_REQUIRED',
+  PAYMENT_PROOF_NOT_ALLOWED: 'PAYMENT_PROOF_NOT_ALLOWED',
+  PAYMENT_DEADLINE_EXPIRED: 'PAYMENT_DEADLINE_EXPIRED',
+  PAYMENT_GATEWAY_NOT_ALLOWED: 'PAYMENT_GATEWAY_NOT_ALLOWED',
+  PAYMENT_GATEWAY_TOKEN_FAILED: 'PAYMENT_GATEWAY_TOKEN_FAILED',
 } as const
 
 type OrderErrorCode = (typeof ORDER_ERRORS)[keyof typeof ORDER_ERRORS]
@@ -74,6 +80,33 @@ type FulfillmentActionParams = {
   userId: number
   mutationId: number
   notes?: string
+}
+
+type OrderPaymentParams = {
+  userId: number
+  orderId: number
+}
+
+type UploadPaymentProofParams = OrderPaymentParams & {
+  paymentProofUrl: string
+}
+
+type MidtransNotificationResult = {
+  orderId: number
+  orderNumber: string
+  transactionStatus: string
+  orderStatus: OrderStatus
+} | null
+
+type ReservedStockJournal = {
+  stockId: number
+  quantityChange: number
+}
+
+type ReservedStockOrder = {
+  id: number
+  orderNumber: string
+  stockJournals: ReservedStockJournal[]
 }
 
 type CheckoutCartItem = {
@@ -624,7 +657,7 @@ export const getCheckoutPreview = async ({ userId, addressId }: CheckoutPreviewP
       {
         value: PaymentMethod.PAYMENT_GATEWAY,
         label: 'Payment Gateway',
-        description: 'Simulasi pembayaran berhasil dan pesanan langsung masuk proses.',
+        description: 'Pembayaran melalui Midtrans Sandbox dan diproses otomatis setelah pembayaran berhasil.',
       },
     ],
   }
@@ -665,8 +698,8 @@ export const createCheckoutOrder = async ({
     )
     const isPaymentGateway = paymentMethod === PaymentMethod.PAYMENT_GATEWAY
     const paymentDeadline = isPaymentGateway ? null : new Date(Date.now() + PAYMENT_DEADLINE_IN_MS)
-    const paymentGatewayId = isPaymentGateway ? `PG-${orderNumber}` : null
-    const status = isPaymentGateway ? OrderStatus.PROCESSING : OrderStatus.PENDING_PAYMENT
+    const paymentGatewayId = null
+    const status = OrderStatus.PENDING_PAYMENT
 
     const order = await tx.order.create({
       data: {
@@ -714,6 +747,388 @@ export const createCheckoutOrder = async ({
       order,
       nearestStore,
       cartCount: 0,
+    }
+  })
+}
+
+export const getOrderPaymentDetails = async ({ userId, orderId }: OrderPaymentParams) => {
+  const order = await prisma.order.findFirst({
+    where: {
+      id: orderId,
+      userId,
+    },
+    select: orderSelect,
+  })
+
+  if (!order) {
+    throw new OrderServiceError(ORDER_ERRORS.ORDER_NOT_FOUND, 'Order not found', 404)
+  }
+
+  return order
+}
+
+export const uploadManualPaymentProof = async ({
+  userId,
+  orderId,
+  paymentProofUrl,
+}: UploadPaymentProofParams) => {
+  if (!paymentProofUrl) {
+    throw new OrderServiceError(
+      ORDER_ERRORS.PAYMENT_PROOF_REQUIRED,
+      'Payment proof file is required',
+      400,
+    )
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        userId: true,
+        status: true,
+        paymentMethod: true,
+        paymentDeadline: true,
+        paymentProof: true,
+      },
+    })
+
+    if (!order || order.userId !== userId) {
+      throw new OrderServiceError(ORDER_ERRORS.ORDER_NOT_FOUND, 'Order not found', 404)
+    }
+
+    if (order.paymentMethod !== PaymentMethod.MANUAL_TRANSFER) {
+      throw new OrderServiceError(
+        ORDER_ERRORS.PAYMENT_PROOF_NOT_ALLOWED,
+        'Payment proof upload is only available for manual transfer orders',
+        400,
+      )
+    }
+
+    if (order.status !== OrderStatus.PENDING_PAYMENT) {
+      throw new OrderServiceError(
+        ORDER_ERRORS.PAYMENT_PROOF_NOT_ALLOWED,
+        order.paymentProof
+          ? 'Payment proof has already been uploaded'
+          : 'Payment proof cannot be uploaded for this order status',
+        400,
+      )
+    }
+
+    if (order.paymentDeadline && new Date() > order.paymentDeadline) {
+      throw new OrderServiceError(
+        ORDER_ERRORS.PAYMENT_DEADLINE_EXPIRED,
+        'Payment proof upload deadline has expired',
+        400,
+      )
+    }
+
+    return tx.order.update({
+      where: { id: order.id },
+      data: {
+        paymentProof: paymentProofUrl,
+        status: OrderStatus.WAITING_CONFIRMATION,
+      },
+      select: orderSelect,
+    })
+  })
+}
+
+const restoreReservedOrderStock = async ({
+  db,
+  order,
+  actorUserId,
+  notes,
+}: {
+  db: DatabaseClient
+  order: ReservedStockOrder
+  actorUserId: number
+  notes: string
+}) => {
+  for (const journal of order.stockJournals) {
+    const restoreQuantity = Math.abs(journal.quantityChange)
+    const stock = await db.stock.findUnique({
+      where: { id: journal.stockId },
+      select: {
+        id: true,
+        quantity: true,
+        product: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            basePrice: true,
+            categoryId: true,
+          },
+        },
+        store: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            address: true,
+            city: true,
+            province: true,
+            latitude: true,
+            longitude: true,
+          },
+        },
+      },
+    })
+
+    if (!stock) {
+      throw new OrderServiceError(ORDER_ERRORS.STOCK_NOT_FOUND, 'Reserved stock not found', 404)
+    }
+
+    const quantityBefore = stock.quantity
+    const quantityAfter = quantityBefore + restoreQuantity
+
+    await db.stock.update({
+      where: { id: stock.id },
+      data: {
+        quantity: { increment: restoreQuantity },
+      },
+    })
+
+    await createStockJournalEntry({
+      db,
+      stock,
+      orderId: order.id,
+      quantityChange: restoreQuantity,
+      quantityBefore,
+      quantityAfter,
+      type: StockJournalType.CANCEL_RETURN,
+      userId: actorUserId,
+      description: `Returned reserved stock from cancelled order ${order.orderNumber}`,
+      notes,
+    })
+  }
+}
+
+export const createMidtransSnapToken = async ({ userId, orderId }: OrderPaymentParams) => {
+  const order = await prisma.order.findFirst({
+    where: {
+      id: orderId,
+      userId,
+    },
+    select: {
+      id: true,
+      orderNumber: true,
+      status: true,
+      totalAmount: true,
+      paymentMethod: true,
+      paymentGatewayId: true,
+      user: {
+        select: {
+          name: true,
+          email: true,
+          phone: true,
+        },
+      },
+      items: {
+        select: {
+          id: true,
+          quantity: true,
+          priceAtTime: true,
+          subtotal: true,
+          product: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  })
+
+  if (!order) {
+    throw new OrderServiceError(ORDER_ERRORS.ORDER_NOT_FOUND, 'Order not found', 404)
+  }
+
+  if (order.paymentMethod !== PaymentMethod.PAYMENT_GATEWAY) {
+    throw new OrderServiceError(
+      ORDER_ERRORS.PAYMENT_GATEWAY_NOT_ALLOWED,
+      'Midtrans payment is only available for payment gateway orders',
+      400,
+    )
+  }
+
+  if (order.status !== OrderStatus.PENDING_PAYMENT) {
+    throw new OrderServiceError(
+      ORDER_ERRORS.PAYMENT_GATEWAY_NOT_ALLOWED,
+      'Payment gateway token cannot be created for this order status',
+      400,
+    )
+  }
+
+  if (order.paymentGatewayId) {
+    return {
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      snapToken: order.paymentGatewayId,
+      redirectUrl: null,
+    }
+  }
+
+  try {
+    const snapTransaction = await midtransSnap.createTransaction({
+      transaction_details: {
+        order_id: order.orderNumber,
+        gross_amount: Math.round(order.totalAmount),
+      },
+      customer_details: {
+        first_name: order.user.name,
+        email: order.user.email,
+        phone: order.user.phone || undefined,
+      },
+      item_details: order.items.map((item) => ({
+        id: String(item.product.id),
+        name: item.product.name.slice(0, 50),
+        price: Math.round(item.priceAtTime),
+        quantity: item.quantity,
+      })),
+      expiry: {
+        unit: 'minute',
+        duration: 60,
+      },
+    })
+
+    await prisma.order.update({
+      where: { id: order.id },
+      data: {
+        paymentGatewayId: snapTransaction.token,
+      },
+    })
+
+    return {
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      snapToken: snapTransaction.token,
+      redirectUrl: snapTransaction.redirect_url,
+    }
+  } catch (error) {
+    throw new OrderServiceError(
+      ORDER_ERRORS.PAYMENT_GATEWAY_TOKEN_FAILED,
+      'Failed to create Midtrans payment token',
+      502,
+      error,
+    )
+  }
+}
+
+export const handleMidtransNotification = async (payload: unknown): Promise<MidtransNotificationResult> => {
+  const notification = await midtransCore.transaction.notification(payload)
+  const orderNumber = notification.order_id
+  const transactionStatus = notification.transaction_status
+  const fraudStatus = notification.fraud_status
+  const isSuccessfulPayment =
+    transactionStatus === 'settlement' ||
+    (transactionStatus === 'capture' && (!fraudStatus || fraudStatus === 'accept'))
+  const isFailedPayment = ['cancel', 'deny', 'expire', 'failure'].includes(transactionStatus)
+
+  if (!isSuccessfulPayment && !isFailedPayment && transactionStatus !== 'pending') {
+    return null
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({
+      where: { orderNumber },
+      select: {
+        id: true,
+        userId: true,
+        orderNumber: true,
+        status: true,
+        paymentMethod: true,
+        stockJournals: {
+          where: {
+            type: StockJournalType.ORDER,
+            quantityChange: { lt: 0 },
+          },
+          select: {
+            stockId: true,
+            quantityChange: true,
+          },
+        },
+      },
+    })
+
+    if (!order || order.paymentMethod !== PaymentMethod.PAYMENT_GATEWAY) {
+      return null
+    }
+
+    if (isSuccessfulPayment) {
+      if (order.status !== OrderStatus.PENDING_PAYMENT) {
+        return {
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          transactionStatus,
+          orderStatus: order.status,
+        }
+      }
+
+      await tx.order.update({
+        where: { id: order.id },
+        data: {
+          status: OrderStatus.PROCESSING,
+        },
+      })
+
+      return {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        transactionStatus,
+        orderStatus: OrderStatus.PROCESSING,
+      }
+    }
+
+    if (isFailedPayment) {
+      if (order.status !== OrderStatus.PENDING_PAYMENT) {
+        return {
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          transactionStatus,
+          orderStatus: order.status,
+        }
+      }
+
+      const cancelReason = `Midtrans payment ${transactionStatus}`
+      const updatedOrder = await tx.order.updateMany({
+        where: {
+          id: order.id,
+          status: OrderStatus.PENDING_PAYMENT,
+        },
+        data: {
+          status: OrderStatus.CANCELLED,
+          cancelledAt: new Date(),
+          cancelReason,
+        },
+      })
+
+      if (updatedOrder.count !== 1) {
+        return null
+      }
+
+      await restoreReservedOrderStock({
+        db: tx,
+        order,
+        actorUserId: order.userId,
+        notes: `${cancelReason}, reserved stock restored`,
+      })
+
+      return {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        transactionStatus,
+        orderStatus: OrderStatus.CANCELLED,
+      }
+    }
+
+    return {
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      transactionStatus,
+      orderStatus: order.status,
     }
   })
 }
@@ -775,64 +1190,12 @@ export const cancelOrder = async ({
       )
     }
 
-    for (const journal of order.stockJournals) {
-      const restoreQuantity = Math.abs(journal.quantityChange)
-      const stock = await tx.stock.findUnique({
-        where: { id: journal.stockId },
-        select: {
-          id: true,
-          quantity: true,
-          product: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              basePrice: true,
-              categoryId: true,
-            },
-          },
-          store: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              address: true,
-              city: true,
-              province: true,
-              latitude: true,
-              longitude: true,
-            },
-          },
-        },
-      })
-
-      if (!stock) {
-        throw new OrderServiceError(ORDER_ERRORS.STOCK_NOT_FOUND, 'Reserved stock not found', 404)
-      }
-
-      const quantityBefore = stock.quantity
-      const quantityAfter = quantityBefore + restoreQuantity
-
-      await tx.stock.update({
-        where: { id: stock.id },
-        data: {
-          quantity: { increment: restoreQuantity },
-        },
-      })
-
-      await createStockJournalEntry({
-        db: tx,
-        stock,
-        orderId: order.id,
-        quantityChange: restoreQuantity,
-        quantityBefore,
-        quantityAfter,
-        type: StockJournalType.CANCEL_RETURN,
-        userId,
-        description: `Returned reserved stock from cancelled order ${order.orderNumber}`,
-        notes: reason || 'Order cancelled, reserved stock restored',
-      })
-    }
+    await restoreReservedOrderStock({
+      db: tx,
+      order,
+      actorUserId: userId,
+      notes: reason || 'Order cancelled, reserved stock restored',
+    })
 
     return tx.order.update({
       where: { id: order.id },
@@ -844,6 +1207,93 @@ export const cancelOrder = async ({
       select: orderSelect,
     })
   })
+}
+
+export const autoCancelExpiredManualTransferOrders = async () => {
+  const now = new Date()
+  const expiredOrders = await prisma.order.findMany({
+    where: {
+      status: OrderStatus.PENDING_PAYMENT,
+      paymentMethod: PaymentMethod.MANUAL_TRANSFER,
+      paymentDeadline: {
+        lte: now,
+      },
+    },
+    select: {
+      id: true,
+    },
+  })
+
+  let cancelledCount = 0
+
+  for (const expiredOrder of expiredOrders) {
+    const cancelledOrder = await prisma.$transaction(async (tx) => {
+      const claimedOrder = await tx.order.findFirst({
+        where: {
+          id: expiredOrder.id,
+          status: OrderStatus.PENDING_PAYMENT,
+          paymentMethod: PaymentMethod.MANUAL_TRANSFER,
+          paymentDeadline: {
+            lte: now,
+          },
+        },
+        select: {
+          id: true,
+          userId: true,
+          orderNumber: true,
+          stockJournals: {
+            where: {
+              type: StockJournalType.ORDER,
+              quantityChange: { lt: 0 },
+            },
+            select: {
+              stockId: true,
+              quantityChange: true,
+            },
+          },
+        },
+      })
+
+      if (!claimedOrder) return null
+
+      const cancelReason = 'Auto-cancelled because manual payment proof was not uploaded before deadline'
+      const updatedOrder = await tx.order.updateMany({
+        where: {
+          id: claimedOrder.id,
+          status: OrderStatus.PENDING_PAYMENT,
+          paymentMethod: PaymentMethod.MANUAL_TRANSFER,
+          paymentDeadline: {
+            lte: now,
+          },
+        },
+        data: {
+          status: OrderStatus.CANCELLED,
+          cancelledAt: now,
+          cancelReason,
+        },
+      })
+
+      if (updatedOrder.count !== 1) return null
+
+      await restoreReservedOrderStock({
+        db: tx,
+        order: claimedOrder,
+        actorUserId: claimedOrder.userId,
+        notes: cancelReason,
+      })
+
+      return claimedOrder
+    })
+
+    if (cancelledOrder) {
+      cancelledCount += 1
+    }
+  }
+
+  return {
+    checkedCount: expiredOrders.length,
+    cancelledCount,
+  }
 }
 
 export const requestOrderFulfillment = async ({

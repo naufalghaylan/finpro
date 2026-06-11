@@ -1,13 +1,17 @@
 import { Request, Response } from 'express'
+import { unlink } from 'fs/promises'
 import {
   approveFulfillment as approveFulfillmentService,
   cancelOrder as cancelOrderService,
   createCheckoutOrder as createCheckoutOrderService,
+  createMidtransSnapToken as createMidtransSnapTokenService,
+  getOrderPaymentDetails as getOrderPaymentDetailsService,
   getCheckoutPreview as getCheckoutPreviewService,
   OrderServiceError,
   receiveFulfillment as receiveFulfillmentService,
   rejectFulfillment as rejectFulfillmentService,
   requestOrderFulfillment as requestOrderFulfillmentService,
+  uploadManualPaymentProof as uploadManualPaymentProofService,
 } from '../services/order.service'
 import {
   cancelOrderSchema,
@@ -41,6 +45,16 @@ const handleOrderError = (error: unknown, res: Response) => {
   }
 
   return false
+}
+
+const removeUploadedFile = async (file?: Express.Multer.File) => {
+  if (!file?.path) return
+
+  try {
+    await unlink(file.path)
+  } catch (error) {
+    console.error('[removeUploadedFile]', error)
+  }
 }
 
 export const getCheckoutPreview = async (req: Request, res: Response): Promise<void> => {
@@ -96,6 +110,107 @@ export const createCheckoutOrder = async (req: Request, res: Response): Promise<
     if (handleOrderError(error, res)) return
 
     console.error('[createCheckoutOrder]', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+}
+
+export const getOrderPaymentDetails = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = getAuthenticatedUserId(req, res)
+    if (!userId) return
+
+    const parsedParams = orderParamsSchema.safeParse(req.params)
+
+    if (!parsedParams.success) {
+      res.status(400).json({ message: 'Validation Error', errors: parsedParams.error.flatten().fieldErrors })
+      return
+    }
+
+    const order = await getOrderPaymentDetailsService({
+      userId,
+      orderId: parsedParams.data.id,
+    })
+
+    res.json({
+      data: order,
+    })
+  } catch (error) {
+    if (handleOrderError(error, res)) return
+
+    console.error('[getOrderPaymentDetails]', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+}
+
+export const uploadManualPaymentProof = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = getAuthenticatedUserId(req, res)
+    if (!userId) {
+      await removeUploadedFile(req.file)
+      return
+    }
+
+    const parsedParams = orderParamsSchema.safeParse(req.params)
+
+    if (!parsedParams.success) {
+      await removeUploadedFile(req.file)
+      res.status(400).json({ message: 'Validation Error', errors: parsedParams.error.flatten().fieldErrors })
+      return
+    }
+
+    if (!req.file) {
+      res.status(400).json({
+        message: 'Payment proof file is required',
+        code: 'PAYMENT_PROOF_REQUIRED',
+      })
+      return
+    }
+
+    const paymentProofUrl = `/uploads/payment-proofs/${req.file.filename}`
+    const order = await uploadManualPaymentProofService({
+      userId,
+      orderId: parsedParams.data.id,
+      paymentProofUrl,
+    })
+
+    res.json({
+      message: 'Payment proof uploaded successfully',
+      data: order,
+    })
+  } catch (error) {
+    await removeUploadedFile(req.file)
+    if (handleOrderError(error, res)) return
+
+    console.error('[uploadManualPaymentProof]', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+}
+
+export const createMidtransPayment = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = getAuthenticatedUserId(req, res)
+    if (!userId) return
+
+    const parsedParams = orderParamsSchema.safeParse(req.params)
+
+    if (!parsedParams.success) {
+      res.status(400).json({ message: 'Validation Error', errors: parsedParams.error.flatten().fieldErrors })
+      return
+    }
+
+    const result = await createMidtransSnapTokenService({
+      userId,
+      orderId: parsedParams.data.id,
+    })
+
+    res.json({
+      message: 'Midtrans payment token created',
+      data: result,
+    })
+  } catch (error) {
+    if (handleOrderError(error, res)) return
+
+    console.error('[createMidtransPayment]', error)
     res.status(500).json({ message: 'Internal server error' })
   }
 }
