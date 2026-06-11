@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { getHomepageData } from '../../api/homepage.api';
-import type { HomepageData } from '../../types/home/homepage';
+import { getPublicStores, getNearestStore } from '../../api/store';
 
 export function useHomepageData(lat?: number, lng?: number) {
-  const [data, setData] = useState<HomepageData | null>(null);
+  const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -13,14 +12,25 @@ export function useHomepageData(lat?: number, lng?: number) {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await getHomepageData(lat, lng);
+        const [storesRes, nearestRes] = await Promise.all([
+          getPublicStores(1, 100),
+          (lat && lng) ? getNearestStore(lat, lng).catch(() => null) : Promise.resolve(null)
+        ]);
+
         if (mounted) {
-          setData(response.data);
+          setData({
+            stores: storesRes.data,
+            storeInfo: nearestRes ? nearestRes.data : null,
+            banners: null,
+            categories: null,
+            footer: null,
+            products: undefined
+          });
           setError(null);
         }
       } catch (err) {
         if (mounted) {
-          setError('Gagal memuat data homepage');
+          setError('Gagal memuat data toko');
           console.error(err);
         }
       } finally {

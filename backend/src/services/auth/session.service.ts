@@ -23,7 +23,8 @@ export class SessionService {
     const payload = {
       userId: storedToken.user.id,
       role: storedToken.user.role,
-      emailVerified: storedToken.user.emailVerified
+      emailVerified: storedToken.user.emailVerified,
+      storeId: storedToken.user.storeId || undefined
     };
 
     const newAccessToken = generateAccessToken(payload);
@@ -39,7 +40,8 @@ export class SessionService {
         email: true, 
         role: true, 
         emailVerified: true, 
-        profilePicture: true 
+        profilePicture: true,
+        storeId: true
       }
     });
 

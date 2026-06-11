@@ -6,6 +6,7 @@ declare module 'express-serve-static-core' {
       userId: number
       role: string
       emailVerified: boolean
+      storeId?: number
       iat?: number
       exp?: number
     }
