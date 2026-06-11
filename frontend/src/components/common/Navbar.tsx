@@ -90,6 +90,9 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
                 </a>
               )
             )}
+            {(user?.role === 'SUPER_ADMIN' || user?.role === 'STORE_ADMIN') && (
+              <Link to="/admin/stores" style={{ color: 'var(--accent-strong)', fontWeight: 600 }}>Admin Toko</Link>
+            )}
           </nav>
 
           {/* Search bar */}
@@ -248,6 +251,11 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
                       {link.label}
                     </a>
                   )
+                )}
+                {(user?.role === 'SUPER_ADMIN' || user?.role === 'STORE_ADMIN') && (
+                  <Link to="/admin/stores" onClick={closeMobileMenu} style={{ color: 'var(--accent-strong)', fontWeight: 600 }}>
+                    Admin Toko
+                  </Link>
                 )}
               </nav>
             )}

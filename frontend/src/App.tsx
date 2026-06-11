@@ -18,6 +18,11 @@ import SearchPage from './pages/search/SearchPage'
 import ProductDetailPage from './pages/product/ProductDetailPage'
 import AdminCategoryPage from './pages/admin/AdminCategoryPage'
 import AdminProductPage from './pages/admin/AdminProductPage'
+import AdminStoreLayout, { AdminStoreIndexRedirect } from './pages/admin/AdminStoreLayout'
+import AdminStoreList from './pages/admin/AdminStoreList'
+import AdminStoreAdminList from './pages/admin/AdminStoreAdminList'
+import AdminStockList from './pages/admin/AdminStockList'
+import AdminStoreDetailPage from './pages/admin/AdminStoreDetailPage'
 import './App.css'
 
 
@@ -61,8 +66,16 @@ function App() {
         <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
         
         {/* Admin Routes */}
-        <Route path="/admin/products" element={<AdminProductPage />} />
         <Route path="/admin/categories" element={<AdminCategoryPage />} />
+        
+        <Route path="/admin/stores" element={<AdminStoreLayout />}>
+          <Route index element={<AdminStoreIndexRedirect />} />
+          <Route path="list" element={<AdminStoreList />} />
+          <Route path="admins" element={<AdminStoreAdminList />} />
+          <Route path="stocks" element={<AdminStockList />} />
+          <Route path="products" element={<AdminProductPage />} />
+          <Route path=":id" element={<AdminStoreDetailPage />} />
+        </Route>
       </Routes>
     </ToastProvider>
   )

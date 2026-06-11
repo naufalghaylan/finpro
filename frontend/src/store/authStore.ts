@@ -8,6 +8,7 @@ interface User {
   role: string;
   profilePicture?: string;
   emailVerified?: boolean;
+  storeId?: number;
 }
 
 interface AuthState {

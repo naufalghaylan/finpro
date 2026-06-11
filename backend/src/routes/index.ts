@@ -4,10 +4,13 @@ import storeRouter from './store.routes'
 import productRouter from './product.routes'
 import categoryRouter from './category.routes'
 import promotionRouter from './promotion.routes'
+import discountRouter from './discount.routes'
 import cartRouter from './cart.routes'
+import stockRouter from './stock.routes'
 import profileRouter from './profile.routes'
-import homepageRouter from './homepage.routes'
 import orderRouter from './order.routes'
+import rajaongkirRouter from './rajaongkir.routes'
+import userRouter from './user.routes'
 
 const router = Router()
 
@@ -16,12 +19,14 @@ router.use('/stores', storeRouter)
 router.use('/products', productRouter)
 router.use('/categories', categoryRouter)
 router.use('/promotions', promotionRouter)
+router.use('/discounts', discountRouter)
 router.use('/cart', cartRouter)
+router.use('/stocks', stockRouter)
 router.use('/profile', profileRouter)
-router.use('/homepage', homepageRouter)
 router.use('/orders', orderRouter)
+router.use('/shipping', rajaongkirRouter)
 
 // ── Placeholder for future routes ──────────────────────────────────────────
-// router.use('/users', userRouter)
+router.use('/users', userRouter)
 
 export default router
