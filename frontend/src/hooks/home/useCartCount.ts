@@ -1,39 +1,27 @@
-import { useEffect, useState } from 'react'
-import api from '../../api/axios'
+import { useEffect } from 'react'
 import { useAuthStore } from '../../store/authStore'
+import { useCartStore } from '../../store/cartStore'
 
 export const useCartCount = () => {
-  const [count, setCount] = useState(0)
-  const [isLoading, setIsLoading] = useState(true)
   const { isAuthenticated } = useAuthStore()
+  const cartCount = useCartStore((state) => state.cartCount)
+  const isLoadingCartCount = useCartStore((state) => state.isLoadingCartCount)
+  const loadCartCount = useCartStore((state) => state.loadCartCount)
+  const resetCartCount = useCartStore((state) => state.resetCartCount)
 
-  const loadCart = async () => {
+  useEffect(() => {
     if (!isAuthenticated) {
-      setCount(0)
-      setIsLoading(false)
+      resetCartCount()
       return
     }
 
-    try {
-      const response = await api.get('/cart/count')
-      const data = response.data
-      setCount(typeof data.count === 'number' ? data.count : 0)
-    } catch {
-      setCount(0)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+    void loadCartCount()
+  }, [isAuthenticated, loadCartCount, resetCartCount])
 
-  useEffect(() => {
-    void loadCart()
-  }, [isAuthenticated])
-
-  // Add event listener for cart updates
   useEffect(() => {
     const handleCartUpdated = () => {
       if (isAuthenticated) {
-        void loadCart()
+        void loadCartCount()
       }
     }
 
@@ -42,8 +30,8 @@ export const useCartCount = () => {
     return () => {
       window.removeEventListener('cartUpdated', handleCartUpdated)
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, loadCartCount])
 
-  return { cartCount: count, isLoadingCartCount: isLoading }
+  return { cartCount, isLoadingCartCount }
 }
 

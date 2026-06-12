@@ -31,6 +31,7 @@ export const ORDER_ERRORS = {
   PAYMENT_DEADLINE_EXPIRED: 'PAYMENT_DEADLINE_EXPIRED',
   PAYMENT_GATEWAY_NOT_ALLOWED: 'PAYMENT_GATEWAY_NOT_ALLOWED',
   PAYMENT_GATEWAY_TOKEN_FAILED: 'PAYMENT_GATEWAY_TOKEN_FAILED',
+  PAYMENT_GATEWAY_STATUS_SYNC_FAILED: 'PAYMENT_GATEWAY_STATUS_SYNC_FAILED',
 } as const
 
 type OrderErrorCode = (typeof ORDER_ERRORS)[keyof typeof ORDER_ERRORS]
@@ -87,6 +88,19 @@ type OrderPaymentParams = {
   orderId: number
 }
 
+type OrderStatusGroup = 'ongoing' | 'completed' | 'cancelled'
+
+type ListOrdersParams = {
+  userId: number
+  page: number
+  limit: number
+  startDate?: string
+  endDate?: string
+  orderNumber?: string
+  status?: OrderStatus
+  statusGroup?: OrderStatusGroup
+}
+
 type UploadPaymentProofParams = OrderPaymentParams & {
   paymentProofUrl: string
 }
@@ -97,6 +111,14 @@ type MidtransNotificationResult = {
   transactionStatus: string
   orderStatus: OrderStatus
 } | null
+
+type MidtransTransactionStatus = {
+  order_id: string
+  transaction_status: string
+  fraud_status?: string
+  payment_type?: string
+  transaction_id?: string
+}
 
 type ReservedStockJournal = {
   stockId: number
@@ -146,6 +168,17 @@ type JournalStoreSnapshot = {
 }
 
 const PAYMENT_DEADLINE_IN_MS = 60 * 60 * 1000
+
+const orderStatusGroups: Record<OrderStatusGroup, OrderStatus[]> = {
+  ongoing: [
+    OrderStatus.PENDING_PAYMENT,
+    OrderStatus.WAITING_CONFIRMATION,
+    OrderStatus.PROCESSING,
+    OrderStatus.SHIPPED,
+  ],
+  completed: [OrderStatus.CONFIRMED],
+  cancelled: [OrderStatus.CANCELLED],
+}
 
 const buildProductSnapshot = (product: JournalProductSnapshot): Prisma.InputJsonObject => ({
   id: product.id,
@@ -237,6 +270,40 @@ const orderSelect = {
     },
   },
 } satisfies Prisma.OrderSelect
+
+const getStartOfDate = (date: string) => new Date(`${date}T00:00:00.000`)
+
+const getEndOfDate = (date: string) => new Date(`${date}T23:59:59.999`)
+
+const getFrontendUrl = () =>
+  (process.env.FRONTEND_URL || process.env.CORS_ORIGIN || 'http://localhost:5173').replace(/\/$/, '')
+
+const getMidtransFinishUrl = (orderId: number) => `${getFrontendUrl()}/orders/${orderId}`
+
+type MidtransApiError = {
+  httpStatusCode?: string | number
+  ApiResponse?: {
+    status_code?: string | number
+  }
+}
+
+const isMidtransTransactionNotFoundError = (error: unknown) => {
+  const apiError = error as MidtransApiError
+  const httpStatusCode = String(apiError.httpStatusCode ?? '')
+  const statusCode = String(apiError.ApiResponse?.status_code ?? '')
+
+  return httpStatusCode === '404' || statusCode === '404'
+}
+
+const getMidtransTransactionStatusOrNull = async (orderNumber: string) => {
+  try {
+    return await midtransCore.transaction.status(orderNumber)
+  } catch (error) {
+    if (isMidtransTransactionNotFoundError(error)) return null
+
+    throw error
+  }
+}
 
 const getDistanceFromLatLonInKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
   const earthRadiusInKm = 6371
@@ -767,6 +834,73 @@ export const getOrderPaymentDetails = async ({ userId, orderId }: OrderPaymentPa
   return order
 }
 
+export const listOrders = async ({
+  userId,
+  page,
+  limit,
+  startDate,
+  endDate,
+  orderNumber,
+  status,
+  statusGroup,
+}: ListOrdersParams) => {
+  const skip = (page - 1) * limit
+  const where: Prisma.OrderWhereInput = { userId }
+
+  if (orderNumber) {
+    where.orderNumber = {
+      contains: orderNumber,
+      mode: 'insensitive',
+    }
+  }
+
+  if (status) {
+    where.status = status
+  } else if (statusGroup) {
+    where.status = {
+      in: orderStatusGroups[statusGroup],
+    }
+  }
+
+  if (startDate || endDate) {
+    const createdAt: Prisma.DateTimeFilter = {}
+
+    if (startDate) {
+      createdAt.gte = getStartOfDate(startDate)
+    }
+
+    if (endDate) {
+      createdAt.lte = getEndOfDate(endDate)
+    }
+
+    where.createdAt = createdAt
+  }
+
+  const [orders, total] = await Promise.all([
+    prisma.order.findMany({
+      where,
+      select: orderSelect,
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    prisma.order.count({ where }),
+  ])
+  const totalPages = Math.ceil(total / limit)
+
+  return {
+    data: orders,
+    meta: {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    },
+  }
+}
+
 export const uploadManualPaymentProof = async ({
   userId,
   orderId,
@@ -963,15 +1097,37 @@ export const createMidtransSnapToken = async ({ userId, orderId }: OrderPaymentP
   }
 
   if (order.paymentGatewayId) {
-    return {
-      orderId: order.id,
-      orderNumber: order.orderNumber,
-      snapToken: order.paymentGatewayId,
-      redirectUrl: null,
+    const existingTransactionStatus = await getMidtransTransactionStatusOrNull(order.orderNumber)
+
+    if (!existingTransactionStatus) {
+      await prisma.order.update({
+        where: { id: order.id },
+        data: {
+          paymentGatewayId: null,
+        },
+      })
+    } else {
+      await processMidtransTransactionStatus(existingTransactionStatus)
+
+      if (existingTransactionStatus.transaction_status !== 'pending') {
+        throw new OrderServiceError(
+          ORDER_ERRORS.PAYMENT_GATEWAY_NOT_ALLOWED,
+          'Payment gateway transaction is no longer pending. Please refresh order status.',
+          409,
+        )
+      }
+
+      return {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        snapToken: order.paymentGatewayId,
+        redirectUrl: null,
+      }
     }
   }
 
   try {
+    const midtransReturnUrl = getMidtransFinishUrl(order.id)
     const snapTransaction = await midtransSnap.createTransaction({
       transaction_details: {
         order_id: order.orderNumber,
@@ -988,6 +1144,9 @@ export const createMidtransSnapToken = async ({ userId, orderId }: OrderPaymentP
         price: Math.round(item.priceAtTime),
         quantity: item.quantity,
       })),
+      callbacks: {
+        finish: midtransReturnUrl,
+      },
       expiry: {
         unit: 'minute',
         duration: 60,
@@ -1017,8 +1176,9 @@ export const createMidtransSnapToken = async ({ userId, orderId }: OrderPaymentP
   }
 }
 
-export const handleMidtransNotification = async (payload: unknown): Promise<MidtransNotificationResult> => {
-  const notification = await midtransCore.transaction.notification(payload)
+const processMidtransTransactionStatus = async (
+  notification: MidtransTransactionStatus,
+): Promise<MidtransNotificationResult> => {
   const orderNumber = notification.order_id
   const transactionStatus = notification.transaction_status
   const fraudStatus = notification.fraud_status
@@ -1133,6 +1293,52 @@ export const handleMidtransNotification = async (payload: unknown): Promise<Midt
   })
 }
 
+export const handleMidtransNotification = async (payload: unknown): Promise<MidtransNotificationResult> => {
+  const notification = await midtransCore.transaction.notification(payload)
+
+  return processMidtransTransactionStatus(notification)
+}
+
+export const syncMidtransPaymentStatus = async ({ userId, orderId }: OrderPaymentParams) => {
+  const order = await prisma.order.findFirst({
+    where: {
+      id: orderId,
+      userId,
+    },
+    select: {
+      id: true,
+      orderNumber: true,
+      paymentMethod: true,
+    },
+  })
+
+  if (!order) {
+    throw new OrderServiceError(ORDER_ERRORS.ORDER_NOT_FOUND, 'Order not found', 404)
+  }
+
+  if (order.paymentMethod !== PaymentMethod.PAYMENT_GATEWAY) {
+    throw new OrderServiceError(
+      ORDER_ERRORS.PAYMENT_GATEWAY_NOT_ALLOWED,
+      'Midtrans status sync is only available for payment gateway orders',
+      400,
+    )
+  }
+
+  try {
+    const transactionStatus = await midtransCore.transaction.status(order.orderNumber)
+    await processMidtransTransactionStatus(transactionStatus)
+
+    return getOrderPaymentDetails({ userId, orderId })
+  } catch (error) {
+    throw new OrderServiceError(
+      ORDER_ERRORS.PAYMENT_GATEWAY_STATUS_SYNC_FAILED,
+      'Failed to sync Midtrans payment status',
+      502,
+      error,
+    )
+  }
+}
+
 export const cancelOrder = async ({
   userId,
   orderId,
@@ -1148,6 +1354,7 @@ export const cancelOrder = async ({
         storeId: true,
         status: true,
         orderNumber: true,
+        paymentProof: true,
         stockJournals: {
           where: {
             type: StockJournalType.ORDER,
@@ -1177,7 +1384,7 @@ export const cancelOrder = async ({
     ) {
       throw new OrderServiceError(
         ORDER_ERRORS.ORDER_NOT_CANCELLABLE,
-        'Order can no longer be cancelled',
+        'Pesanan sudah tidak bisa dibatalkan',
         400,
       )
     }
@@ -1185,7 +1392,15 @@ export const cancelOrder = async ({
     if (!isAdmin && order.status !== OrderStatus.PENDING_PAYMENT) {
       throw new OrderServiceError(
         ORDER_ERRORS.ORDER_NOT_CANCELLABLE,
-        'Order can only be cancelled before payment is processed',
+        'Pesanan hanya bisa dibatalkan sebelum pembayaran diproses',
+        400,
+      )
+    }
+
+    if (!isAdmin && order.paymentProof) {
+      throw new OrderServiceError(
+        ORDER_ERRORS.ORDER_NOT_CANCELLABLE,
+        'Pesanan hanya bisa dibatalkan sebelum bukti bayar diupload',
         400,
       )
     }
@@ -1202,7 +1417,7 @@ export const cancelOrder = async ({
       data: {
         status: OrderStatus.CANCELLED,
         cancelledAt: new Date(),
-        cancelReason: reason || 'Order cancelled',
+        cancelReason: reason || 'Pesanan dibatalkan oleh pelanggan',
       },
       select: orderSelect,
     })

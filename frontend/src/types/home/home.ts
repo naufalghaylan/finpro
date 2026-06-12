@@ -17,7 +17,7 @@ export type NavLink = {
   id: string
   label: string
   href: string
-  icon?: string
+  icon?: string | null
 }
 
 export type ValueProp = {

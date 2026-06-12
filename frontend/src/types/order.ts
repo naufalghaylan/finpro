@@ -8,6 +8,7 @@ export type OrderStatus =
   | 'SHIPPED'
   | 'CONFIRMED'
   | 'CANCELLED'
+export type OrderStatusGroup = 'ongoing' | 'completed' | 'cancelled'
 
 export type CheckoutAddress = {
   id: number
@@ -111,4 +112,28 @@ export type CreateMidtransPaymentResult = {
   orderNumber: string
   snapToken: string
   redirectUrl: string | null
+}
+
+export type OrderListQuery = {
+  page?: number
+  limit?: number
+  startDate?: string
+  endDate?: string
+  orderNumber?: string
+  status?: OrderStatus
+  statusGroup?: OrderStatusGroup
+}
+
+export type OrderListMeta = {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+}
+
+export type OrderListResponse = {
+  orders: CheckoutOrder[]
+  meta: OrderListMeta
 }
