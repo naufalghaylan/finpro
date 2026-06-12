@@ -10,7 +10,6 @@ import {
   BRAND,
   footerSections as defaultFooter,
   heroSlides as defaultSlides,
-  MAIN_STORE_ID,
   SERVICE_RANGE_KM,
   storeLocations as defaultStores,
   valueProps,
@@ -40,10 +39,10 @@ const getCategoryIcon = (label: string) => {
   if (normalizedLabel.includes('bumbu')) return <Flame size={18} style={{ marginRight: 8 }} />
   if (normalizedLabel.includes('siap')) return <ChefHat size={18} style={{ marginRight: 8 }} />
   return <LayoutGrid size={18} style={{ marginRight: 8 }} />
-}
+} // TODO: icon placeholder pakai ganti ke database aja, taruh icon placeholder tiap kategori di database, terus tinggal panggil aja, jangan pake if else banyak gini, nanti susah maintenance nya, kalau bisa buat tabel kategori di database yang punya field icon_url atau semacamnya, terus tinggal panggil aja dari situ, biar lebih scalable dan gampang kalau mau nambah kategori baru tinggal masukin data doang tanpa harus ubah code.
+  // TODO: Atau bisa juga pakai dynamic iconnya lucide https://lucide.dev/guide/react/advanced/dynamic-icon-component
 
-const getMainStore = () =>
-  defaultStores.find((store) => store.id === MAIN_STORE_ID) ?? defaultStores[0]
+// removed getMainStore
 
 export default function HomePage() {
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null)
@@ -69,23 +68,23 @@ export default function HomePage() {
         setTimeout(() => {
           el.scrollIntoView({ behavior: 'smooth' })
         }, 100)
-      }
+      } //TODO: coba cek cleanup functionnya, takut keduplicate scroll kalau user cepet ganti hash atau ganti hash pas loading, jadi mungkin kita bisa clear timeoutnya dulu sebelum setTimeout baru, biar kalau user ganti hash cepet gak bikin banyak timeout yang numpuk dan bikin scroll kacau.
     }
   }, [location.hash, loading])
 
   const activeStores = data?.stores && data.stores.length > 0
-    ? data.stores.map((s: HomepageStore) => ({
+    ? data.stores.map((s: HomepageStore, index: number) => ({
         id: s.id.toString(),
         name: s.name,
         city: s.city,
         address: s.address,
         lat: s.latitude,
         lng: s.longitude,
-        isMain: s.id.toString() === MAIN_STORE_ID
+        isMain: index === 0
       }))
     : defaultStores;
 
-  const mainStore = getMainStore()
+  const mainStore = activeStores.find((s: { isMain?: boolean }) => s.isMain) || activeStores[0];
 
   const isManuallySelected = selectedStoreId && selectedStoreId !== data?.storeInfo?.id?.toString()
 
@@ -189,13 +188,6 @@ export default function HomePage() {
           onUseMainStore={fallbackToMainStore}
         />
         <ValueStrip items={valueProps} sectionId="deals" />
-        
-        {/* We pass the fetched products to ProductGrid if it supports it, else ProductGrid handles it.
-            Actually, the user requirement states Product list based on nearest store.
-            Let's pass the nearest storeId down to the ProductGrid or it will fetch on its own.
-            Since ProductGrid uses useProducts natively, let's update ProductGrid to take storeId,
-            or just pass the products array if ProductGrid is modified.
-        */}
         <ProductGrid products={isManuallySelected ? undefined : data?.products} storeId={activeStore.id} />
           
         <StoreShowcase

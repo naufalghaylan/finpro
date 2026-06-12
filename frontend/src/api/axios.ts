@@ -52,8 +52,8 @@ api.interceptors.response.use(
         processQueue(refreshError, null);
         
         // Log out user if refresh fails and they are not already on a public page
-        const publicPaths = ['/', '/login', '/register', '/forgot-password', '/reset-password'];
-        const isPublicPath = publicPaths.includes(window.location.pathname) || window.location.pathname.startsWith('/verify');
+        const publicPaths = ['/', '/home', '/catalog', '/search', '/login', '/register', '/forgot-password', '/reset-password'];
+        const isPublicPath = publicPaths.includes(window.location.pathname) || window.location.pathname.startsWith('/verify') || window.location.pathname.startsWith('/products');
         
         if (!isPublicPath) {
            window.location.href = '/login';

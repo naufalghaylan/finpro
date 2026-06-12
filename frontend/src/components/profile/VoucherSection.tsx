@@ -44,7 +44,7 @@ export const VoucherSection = () => {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {profile.vouchers.map(voucher => (
+            {profile.vouchers.map((voucher) => (
               <div key={voucher.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', border: '1px solid #e2e8f0', borderRadius: '12px', background: '#fff' }}>
                 <div>
                   <h5 style={{ margin: '0 0 4px', fontSize: '1rem', color: 'var(--ink)' }}>{voucher.name}</h5>

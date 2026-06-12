@@ -22,6 +22,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
       userId: Number(decoded.userId),
       role: String(decoded.role),
       emailVerified: decoded.emailVerified,
+      storeId: decoded.storeId,
       // iat and exp are preserved if needed by checking token manually, but payload has our core items
     }
     next()

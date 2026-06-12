@@ -35,7 +35,7 @@ export class AuthService {
       throw new AppError(401, 'Invalid credentials');
     }
 
-    const payload = { userId: user.id, role: user.role, emailVerified: user.emailVerified };
+    const payload = { userId: user.id, role: user.role, emailVerified: user.emailVerified, storeId: user.storeId || undefined };
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken(payload, rememberMe);
 
@@ -58,7 +58,7 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, emailVerified: user.emailVerified, profilePicture: user.profilePicture }
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, emailVerified: user.emailVerified, profilePicture: user.profilePicture, storeId: user.storeId }
     };
   }
 

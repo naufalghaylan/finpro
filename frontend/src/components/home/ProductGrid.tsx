@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { ArrowRight, Eye, ShoppingCart } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { useProducts } from '../../hooks/useProducts'
+import { ProductCard } from '../product/ProductCard'
 import type { Product } from '../../types/product'
 
 type ProductGridProps = {
-  products?: Product[] | any[]
+  products?: Product[] 
   storeId?: string
 }
 import { useAddToCart } from '../../hooks/useAddToCart'
@@ -18,7 +19,7 @@ export const ProductGrid = ({ products: initialProducts, storeId }: ProductGridP
     initialProducts ? undefined : { limit: 8, sortBy: 'newest', storeId }
   )
   
-  const [displayProducts, setDisplayProducts] = useState<Product[] | any[]>(initialProducts || [])
+  const [displayProducts, setDisplayProducts] = useState<Product[] >(initialProducts || [])
 
   useEffect(() => {
     if (initialProducts) {
@@ -65,38 +66,13 @@ export const ProductGrid = ({ products: initialProducts, storeId }: ProductGridP
         </div>
         <div className="product-grid" style={{ opacity: (!initialProducts && loading) ? 0.5 : 1, transition: 'opacity 0.2s', pointerEvents: (!initialProducts && loading) ? 'none' : 'auto' }}>
           {displayProducts.map((product) => (
-            <article key={product.id} className="product-card">
-              <div className="product-swatch swatch-olive">
-                <span>{product.category?.name || product.categoryName}</span>
-              </div>
-              <div className="product-meta">
-                <div className="product-header">
-                  <h3>{product.name}</h3>
-                </div>
-                <p className="product-price">
-                  Rp {(product.basePrice ?? product.price)?.toLocaleString('id-ID')}
-                </p>
-              </div>
-              <div className="product-footer">
-                <button
-                  type="button"
-                  className="button primary"
-                  disabled={addingProductId === product.id}
-                  onClick={() => void addToCart(product)}
-                >
-                  <ShoppingCart className="button-icon" aria-hidden="true" />
-                  <span>{addingProductId === product.id ? 'Menambahkan...' : 'Tambah'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="button ghost"
-                  onClick={() => navigate(`/products/${product.id}`)}
-                >
-                  <Eye className="button-icon" aria-hidden="true" />
-                  <span>Detail</span>
-                </button>
-              </div>
-            </article>
+            <ProductCard
+              key={product.id}
+              product={product}
+              isAddingToCart={addingProductId === product.id}
+              onAddToCart={() => void addToCart(product)}
+              onClick={() => navigate(`/products/${product.id}`)}
+            />
           ))}
         </div>
       </div>

@@ -15,6 +15,7 @@ export interface AuthTokenPayload {
   userId: number;
   role: string;
   emailVerified: boolean;
+  storeId?: number;
 }
 
 export const generateAccessToken = (payload: AuthTokenPayload): string => {

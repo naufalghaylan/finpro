@@ -1,5 +1,6 @@
 import prisma from '../lib/prisma'
 import { AppError } from '../utils/AppError'
+import bcrypt from 'bcryptjs'
 
 /**
  * Shared UserService for inter-module communication.
@@ -88,5 +89,76 @@ export class UserService {
     const user = await this.getUserById(userId, false)
     if (!user) return false
     return roles.includes(user.role)
+  }
+
+  static async getStoreAdmins() {
+    return await prisma.user.findMany({
+      where: { role: 'STORE_ADMIN' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+        storeId: true,
+        store: {
+          select: {
+            id: true,
+            name: true,
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  static async createStoreAdmin(data: any) {
+    const existingUser = await prisma.user.findUnique({ where: { email: data.email } });
+    if (existingUser) {
+      throw new AppError(400, 'Email already registered');
+    }
+
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+
+    return await prisma.user.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        password: hashedPassword,
+        role: 'STORE_ADMIN',
+        storeId: data.storeId || null,
+        emailVerified: true
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        storeId: true
+      }
+    });
+  }
+
+  static async assignStoreAdmin(adminId: number, storeId: number | null) {
+    const admin = await prisma.user.findUnique({ where: { id: adminId } });
+    if (!admin || admin.role !== 'STORE_ADMIN') {
+      throw new AppError(404, 'Admin not found or invalid role');
+    }
+
+    if (storeId) {
+      const store = await prisma.store.findUnique({ where: { id: storeId } });
+      if (!store) {
+        throw new AppError(404, 'Store not found');
+      }
+    }
+
+    return await prisma.user.update({
+      where: { id: adminId },
+      data: { storeId: storeId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        storeId: true
+      }
+    });
   }
 }
