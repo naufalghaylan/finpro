@@ -100,6 +100,7 @@ model User {
   rejectedMutations  StockMutation[] @relation("MutationRejecter")
   receivedMutations  StockMutation[] @relation("MutationReceiver")
   refreshTokens      RefreshToken[]
+  shippingCaches     UserShippingCache[]
 
   @@map("users")
 }
@@ -131,6 +132,7 @@ model Store {
   discounts            Discount[]
   sourceMutations      StockMutation[] @relation("MutationSource")
   destinationMutations StockMutation[] @relation("MutationDestination")
+  shippingCaches       UserShippingCache[]
 
   @@map("stores")
 }
@@ -323,6 +325,7 @@ model UserAddress {
 
   user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   orders Order[]
+  shippingCaches UserShippingCache[]
 
   @@index([userId])
   @@map("user_addresses")
@@ -511,4 +514,26 @@ model RefreshToken {
 
   @@index([userId])
   @@map("refresh_tokens")
+}
+
+model UserShippingCache {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  addressId    Int      @map("address_id")
+  storeId      Int      @map("store_id")
+  weight       Int      // berat dalam gram untuk API RajaOngkir
+  courier      String   // misal: 'jne', 'pos', 'tiki'
+  results      Json     // Array dari tipe layanan kurir
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address UserAddress @relation(fields: [addressId], references: [id], onDelete: Cascade)
+  store   Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, addressId, storeId, weight, courier])
+  @@index([userId])
+  @@index([addressId])
+  @@index([storeId])
+  @@map("user_shipping_caches")
 }
