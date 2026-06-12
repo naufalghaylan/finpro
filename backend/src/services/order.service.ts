@@ -52,6 +52,9 @@ export class OrderServiceError extends Error {
 type CreateCheckoutOrderParams = {
   userId: number
   addressId: number
+  shippingMethod: string
+  shippingService: string
+  shippingCost: number
   paymentMethod: PaymentMethod
   notes?: string
 }
@@ -733,6 +736,9 @@ export const getCheckoutPreview = async ({ userId, addressId }: CheckoutPreviewP
 export const createCheckoutOrder = async ({
   userId,
   addressId,
+  shippingMethod,
+  shippingService,
+  shippingCost,
   paymentMethod,
   notes,
 }: CreateCheckoutOrderParams) => {
@@ -776,8 +782,10 @@ export const createCheckoutOrder = async ({
         addressId,
         status,
         totalProductAmount,
-        totalAmount: totalProductAmount,
-        shippingCost: 0,
+        totalAmount: totalProductAmount + shippingCost,
+        shippingCost,
+        shippingMethod,
+        shippingService,
         discountAmount: 0,
         paymentMethod,
         paymentDeadline,
