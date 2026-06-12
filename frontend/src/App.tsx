@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import { ToastProvider } from './components/common/Toast'
 import { ProtectedRoute, GuestRoute } from './components/common/RouteGuard'
+import { ScrollToTop } from './components/common/ScrollToTop'
 import HomePage from './pages/home/HomePage'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
@@ -14,6 +15,7 @@ import SocialOnboardingPage from './pages/auth/SocialOnboardingPage'
 import CartPage from './pages/cart/CartPage'
 import CheckoutPage from './pages/checkout/CheckoutPage'
 import PaymentPage from './pages/payment/PaymentPage'
+import OrdersPage from './pages/orders/OrdersPage'
 import CatalogPage from './pages/catalog/CatalogPage'
 import SearchPage from './pages/search/SearchPage'
 import ProductDetailPage from './pages/product/ProductDetailPage'
@@ -41,6 +43,7 @@ function App() {
 
   return (
     <ToastProvider>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Navigate to="/home" replace />} />
         <Route path="/home" element={<HomePage />} />
@@ -60,6 +63,8 @@ function App() {
         <Route path="/onboarding" element={<ProtectedRoute><SocialOnboardingPage /></ProtectedRoute>} />
         <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
         <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+        <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
+        <Route path="/orders/:id" element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
         <Route path="/orders/:id/payment" element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
         
         {/* Admin Routes */}

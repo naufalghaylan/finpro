@@ -9,6 +9,13 @@ type MidtransSnapClient = {
 
 type MidtransCoreClient = {
   transaction: {
+    status: (transactionId: string) => Promise<{
+      order_id: string
+      transaction_status: string
+      fraud_status?: string
+      payment_type?: string
+      transaction_id?: string
+    }>
     notification: (payload: unknown) => Promise<{
       order_id: string
       transaction_status: string

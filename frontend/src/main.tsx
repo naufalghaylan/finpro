@@ -7,6 +7,10 @@ import App from './App.tsx'
 
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
 
+if ('scrollRestoration' in window.history) {
+  window.history.scrollRestoration = 'manual'
+}
+
 const app = (
   <BrowserRouter>
     <App />

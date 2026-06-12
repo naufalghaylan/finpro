@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ShoppingCart } from 'lucide-react'
+import { PackageCheck, ShoppingCart, UserRound } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useCartCount } from '../../hooks/home/useCartCount'
 import type { NavLink } from '../../types/home/home'
@@ -116,49 +116,62 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
           <div className="nav-actions">
             {isAuthenticated && user ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <Link
-                  to="/profile"
-                  className="profile-pill"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    textDecoration: 'none',
-                    color: 'var(--ink)',
-                    background: 'white',
-                    border: '1px solid var(--line)',
-                    borderRadius: '999px',
-                    padding: '6px 16px 6px 6px',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
-                  }}
-                >
-                  <div style={{
-                    width: '34px',
-                    height: '34px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--accent)',
-                    color: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 'bold',
-                    fontSize: '0.95rem',
-                    overflow: 'hidden'
-                  }}>
-                    {user.profilePicture ? (
-                      <img
-                        src={user.profilePicture}
-                        alt={user.name}
-                        referrerPolicy="no-referrer"
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                    ) : (
-                      getInitial(user.name)
-                    )}
+                <div className="profile-menu">
+                  <Link
+                    to="/profile"
+                    className="profile-pill"
+                    aria-haspopup="menu"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      textDecoration: 'none',
+                      color: 'var(--ink)',
+                      background: 'white',
+                      border: '1px solid var(--line)',
+                      borderRadius: '999px',
+                      padding: '6px 16px 6px 6px',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                    }}
+                  >
+                    <div style={{
+                      width: '34px',
+                      height: '34px',
+                      borderRadius: '50%',
+                      backgroundColor: 'var(--accent)',
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 'bold',
+                      fontSize: '0.95rem',
+                      overflow: 'hidden'
+                    }}>
+                      {user.profilePicture ? (
+                        <img
+                          src={user.profilePicture}
+                          alt={user.name}
+                          referrerPolicy="no-referrer"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        getInitial(user.name)
+                      )}
+                    </div>
+                    <span style={{ fontWeight: 600, fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '120px' }} className="desktop-only">{user.name}</span>
+                  </Link>
+                  <div className="profile-dropdown" role="menu" aria-label="Menu akun">
+                    <Link to="/profile" role="menuitem" className="profile-dropdown-item">
+                      <UserRound aria-hidden="true" />
+                      Profil
+                    </Link>
+                    <Link to="/orders" role="menuitem" className="profile-dropdown-item">
+                      <PackageCheck aria-hidden="true" />
+                      Pesanan
+                    </Link>
                   </div>
-                  <span style={{ fontWeight: 600, fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '120px' }} className="desktop-only">{user.name}</span>
-                </Link>
+                </div>
                 <button
                   type="button"
                   onClick={() => logout()}
@@ -257,7 +270,7 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
             {/* Auth section */}
             {isAuthenticated && user ? (
               <div className="mobile-menu-auth">
-                <Link to="/profile" className="mobile-profile-row" onClick={closeMobileMenu}>
+                <div className="mobile-profile-row">
                   <div className="mobile-avatar">
                     {user.profilePicture ? (
                       <img
@@ -272,9 +285,19 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
                   </div>
                   <div className="mobile-profile-info">
                     <span className="mobile-profile-name">{user.name}</span>
-                    <span className="mobile-profile-sub">Lihat profil</span>
+                    <span className="mobile-profile-sub">Akun PanenMart</span>
                   </div>
-                </Link>
+                </div>
+                <nav className="mobile-account-links" aria-label="Menu akun">
+                  <Link to="/profile" onClick={closeMobileMenu}>
+                    <UserRound aria-hidden="true" />
+                    Profil
+                  </Link>
+                  <Link to="/orders" onClick={closeMobileMenu}>
+                    <PackageCheck aria-hidden="true" />
+                    Pesanan
+                  </Link>
+                </nav>
                 <button
                   type="button"
                   onClick={() => { logout(); closeMobileMenu() }}

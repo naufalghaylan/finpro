@@ -1,14 +1,68 @@
 import { z } from 'zod'
-import { PaymentMethod } from '../generated/prisma/client'
+import { OrderStatus, PaymentMethod } from '../generated/prisma/client'
 
 const positiveIntegerSchema = z.coerce
   .number()
   .int('Must be an integer')
   .positive('Must be a positive integer')
 
+const orderListLimitSchema = z.coerce
+  .number()
+  .int('Limit must be an integer')
+  .positive('Limit must be a positive integer')
+  .default(10)
+  .transform((limit) => Math.min(limit, 50))
+
+const optionalDateSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must use YYYY-MM-DD format')
+  .optional()
+
+const optionalOrderNumberSchema = z
+  .string()
+  .trim()
+  .max(80, 'Order number must be at most 80 characters')
+  .optional()
+  .transform((value) => value || undefined)
+
+const orderStatusValues = [
+  OrderStatus.PENDING_PAYMENT,
+  OrderStatus.WAITING_CONFIRMATION,
+  OrderStatus.PROCESSING,
+  OrderStatus.SHIPPED,
+  OrderStatus.CONFIRMED,
+  OrderStatus.CANCELLED,
+] as const
+
 export const checkoutQuerySchema = z.object({
   addressId: positiveIntegerSchema.optional(),
 })
+
+export const orderListQuerySchema = z
+  .object({
+    page: positiveIntegerSchema.default(1),
+    limit: orderListLimitSchema,
+    startDate: optionalDateSchema,
+    endDate: optionalDateSchema,
+    orderNumber: optionalOrderNumberSchema,
+    status: z.enum(orderStatusValues).optional(),
+    statusGroup: z.enum(['ongoing', 'completed', 'cancelled']).optional(),
+  })
+  .superRefine((query, context) => {
+    if (!query.startDate || !query.endDate) return
+
+    const startDate = new Date(`${query.startDate}T00:00:00.000`)
+    const endDate = new Date(`${query.endDate}T23:59:59.999`)
+
+    if (startDate.getTime() > endDate.getTime()) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'End date must be after start date',
+        path: ['endDate'],
+      })
+    }
+  })
 
 export const createCheckoutOrderSchema = z.object({
   addressId: positiveIntegerSchema,
@@ -42,6 +96,7 @@ export const fulfillmentActionSchema = z.object({
 })
 
 export type CheckoutQuery = z.infer<typeof checkoutQuerySchema>
+export type OrderListQuery = z.infer<typeof orderListQuerySchema>
 export type CreateCheckoutOrderInput = z.infer<typeof createCheckoutOrderSchema>
 export type CancelOrderInput = z.infer<typeof cancelOrderSchema>
 export type RequestFulfillmentInput = z.infer<typeof requestFulfillmentSchema>

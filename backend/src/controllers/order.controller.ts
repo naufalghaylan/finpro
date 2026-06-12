@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { unlink } from 'fs/promises'
+import cloudinary from '../lib/cloudinary'
 import {
   approveFulfillment as approveFulfillmentService,
   cancelOrder as cancelOrderService,
@@ -8,9 +8,11 @@ import {
   getOrderPaymentDetails as getOrderPaymentDetailsService,
   getCheckoutPreview as getCheckoutPreviewService,
   OrderServiceError,
+  listOrders as listOrdersService,
   receiveFulfillment as receiveFulfillmentService,
   rejectFulfillment as rejectFulfillmentService,
   requestOrderFulfillment as requestOrderFulfillmentService,
+  syncMidtransPaymentStatus as syncMidtransPaymentStatusService,
   uploadManualPaymentProof as uploadManualPaymentProofService,
 } from '../services/order.service'
 import {
@@ -18,6 +20,7 @@ import {
   checkoutQuerySchema,
   createCheckoutOrderSchema,
   fulfillmentActionSchema,
+  orderListQuerySchema,
   orderParamsSchema,
   requestFulfillmentSchema,
   stockMutationParamsSchema,
@@ -47,13 +50,48 @@ const handleOrderError = (error: unknown, res: Response) => {
   return false
 }
 
-const removeUploadedFile = async (file?: Express.Multer.File) => {
-  if (!file?.path) return
+const uploadPaymentProofToCloudinary = async (file: Express.Multer.File) => {
+  const base64File = Buffer.from(file.buffer).toString('base64')
+  const dataUri = `data:${file.mimetype};base64,${base64File}`
+
+  return cloudinary.uploader.upload(dataUri, {
+    folder: 'finpro/payment-proofs',
+    resource_type: 'image',
+  })
+}
+
+const removeCloudinaryAsset = async (publicId?: string) => {
+  if (!publicId) return
 
   try {
-    await unlink(file.path)
+    await cloudinary.uploader.destroy(publicId)
   } catch (error) {
-    console.error('[removeUploadedFile]', error)
+    console.error('[removeCloudinaryAsset]', error)
+  }
+}
+
+export const listOrders = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = getAuthenticatedUserId(req, res)
+    if (!userId) return
+
+    const parsed = orderListQuerySchema.safeParse(req.query)
+    if (!parsed.success) {
+      res.status(400).json({ message: 'Validation Error', errors: parsed.error.flatten().fieldErrors })
+      return
+    }
+
+    const result = await listOrdersService({
+      userId,
+      ...parsed.data,
+    })
+
+    res.json(result)
+  } catch (error) {
+    if (handleOrderError(error, res)) return
+
+    console.error('[listOrders]', error)
+    res.status(500).json({ message: 'Internal server error' })
   }
 }
 
@@ -143,17 +181,17 @@ export const getOrderPaymentDetails = async (req: Request, res: Response): Promi
 }
 
 export const uploadManualPaymentProof = async (req: Request, res: Response): Promise<void> => {
+  let uploadedPaymentProofPublicId: string | undefined
+
   try {
     const userId = getAuthenticatedUserId(req, res)
     if (!userId) {
-      await removeUploadedFile(req.file)
       return
     }
 
     const parsedParams = orderParamsSchema.safeParse(req.params)
 
     if (!parsedParams.success) {
-      await removeUploadedFile(req.file)
       res.status(400).json({ message: 'Validation Error', errors: parsedParams.error.flatten().fieldErrors })
       return
     }
@@ -166,19 +204,23 @@ export const uploadManualPaymentProof = async (req: Request, res: Response): Pro
       return
     }
 
-    const paymentProofUrl = `/uploads/payment-proofs/${req.file.filename}`
+    const uploadResult = await uploadPaymentProofToCloudinary(req.file)
+    uploadedPaymentProofPublicId = uploadResult.public_id
+
     const order = await uploadManualPaymentProofService({
       userId,
       orderId: parsedParams.data.id,
-      paymentProofUrl,
+      paymentProofUrl: uploadResult.secure_url,
     })
+
+    uploadedPaymentProofPublicId = undefined
 
     res.json({
       message: 'Payment proof uploaded successfully',
       data: order,
     })
   } catch (error) {
-    await removeUploadedFile(req.file)
+    await removeCloudinaryAsset(uploadedPaymentProofPublicId)
     if (handleOrderError(error, res)) return
 
     console.error('[uploadManualPaymentProof]', error)
@@ -211,6 +253,35 @@ export const createMidtransPayment = async (req: Request, res: Response): Promis
     if (handleOrderError(error, res)) return
 
     console.error('[createMidtransPayment]', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+}
+
+export const syncMidtransPaymentStatus = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = getAuthenticatedUserId(req, res)
+    if (!userId) return
+
+    const parsedParams = orderParamsSchema.safeParse(req.params)
+
+    if (!parsedParams.success) {
+      res.status(400).json({ message: 'Validation Error', errors: parsedParams.error.flatten().fieldErrors })
+      return
+    }
+
+    const order = await syncMidtransPaymentStatusService({
+      userId,
+      orderId: parsedParams.data.id,
+    })
+
+    res.json({
+      message: 'Midtrans payment status synced',
+      data: order,
+    })
+  } catch (error) {
+    if (handleOrderError(error, res)) return
+
+    console.error('[syncMidtransPaymentStatus]', error)
     res.status(500).json({ message: 'Internal server error' })
   }
 }

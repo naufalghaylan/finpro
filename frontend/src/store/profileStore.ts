@@ -1,6 +1,16 @@
 import { create } from 'zustand'
 import api from '../api/axios'
 
+type UserVoucher = {
+  id: number
+  code: string
+  name: string
+  discountType: 'PERCENTAGE' | 'NOMINAL' | 'BUY_ONE_GET_ONE'
+  discountValue: number
+  minPurchase: number
+  expiredAt: string
+}
+
 interface UserProfile {
   id: number
   name: string
@@ -11,7 +21,7 @@ interface UserProfile {
   emailVerified: boolean
   createdAt: string
   referralCode?: { code: string } | null
-  vouchers?: Record<string, unknown>[]
+  vouchers?: UserVoucher[]
 }
 
 interface ProfileState {
