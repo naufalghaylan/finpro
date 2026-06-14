@@ -1052,6 +1052,70 @@
   background: rgba(232, 107, 79, 0.12);
 }
 
+.checkout-shipping-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.checkout-courier-grid,
+.checkout-shipping-service-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.checkout-courier-card,
+.checkout-shipping-service-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 100%;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 16px;
+  background: #fffaf2;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.checkout-courier-card:hover,
+.checkout-shipping-service-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(232, 107, 79, 0.45);
+}
+
+.checkout-courier-card.selected,
+.checkout-shipping-service-card.selected {
+  border-color: var(--accent);
+  box-shadow: 0 14px 28px rgba(232, 107, 79, 0.14);
+}
+
+.checkout-courier-card input,
+.checkout-shipping-service-card input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.shipping-service-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.shipping-service-info span {
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
+.shipping-service-cost {
+  margin-top: 4px;
+  color: var(--accent-strong);
+  font-size: 1.1rem;
+}
+
 .checkout-store-card {
   display: flex;
   justify-content: space-between;

@@ -16,6 +16,19 @@ import {
   WalletCards,
 } from 'lucide-react'
 import { createCheckoutOrder, getCheckoutPreview } from '../../api/order.api'
+import { calculateShippingCost, type ShippingCostResult } from '../../api/rajaongkir'
+
+const AVAILABLE_COURIERS = [
+  { code: 'jne', label: 'JNE' },
+  { code: 'pos', label: 'POS Indonesia' },
+  { code: 'tiki', label: 'TIKI' },
+  { code: 'sicepat', label: 'SiCepat' },
+  { code: 'jnt', label: 'J&T Express' },
+  { code: 'anteraja', label: 'AnterAja' },
+  { code: 'ninja', label: 'Ninja Xpress' },
+  { code: 'idexpress', label: 'ID Express' },
+  { code: 'sap', label: 'SAP Express' },
+]
 import { Navbar } from '../../components/common/Navbar'
 import { useToast } from '../../components/common/toastContext'
 import { HomeFooter } from '../../components/home/HomeFooter'
@@ -80,6 +93,11 @@ function CheckoutPage() {
   const [isRefreshingPreview, setIsRefreshingPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const [selectedCourier, setSelectedCourier] = useState<string>('')
+  const [shippingCosts, setShippingCosts] = useState<ShippingCostResult[]>([])
+  const [selectedShippingService, setSelectedShippingService] = useState<ShippingCostResult | null>(null)
+  const [isFetchingShipping, setIsFetchingShipping] = useState(false)
   const { showToast } = useToast()
   const navigate = useNavigate()
   const setCartCount = useCartStore((state) => state.setCartCount)
@@ -124,34 +142,76 @@ function CheckoutPage() {
     selectedAddress.longitude !== null &&
     selectedAddress.longitude !== undefined
   const isCartEmpty = (preview?.cart.items.length ?? 0) === 0
+
+  const totalWeight = useMemo(() => {
+    return preview?.cart.items.reduce((acc, item) => acc + (item.product.weight * item.quantity), 0) ?? 0
+  }, [preview?.cart.items])
+
   const paymentSummary = useMemo(() => {
     const subtotal = preview?.cart.summary.subtotal ?? 0
+    const shippingCost = selectedShippingService?.cost ?? 0
 
     return {
       subtotal,
-      totalPayment: Math.max(0, subtotal),
+      shippingCost,
+      totalPayment: Math.max(0, subtotal + shippingCost),
     }
-  }, [preview?.cart.summary.subtotal])
+  }, [preview?.cart.summary.subtotal, selectedShippingService])
+
   const canCreateOrder =
     Boolean(selectedAddressId) &&
     hasSelectedAddressCoordinates &&
     Boolean(preview?.nearestStore) &&
     !isCartEmpty &&
     !isRefreshingPreview &&
-    !isSubmitting
+    !isSubmitting &&
+    Boolean(selectedShippingService)
 
   const handleAddressChange = (addressId: number) => {
     setSelectedAddressId(addressId)
     void loadPreview(addressId)
   }
 
+  useEffect(() => {
+    if (!selectedAddressId || !preview?.nearestStore || !selectedCourier || totalWeight === 0) {
+      setShippingCosts([])
+      setSelectedShippingService(null)
+      return
+    }
+
+    const fetchShippingCosts = async () => {
+      setIsFetchingShipping(true)
+      try {
+        const results = await calculateShippingCost({
+          addressId: selectedAddressId,
+          storeId: preview.nearestStore!.id,
+          weight: Math.max(1, Math.ceil(totalWeight)),
+          courier: selectedCourier,
+        })
+        setShippingCosts(results)
+        setSelectedShippingService(null)
+      } catch (err) {
+        showToast('Gagal memuat ongkos kirim. Silakan coba kurir lain.', 'error')
+        setShippingCosts([])
+        setSelectedShippingService(null)
+      } finally {
+        setIsFetchingShipping(false)
+      }
+    }
+
+    void fetchShippingCosts()
+  }, [selectedAddressId, preview?.nearestStore, selectedCourier, totalWeight, showToast])
+
   const handleCreateOrder = async () => {
-    if (!selectedAddressId || !canCreateOrder) return
+    if (!selectedAddressId || !canCreateOrder || !selectedShippingService) return
 
     setIsSubmitting(true)
     try {
       const result = await createCheckoutOrder({
         addressId: selectedAddressId,
+        shippingMethod: selectedCourier,
+        shippingService: selectedShippingService.service,
+        shippingCost: selectedShippingService.cost,
         paymentMethod,
         notes: notes.trim() || undefined,
       })
@@ -386,16 +446,79 @@ function CheckoutPage() {
                         <Truck aria-hidden="true" />
                         <div>
                           <h2>Metode Pengiriman</h2>
-                          <p>Opsi pengiriman akan mengikuti data alamat dan ongkir dari Feature 1.</p>
+                          <p>Pilih kurir dan layanan pengiriman untuk pesanan ini.</p>
                         </div>
                       </div>
 
-                      <div className="checkout-inline-alert">
-                        <AlertCircle aria-hidden="true" />
-                        {hasSelectedAddressCoordinates
-                          ? 'Metode pengiriman menunggu data dari fitur alamat/pengiriman.'
-                          : 'Pilih alamat dengan koordinat untuk menampilkan metode pengiriman.'}
-                      </div>
+                      {!hasSelectedAddressCoordinates ? (
+                        <div className="checkout-inline-alert">
+                          <AlertCircle aria-hidden="true" />
+                          Pilih alamat dengan koordinat untuk menampilkan metode pengiriman.
+                        </div>
+                      ) : !preview.nearestStore ? (
+                        <div className="checkout-inline-alert">
+                          <AlertCircle aria-hidden="true" />
+                          Store terdekat belum tersedia.
+                        </div>
+                      ) : (
+                        <div className="checkout-shipping-container">
+                          <div className="checkout-courier-grid">
+                            {AVAILABLE_COURIERS.map((courier) => (
+                              <label
+                                key={courier.code}
+                                className={`checkout-courier-card ${selectedCourier === courier.code ? 'selected' : ''}`}
+                              >
+                                <input
+                                  type="radio"
+                                  name="courier"
+                                  checked={selectedCourier === courier.code}
+                                  onChange={() => setSelectedCourier(courier.code)}
+                                />
+                                <strong>{courier.label}</strong>
+                              </label>
+                            ))}
+                          </div>
+
+                          {isFetchingShipping ? (
+                            <div className="checkout-inline-alert">
+                              <Loader2 className="button-icon spin" aria-hidden="true" />
+                              Memuat ongkos kirim...
+                            </div>
+                          ) : shippingCosts.length > 0 ? (
+                            <div className="checkout-shipping-service-grid">
+                              {shippingCosts.map((service, idx) => (
+                                <label
+                                  key={idx}
+                                  className={`checkout-shipping-service-card ${selectedShippingService?.service === service.service ? 'selected' : ''}`}
+                                >
+                                  <input
+                                    type="radio"
+                                    name="shippingService"
+                                    checked={selectedShippingService?.service === service.service}
+                                    onChange={() => setSelectedShippingService(service)}
+                                  />
+                                  <div className="shipping-service-info">
+                                    <strong>{service.service}</strong>
+                                    <span>{service.description}</span>
+                                    <span>Estimasi: {service.etd}</span>
+                                  </div>
+                                  <strong className="shipping-service-cost">{formatCurrency(service.cost)}</strong>
+                                </label>
+                              ))}
+                            </div>
+                          ) : selectedCourier ? (
+                            <div className="checkout-inline-alert">
+                              <AlertCircle aria-hidden="true" />
+                              Layanan pengiriman tidak tersedia untuk kurir ini ke alamat tujuan.
+                            </div>
+                          ) : (
+                            <div className="checkout-inline-alert">
+                              <AlertCircle aria-hidden="true" />
+                              Pilih kurir untuk melihat tarif pengiriman.
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </section>
 
                     <section className="checkout-panel">
@@ -458,7 +581,7 @@ function CheckoutPage() {
                     </div>
                     <div className="cart-summary-row">
                       <span>Ongkir</span>
-                      <strong>Rp -</strong>
+                      <strong>{selectedShippingService ? formatCurrency(selectedShippingService.cost) : 'Rp -'}</strong>
                     </div>
                     <div className="cart-summary-row checkout-summary-total">
                       <span>Total Bayar</span>

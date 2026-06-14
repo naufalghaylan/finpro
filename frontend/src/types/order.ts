@@ -97,6 +97,9 @@ export type CheckoutOrder = {
 
 export type CreateCheckoutOrderPayload = {
   addressId: number
+  shippingMethod: string
+  shippingService: string
+  shippingCost: number
   paymentMethod: PaymentMethod
   notes?: string
 }

@@ -1,7 +1,9 @@
 import axios from 'axios';
+import prisma from '../lib/prisma'
+import { AppError } from '../utils/AppError'
 
 const RAJAONGKIR_API_KEY = process.env.RAJAONGKIR_API_KEY || '';
-const RAJAONGKIR_BASE_URL = 'https://api.rajaongkir.com/starter';
+const RAJAONGKIR_BASE_URL = 'https://rajaongkir.komerce.id/api/v1';
 
 const apiClient = axios.create({
   baseURL: RAJAONGKIR_BASE_URL,
@@ -10,27 +12,19 @@ const apiClient = axios.create({
   },
 });
 
-export const getProvincesService = async () => {
+export const searchDestinationsService = async (query: string) => {
   try {
-    const response = await apiClient.get('/province');
-    return response.data.rajaongkir.results;
-  } catch (error: unknown) {
-    throw new Error(`Failed to fetch provinces: ${error instanceof Error ? error.message : String(error)}`);
+    const response = await apiClient.get('/destination/domestic-destination', {
+      params: { search: query }
+    });
+    return response.data.data || [];
+  } catch (error: any) {
+    if (error.response && error.response.status === 404) {
+      return [];
+    }
+    throw new Error(`Failed to search destinations: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
-
-export const getCitiesService = async (provinceId?: string) => {
-  try {
-    const params = provinceId ? { province: provinceId } : {};
-    const response = await apiClient.get('/city', { params });
-    return response.data.rajaongkir.results;
-  } catch (error: unknown) {
-    throw new Error(`Failed to fetch cities: ${error instanceof Error ? error.message : String(error)}`);
-  }
-};
-
-import prisma from '../lib/prisma'
-import { AppError } from '../utils/AppError'
 
 export const calculateShippingCostService = async (userId: number, addressId: number, storeId: number, weight: number, courier: string) => {
   // 1. Check if cached
@@ -65,16 +59,21 @@ export const calculateShippingCostService = async (userId: number, addressId: nu
     throw new AppError(400, 'Invalid store or missing city data')
   }
 
-  // 3. Hit RajaOngkir API
+  // 3. Hit RajaOngkir API (Komerce V2 uses urlencoded)
   try {
-    const response = await apiClient.post('/cost', {
+    const response = await apiClient.post('/calculate/domestic-cost', {
       origin: store.cityId,
       destination: address.cityId,
       weight: weight,
       courier: courier
+    }, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
     })
     
-    const results = response.data.rajaongkir.results
+    // Komerce V2 returns results in .data
+    const results = response.data.data
 
     // 4. Cache the results
     await prisma.userShippingCache.create({

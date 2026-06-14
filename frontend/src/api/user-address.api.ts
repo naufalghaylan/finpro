@@ -27,6 +27,6 @@ export const deleteAddress = async (id: number) => {
 };
 
 export const setPrimaryAddress = async (id: number) => {
-  const response = await api.patch<{ message: string; data: UserAddress }>(`/addresses/${id}/primary`);
+  const response = await api.put<{ message: string; data: UserAddress }>(`/addresses/${id}/primary`);
   return response.data.data;
 };

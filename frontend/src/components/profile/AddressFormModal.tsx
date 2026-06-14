@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAddressStore } from '../../store/addressStore'
-import { getProvinces, getCities } from '../../api/rajaongkir'
-import type { RajaOngkirProvince, RajaOngkirCity } from '../../api/rajaongkir'
-import { MapPin, X, Target, Loader2 } from 'lucide-react'
+import { searchDestinations } from '../../api/rajaongkir'
+import type { KomerceDestination } from '../../api/rajaongkir'
+import { MapPin, X, Target, Loader2, Search } from 'lucide-react'
 import type { UserAddress, CreateUserAddressDTO } from '../../types/address'
 
 interface AddressFormModalProps {
@@ -29,16 +29,16 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
     isPrimary: false
   })
 
-  const [provinces, setProvinces] = useState<RajaOngkirProvince[]>([])
-  const [cities, setCities] = useState<RajaOngkirCity[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [destinations, setDestinations] = useState<KomerceDestination[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
   const [loadingLocation, setLoadingLocation] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     if (isOpen) {
-      // Fetch provinces on mount
-      getProvinces().then(setProvinces).catch(console.error)
-
       if (editData) {
         setFormData({
           recipientName: editData.recipientName,
@@ -54,10 +54,7 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
           longitude: editData.longitude || undefined,
           isPrimary: editData.isPrimary
         })
-
-        if (editData.provinceId) {
-          getCities(editData.provinceId).then(setCities).catch(console.error)
-        }
+        setSearchQuery(`${editData.city}, ${editData.province}`)
       } else {
         // Reset
         setFormData({
@@ -74,41 +71,50 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
           longitude: undefined,
           isPrimary: false
         })
-        setCities([])
+        setSearchQuery('')
       }
+      setDestinations([])
+      setShowSuggestions(false)
       setErrorMsg('')
     }
   }, [isOpen, editData])
 
-  const handleProvinceChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const provinceId = e.target.value
-    const province = provinces.find(p => p.province_id === provinceId)?.province || ''
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    setSearchQuery(val)
+    setShowSuggestions(true)
     
-    setFormData(prev => ({ ...prev, provinceId, province, cityId: '', city: '' }))
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
     
-    if (provinceId) {
-      try {
-        const fetchedCities = await getCities(provinceId)
-        setCities(fetchedCities)
-      } catch (err) {
-        console.error(err)
-      }
+    if (val.length >= 3) {
+      searchTimeoutRef.current = setTimeout(async () => {
+        setIsSearching(true)
+        try {
+          const results = await searchDestinations(val)
+          setDestinations(results)
+        } catch (err) {
+          console.error(err)
+          setErrorMsg('Gagal mencari lokasi.')
+        } finally {
+          setIsSearching(false)
+        }
+      }, 500)
     } else {
-      setCities([])
+      setDestinations([])
     }
   }
 
-  const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const cityId = e.target.value
-    const cityObj = cities.find(c => c.city_id === cityId)
-    const city = cityObj ? `${cityObj.type} ${cityObj.city_name}` : ''
-    
-    setFormData(prev => ({ 
-      ...prev, 
-      cityId, 
-      city,
-      postalCode: cityObj?.postal_code || prev.postalCode 
+  const handleSelectDestination = (dest: KomerceDestination) => {
+    setSearchQuery(dest.label)
+    setFormData(prev => ({
+      ...prev,
+      cityId: dest.id.toString(), // destination_id
+      city: dest.city_name,
+      province: dest.province_name,
+      district: dest.subdistrict_name || dest.district_name,
+      postalCode: dest.zip_code
     }))
+    setShowSuggestions(false)
   }
 
   const handleGetLocation = () => {
@@ -153,7 +159,17 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
       }
       onClose()
     } catch (err: any) {
-      setErrorMsg(err.message || 'Terjadi kesalahan saat menyimpan alamat')
+      // Check for backend Zod validation errors
+      const backendMessage = err.response?.data?.message;
+      const validationErrors = err.response?.data?.errors;
+      
+      if (validationErrors && Array.isArray(validationErrors)) {
+        setErrorMsg(`Validasi gagal: ${validationErrors[0].message}`);
+      } else if (backendMessage) {
+        setErrorMsg(backendMessage);
+      } else {
+        setErrorMsg(err.message || 'Terjadi kesalahan saat menyimpan alamat');
+      }
     }
   }
 
@@ -235,42 +251,56 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
             </div>
           </div>
 
-          <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
-            <label style={{ fontSize: '0.9rem', fontWeight: 500 }}>Provinsi *</label>
-            <select 
-              required
-              value={formData.provinceId}
-              onChange={handleProvinceChange}
-              style={{
-                padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--line)',
-                backgroundColor: 'transparent', width: '100%', outline: 'none', appearance: 'none'
-              }}
-            >
-              <option value="">Pilih Provinsi</option>
-              {provinces.map(p => (
-                <option key={p.province_id} value={p.province_id}>{p.province}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
-            <label style={{ fontSize: '0.9rem', fontWeight: 500 }}>Kota / Kabupaten *</label>
-            <select 
-              required disabled={!formData.provinceId}
-              value={formData.cityId}
-              onChange={handleCityChange}
-              style={{
-                padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--line)',
-                backgroundColor: formData.provinceId ? 'transparent' : 'var(--surface-muted)', 
-                width: '100%', outline: 'none', appearance: 'none',
-                opacity: formData.provinceId ? 1 : 0.6
-              }}
-            >
-              <option value="">Pilih Kota</option>
-              {cities.map(c => (
-                <option key={c.city_id} value={c.city_id}>{c.type} {c.city_name}</option>
-              ))}
-            </select>
+          <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px', position: 'relative' }}>
+            <label style={{ fontSize: '0.9rem', fontWeight: 500 }}>Cari Kecamatan / Kota *</label>
+            <div style={{ position: 'relative' }}>
+              <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-soft)' }} />
+              <input 
+                type="text" 
+                required
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                placeholder="Ketik minimal 3 huruf..."
+                style={{
+                  padding: '12px 16px 12px 42px', borderRadius: '8px', border: '1px solid var(--line)',
+                  backgroundColor: 'transparent', width: '100%', outline: 'none'
+                }}
+              />
+              {isSearching && (
+                <Loader2 size={16} className="animate-spin" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-soft)' }} />
+              )}
+            </div>
+            
+            {showSuggestions && destinations.length > 0 && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px',
+                backgroundColor: 'var(--surface)', borderRadius: '8px', border: '1px solid var(--line)',
+                boxShadow: 'var(--shadow-soft)', zIndex: 50, maxHeight: '200px', overflowY: 'auto'
+              }}>
+                {destinations.map(dest => (
+                  <div 
+                    key={dest.id}
+                    onClick={() => handleSelectDestination(dest)}
+                    style={{
+                      padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid var(--line)',
+                      fontSize: '0.9rem', transition: 'background-color 0.2s'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-muted)'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <strong>{dest.subdistrict_name}</strong> - {dest.city_name}, {dest.province_name} ({dest.zip_code})
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {!formData.cityId && searchQuery.length >= 3 && !isSearching && destinations.length === 0 && (
+              <div style={{ fontSize: '0.85rem', color: 'var(--accent-strong)', marginTop: '4px' }}>
+                Pilih lokasi dari daftar yang muncul.
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>

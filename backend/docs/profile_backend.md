@@ -10,6 +10,8 @@ This document describes the API endpoints and middlewares for User Profile opera
   - [2. Update Profile](#2-update-profile)
   - [3. Update Email](#3-update-email)
   - [4. Re-verify Email](#4-re-verify-email)
+  - [5. User Address Management](#5-user-address-management)
+  - [6. Shipping & Komerce Integration](#6-shipping--komerce-integration)
 
 ---
 
@@ -146,3 +148,51 @@ The Profile module follows a layered architecture to keep the codebase clean, mo
   ```
 - **Errors:**
   - `400 Bad Request`: Email is already verified.
+
+---
+
+### 5. User Address Management
+Manages user delivery addresses.
+
+- **Endpoints:**
+  - `GET /addresses` : Get all addresses for the logged-in user.
+  - `POST /addresses` : Create a new address. If it's the first address, it automatically becomes the primary address.
+  - `PUT /addresses/:id` : Update an existing address.
+  - `DELETE /addresses/:id` : Delete an address.
+  - `PUT /addresses/:id/primary` : Set a specific address as the primary address.
+- **Request Body (Create/Update):**
+  ```json
+  {
+    "recipientName": "John Doe",
+    "phone": "08123456789",
+    "address": "Jl. Sudirman No 123",
+    "city": "Jakarta Pusat",
+    "cityId": "152", // Komerce destination_id
+    "province": "DKI Jakarta",
+    "district": "Tanah Abang",
+    "postalCode": "10220",
+    "latitude": -6.200000,
+    "longitude": 106.816666,
+    "isPrimary": true
+  }
+  ```
+- **Description:** Addresses are linked to Komerce destination IDs (`cityId`) to calculate shipping costs.
+
+---
+
+### 6. Shipping & Komerce Integration
+Integration with Komerce V2 API for fetching destinations and calculating shipping costs.
+
+- **Endpoints:**
+  - `GET /shipping/destinations?search=query` : Search for districts/cities based on a query string (minimum 3 characters). Returns an array of matched destinations from Komerce.
+  - `POST /shipping/cost` : Calculate shipping cost between a store and a user address.
+- **Request Body (Calculate Cost):**
+  ```json
+  {
+    "addressId": 1,
+    "storeId": 2,
+    "weight": 1000, // in grams
+    "courier": "jne"
+  }
+  ```
+- **Note:** The backend translates this request into a `x-www-form-urlencoded` payload and forwards it to `https://rajaongkir.komerce.id/api/v1/calculate/domestic-cost`. Results are cached in the `UserShippingCache` table to optimize performance and reduce third-party API calls.
