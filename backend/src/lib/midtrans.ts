@@ -38,12 +38,16 @@ const getServerKey = () => {
 
 const isProduction = () => process.env.MIDTRANS_IS_PRODUCTION === 'true'
 
-export const midtransSnap = new midtransClient.Snap({
-  isProduction: isProduction(),
-  serverKey: getServerKey(),
-}) as MidtransSnapClient
+const createSnapClient = (): MidtransSnapClient =>
+  new midtransClient.Snap({ isProduction: isProduction(), serverKey: getServerKey() })
 
-export const midtransCore = new midtransClient.CoreApi({
-  isProduction: isProduction(),
-  serverKey: getServerKey(),
-}) as MidtransCoreClient
+const createCoreClient = (): MidtransCoreClient =>
+  new midtransClient.CoreApi({ isProduction: isProduction(), serverKey: getServerKey() })
+
+export const midtransSnap: MidtransSnapClient = new Proxy({} as MidtransSnapClient, {
+  get: (_, prop) => createSnapClient()[prop as keyof MidtransSnapClient],
+})
+
+export const midtransCore: MidtransCoreClient = new Proxy({} as MidtransCoreClient, {
+  get: (_, prop) => createCoreClient()[prop as keyof MidtransCoreClient],
+})

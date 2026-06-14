@@ -124,13 +124,16 @@ export default function LoginPage() {
               </button>
             </form>
             
-            <div style={{ display: 'flex', alignItems: 'center', margin: '24px 0' }}>
-              <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--line)' }}></div>
-              <span style={{ padding: '0 12px', fontSize: '0.9rem', color: 'var(--ink-soft)' }}>atau masuk dengan</span>
-              <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--line)' }}></div>
-            </div>
-
-            <GoogleLoginButton onError={setError} />
+            {import.meta.env.VITE_GOOGLE_CLIENT_ID && (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', margin: '24px 0' }}>
+                  <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--line)' }}></div>
+                  <span style={{ padding: '0 12px', fontSize: '0.9rem', color: 'var(--ink-soft)' }}>atau masuk dengan</span>
+                  <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--line)' }}></div>
+                </div>
+                <GoogleLoginButton onError={setError} />
+              </>
+            )}
             
             <div style={{ marginTop: '32px', textAlign: 'center', fontSize: '0.95rem', color: 'var(--ink-soft)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div>

@@ -142,13 +142,16 @@ export default function RegisterPage() {
             
             {!isSuccess && (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', margin: '24px 0' }}>
-                  <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--line)' }}></div>
-                  <span style={{ padding: '0 12px', fontSize: '0.9rem', color: 'var(--ink-soft)' }}>atau daftar dengan</span>
-                  <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--line)' }}></div>
-                </div>
-
-                <GoogleLoginButton onError={setError} />
+                {import.meta.env.VITE_GOOGLE_CLIENT_ID && (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', margin: '24px 0' }}>
+                      <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--line)' }}></div>
+                      <span style={{ padding: '0 12px', fontSize: '0.9rem', color: 'var(--ink-soft)' }}>atau daftar dengan</span>
+                      <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--line)' }}></div>
+                    </div>
+                    <GoogleLoginButton onError={setError} />
+                  </>
+                )}
 
                 <div style={{ marginTop: '32px', textAlign: 'center', fontSize: '0.95rem', color: 'var(--ink-soft)' }}>
                   Sudah punya akun? <Link to="/login" style={{ color: 'var(--accent-strong)', fontWeight: 600, textDecoration: 'none' }}>Masuk di sini</Link>

@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import { ToastProvider } from './components/common/Toast'
-import { ProtectedRoute, GuestRoute } from './components/common/RouteGuard'
+import { ProtectedRoute, GuestRoute, AdminRoute, SuperAdminRoute } from './components/common/RouteGuard'
 import { ScrollToTop } from './components/common/ScrollToTop'
 import HomePage from './pages/home/HomePage'
 import LoginPage from './pages/auth/LoginPage'
@@ -26,6 +26,7 @@ import AdminStoreList from './pages/admin/AdminStoreList'
 import AdminStoreAdminList from './pages/admin/AdminStoreAdminList'
 import AdminStockList from './pages/admin/AdminStockList'
 import AdminStoreDetailPage from './pages/admin/AdminStoreDetailPage'
+import AdminUserPage from './pages/admin/AdminUserPage'
 import './App.css'
 
 
@@ -73,9 +74,10 @@ function App() {
         <Route path="/orders/:id/payment" element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
         
         {/* Admin Routes */}
-        <Route path="/admin/categories" element={<AdminCategoryPage />} />
-        
-        <Route path="/admin/stores" element={<AdminStoreLayout />}>
+        <Route path="/admin/users" element={<SuperAdminRoute><AdminUserPage /></SuperAdminRoute>} />
+        <Route path="/admin/categories" element={<AdminRoute><AdminCategoryPage /></AdminRoute>} />
+
+        <Route path="/admin/stores" element={<AdminRoute><AdminStoreLayout /></AdminRoute>}>
           <Route index element={<AdminStoreIndexRedirect />} />
           <Route path="list" element={<AdminStoreList />} />
           <Route path="admins" element={<AdminStoreAdminList />} />
