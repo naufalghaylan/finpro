@@ -652,6 +652,8 @@ export const createMidtransSnapToken = async ({ userId, orderId }: OrderPaymentP
       orderNumber: true,
       status: true,
       totalAmount: true,
+      shippingCost: true,
+      discountAmount: true,
       paymentMethod: true,
       paymentGatewayId: true,
       user: {
@@ -740,12 +742,26 @@ export const createMidtransSnapToken = async ({ userId, orderId }: OrderPaymentP
         email: order.user.email,
         phone: order.user.phone || undefined,
       },
-      item_details: order.items.map((item) => ({
-        id: String(item.product.id),
-        name: item.product.name.slice(0, 50),
-        price: Math.round(item.priceAtTime),
-        quantity: item.quantity,
-      })),
+      item_details: [
+        ...order.items.map((item) => ({
+          id: String(item.product.id),
+          name: item.product.name.slice(0, 50),
+          price: Math.round(item.priceAtTime),
+          quantity: item.quantity,
+        })),
+        {
+          id: 'SHIPPING',
+          name: 'Shipping Cost',
+          price: Math.round(order.shippingCost),
+          quantity: 1,
+        },
+        ...(order.discountAmount > 0 ? [{
+          id: 'DISCOUNT',
+          name: 'Discount',
+          price: -Math.round(order.discountAmount),
+          quantity: 1,
+        }] : [])
+      ],
       callbacks: {
         finish: midtransReturnUrl,
       },

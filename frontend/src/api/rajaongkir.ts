@@ -1,26 +1,40 @@
 import api from './axios';
 
-export interface RajaOngkirProvince {
-  province_id: string;
-  province: string;
-}
-
-export interface RajaOngkirCity {
-  city_id: string;
-  province_id: string;
-  province: string;
-  type: string;
+export interface KomerceDestination {
+  id: number;
+  label: string;
+  province_name: string;
   city_name: string;
-  postal_code: string;
+  district_name: string;
+  subdistrict_name: string;
+  zip_code: string;
 }
 
-export const getProvinces = async () => {
-  const response = await api.get<{ message: string; data: RajaOngkirProvince[] }>('/shipping/provinces');
+export const searchDestinations = async (query: string) => {
+  if (!query || query.length < 3) return [];
+  const response = await api.get<{ message: string; data: KomerceDestination[] }>('/shipping/destinations', {
+    params: { search: query }
+  });
   return response.data.data;
 };
 
-export const getCities = async (provinceId?: string) => {
-  const params = provinceId ? { provinceId } : {};
-  const response = await api.get<{ message: string; data: RajaOngkirCity[] }>('/shipping/cities', { params });
+export interface ShippingCostRequest {
+  addressId: number;
+  storeId: number;
+  weight: number;
+  courier: string;
+}
+
+export interface ShippingCostResult {
+  name: string;
+  code: string;
+  service: string;
+  description: string;
+  cost: number;
+  etd: string;
+}
+
+export const calculateShippingCost = async (payload: ShippingCostRequest) => {
+  const response = await api.post<{ message: string; data: ShippingCostResult[] }>('/shipping/cost', payload);
   return response.data.data;
 };

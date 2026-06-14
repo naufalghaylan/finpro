@@ -1,25 +1,17 @@
 import { Request, Response } from 'express';
-import { getProvincesService, getCitiesService } from '../services/rajaongkir.service';
+import { searchDestinationsService } from '../services/rajaongkir.service';
 
-export const getProvinces = async (req: Request, res: Response): Promise<void> => {
+export const searchDestinations = async (req: Request, res: Response): Promise<void> => {
   try {
-    const provinces = await getProvincesService();
+    const { search } = req.query;
+    if (!search || typeof search !== 'string') {
+      res.status(400).json({ message: 'Search query is required' });
+      return;
+    }
+    const destinations = await searchDestinationsService(search);
     res.status(200).json({
-      message: 'Provinces fetched successfully',
-      data: provinces,
-    });
-  } catch (error: unknown) {
-    res.status(500).json({ message: 'Internal server error', error: error instanceof Error ? error.message : String(error) });
-  }
-};
-
-export const getCities = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { provinceId } = req.query;
-    const cities = await getCitiesService(provinceId as string | undefined);
-    res.status(200).json({
-      message: 'Cities fetched successfully',
-      data: cities,
+      message: 'Destinations fetched successfully',
+      data: destinations,
     });
   } catch (error: unknown) {
     res.status(500).json({ message: 'Internal server error', error: error instanceof Error ? error.message : String(error) });
