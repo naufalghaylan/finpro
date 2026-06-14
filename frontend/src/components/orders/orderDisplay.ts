@@ -64,6 +64,17 @@ export const formatDateTime = (value: string | null) => {
   }).format(new Date(value))
 }
 
+export const formatTrackingDateTime = (value: string | null) => {
+  if (!value) return 'Menunggu update'
+
+  return new Intl.DateTimeFormat('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(value))
+}
+
 export const getPrimaryOrderImage = (order: CheckoutOrder) => {
   const itemWithImage = order.items.find((item) => item.product.images.length > 0)
   if (!itemWithImage) return null
