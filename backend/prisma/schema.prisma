@@ -305,6 +305,8 @@ model StockMutation {
   @@map("stock_mutations")
 }
 
+
+
 model UserAddress {
   id            Int      @id @default(autoincrement())
   userId        Int      @map("user_id")
