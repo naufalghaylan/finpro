@@ -28,3 +28,68 @@ export const getCitiesService = async (provinceId?: string) => {
     throw new Error(`Failed to fetch cities: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
+
+import prisma from '../lib/prisma'
+import { AppError } from '../utils/AppError'
+
+export const calculateShippingCostService = async (userId: number, addressId: number, storeId: number, weight: number, courier: string) => {
+  // 1. Check if cached
+  const cached = await prisma.userShippingCache.findUnique({
+    where: {
+      userId_addressId_storeId_weight_courier: {
+        userId,
+        addressId,
+        storeId,
+        weight,
+        courier
+      }
+    }
+  })
+
+  if (cached) {
+    return cached.results
+  }
+
+  // 2. Not cached, get address and store
+  const address = await prisma.userAddress.findFirst({
+    where: { id: addressId, userId }
+  })
+  if (!address || !address.cityId) {
+    throw new AppError(400, 'Invalid address or missing city data')
+  }
+
+  const store = await prisma.store.findUnique({
+    where: { id: storeId }
+  })
+  if (!store || !store.cityId) {
+    throw new AppError(400, 'Invalid store or missing city data')
+  }
+
+  // 3. Hit RajaOngkir API
+  try {
+    const response = await apiClient.post('/cost', {
+      origin: store.cityId,
+      destination: address.cityId,
+      weight: weight,
+      courier: courier
+    })
+    
+    const results = response.data.rajaongkir.results
+
+    // 4. Cache the results
+    await prisma.userShippingCache.create({
+      data: {
+        userId,
+        addressId,
+        storeId,
+        weight,
+        courier,
+        results: results as any
+      }
+    })
+
+    return results
+  } catch (error: unknown) {
+    throw new AppError(500, `Failed to calculate shipping cost: ${error instanceof Error ? error.message : String(error)}`)
+  }
+}

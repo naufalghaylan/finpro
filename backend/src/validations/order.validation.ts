@@ -66,6 +66,9 @@ export const orderListQuerySchema = z
 
 export const createCheckoutOrderSchema = z.object({
   addressId: positiveIntegerSchema,
+  shippingMethod: z.string().min(1, 'Shipping method is required'),
+  shippingService: z.string().min(1, 'Shipping service is required'),
+  shippingCost: z.number().int().min(0, 'Shipping cost cannot be negative'),
   paymentMethod: z
     .enum([PaymentMethod.MANUAL_TRANSFER, PaymentMethod.PAYMENT_GATEWAY])
     .default(PaymentMethod.MANUAL_TRANSFER),

@@ -4,6 +4,7 @@ import { HomeFooter } from '../../components/home/HomeFooter'
 import { ProfileForm } from '../../components/profile/ProfileForm'
 import { EmailForm } from '../../components/profile/EmailForm'
 import { VoucherSection } from '../../components/profile/VoucherSection'
+import { AddressManagement } from '../../components/profile/AddressManagement'
 import { useProfileStore } from '../../store/profileStore'
 import { BRAND, navLinks, footerSections } from '../../data/home/homeData'
 
@@ -37,6 +38,7 @@ export default function ProfilePage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', animation: 'fadeUp 0.5s ease forwards' }}>
                 <EmailForm />
+                <AddressManagement />
                 
                 {/* Extra aesthetic card for visual balance */}
                 <div className="hero-card" style={{ padding: '24px', background: 'var(--accent-soft)', border: 'none' }}>

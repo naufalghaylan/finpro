@@ -17,8 +17,10 @@ import {
 } from '../../data/home/homeData'
 import { useLocationSelection } from '../../hooks/home/useLocationSelection'
 import { useHomepageData } from '../../hooks/home/useHomepageData'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useLocation } from 'react-router-dom'
+import { useAuthStore } from '../../store/authStore'
+import { useAddressStore } from '../../store/addressStore'
 import {
   ShoppingBag, Tag, MapPin, HelpCircle,
   Carrot, Apple, Beef, Milk, Flame, ChefHat, LayoutGrid
@@ -39,13 +41,18 @@ const getCategoryIcon = (label: string) => {
   if (normalizedLabel.includes('bumbu')) return <Flame size={18} style={{ marginRight: 8 }} />
   if (normalizedLabel.includes('siap')) return <ChefHat size={18} style={{ marginRight: 8 }} />
   return <LayoutGrid size={18} style={{ marginRight: 8 }} />
-} // TODO: icon placeholder pakai ganti ke database aja, taruh icon placeholder tiap kategori di database, terus tinggal panggil aja, jangan pake if else banyak gini, nanti susah maintenance nya, kalau bisa buat tabel kategori di database yang punya field icon_url atau semacamnya, terus tinggal panggil aja dari situ, biar lebih scalable dan gampang kalau mau nambah kategori baru tinggal masukin data doang tanpa harus ubah code.
-  // TODO: Atau bisa juga pakai dynamic iconnya lucide https://lucide.dev/guide/react/advanced/dynamic-icon-component
-
-// removed getMainStore
+}
 
 export default function HomePage() {
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null)
+  const { isAuthenticated } = useAuthStore()
+  const { addresses, selectedAddressId, fetchAddresses } = useAddressStore()
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchAddresses()
+    }
+  }, [isAuthenticated, fetchAddresses])
 
   const {
     status,
@@ -56,7 +63,16 @@ export default function HomePage() {
     isFallback,
   } = useLocationSelection()
 
-  const { data, loading, error: apiError } = useHomepageData(coords?.lat, coords?.lng)
+  const selectedAddress = useMemo(() => {
+    if (!isAuthenticated || selectedAddressId === null) return null
+    return addresses.find(a => a.id === selectedAddressId) || null
+  }, [isAuthenticated, selectedAddressId, addresses])
+
+  const finalCoords = selectedAddress && selectedAddress.latitude && selectedAddress.longitude
+    ? { lat: selectedAddress.latitude, lng: selectedAddress.longitude }
+    : coords
+
+  const { data, loading, error: apiError } = useHomepageData(finalCoords?.lat, finalCoords?.lng)
 
   const location = useLocation()
 

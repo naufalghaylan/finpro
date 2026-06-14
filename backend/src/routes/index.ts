@@ -13,6 +13,8 @@ import rajaongkirRouter from './rajaongkir.routes'
 import userRouter from './user.routes'
 import paymentRouter from './payment.routes'
 
+import userAddressRouter from './user-address.routes'
+
 const router = Router()
 
 router.use('/auth', authRouter)
@@ -24,6 +26,7 @@ router.use('/discounts', discountRouter)
 router.use('/cart', cartRouter)
 router.use('/stocks', stockRouter)
 router.use('/profile', profileRouter)
+router.use('/addresses', userAddressRouter)
 router.use('/orders', orderRouter)
 router.use('/shipping', rajaongkirRouter)
 router.use('/payments', paymentRouter)

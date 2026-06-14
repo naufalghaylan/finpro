@@ -136,6 +136,9 @@ export const createCheckoutOrder = async (req: Request, res: Response): Promise<
     const result = await createCheckoutOrderService({
       userId,
       addressId: parsed.data.addressId,
+      shippingMethod: parsed.data.shippingMethod,
+      shippingService: parsed.data.shippingService,
+      shippingCost: parsed.data.shippingCost,
       paymentMethod: parsed.data.paymentMethod,
       notes: parsed.data.notes,
     })

@@ -1,6 +1,10 @@
+import { useState } from 'react'
 import type { LocationStatus } from '../../hooks/home/useLocationSelection'
 import type { StoreLocation } from '../../types/home/home'
 import { formatDistance } from '../../utils/home/format'
+import { useAuthStore } from '../../store/authStore'
+import { useAddressStore } from '../../store/addressStore'
+import { AddressSelectorModal } from './AddressSelectorModal'
 
 type LocationPanelProps = {
   status: LocationStatus
@@ -14,7 +18,10 @@ type LocationPanelProps = {
   onUseMainStore: () => void
 }
 
-const getStatusLabel = (status: LocationStatus, isFallback: boolean) => {
+const getStatusLabel = (status: LocationStatus, isFallback: boolean, isAddressSelected: boolean) => {
+  if (isAddressSelected) {
+    return 'Menggunakan alamat tersimpan'
+  }
   if (isFallback) {
     return 'Menggunakan toko utama'
   }
@@ -44,7 +51,12 @@ export const LocationPanel = ({
   onRequestLocation,
   onUseMainStore,
 }: LocationPanelProps) => {
-  const statusLabel = getStatusLabel(status, isFallback)
+  const { isAuthenticated } = useAuthStore()
+  const { selectedAddressId, selectAddress } = useAddressStore()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const isAddressSelected = selectedAddressId !== null
+  const statusLabel = getStatusLabel(status, isFallback, isAddressSelected)
   const distanceLabel = distanceKm !== null ? formatDistance(distanceKm) : '--'
   const storeTag = store.isMain ? 'Toko utama' : 'Toko terdekat'
 
@@ -53,7 +65,7 @@ export const LocationPanel = ({
       <div className="shell location-panel">
         <div className="location-info">
           <div className="location-header">
-            <span className={`status-pill status-${status}`}>{statusLabel}</span>
+            <span className={`status-pill status-${isAddressSelected ? 'granted' : status}`}>{statusLabel}</span>
             <span className="store-tag">{storeTag}</span>
           </div>
           <h3>{store.name}</h3>
@@ -64,9 +76,16 @@ export const LocationPanel = ({
           </div>
         </div>
         <div className="location-actions">
-          <button type="button" className="button ghost" onClick={onRequestLocation}>
-            Gunakan lokasi
-          </button>
+          {isAuthenticated ? (
+            <button type="button" className="button ghost" onClick={() => setIsModalOpen(true)}>
+              Pilih Alamat Pengiriman
+            </button>
+          ) : (
+            <button type="button" className="button ghost" onClick={onRequestLocation}>
+              Gunakan lokasi saya
+            </button>
+          )}
+          
           <button type="button" className="button subtle" onClick={onUseMainStore}>
             Pakai toko utama
           </button>
@@ -74,13 +93,24 @@ export const LocationPanel = ({
             Pilih toko lain
           </a>
         </div>
-        {error ? <p className="location-error">{error}</p> : null}
+        {error && !isAddressSelected ? <p className="location-error">{error}</p> : null}
         {!serviceable ? (
           <div className="location-warning">
             Lokasi di luar jangkauan layanan. Coba lokasi lain atau pilih toko utama.
           </div>
         ) : null}
       </div>
+
+      <AddressSelectorModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSelectAddress={(id) => {
+          selectAddress(id)
+          if (id === null) {
+            onRequestLocation()
+          }
+        }}
+      />
     </section>
   )
 }
