@@ -1,14 +1,6 @@
 import { create } from 'zustand'
 import api from '../api/axios'
 
-export interface ProfileVoucher {
-  id: number
-  name: string
-  code: string
-  discountType: string
-  discountValue: number
-  expiredAt: string
-}
 
 type UserVoucher = {
   id: number
