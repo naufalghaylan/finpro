@@ -45,11 +45,13 @@ export async function createCheckoutOrder(
   return data.data
 }
 
-export async function getOrderPaymentDetails(orderId: number): Promise<CheckoutOrder> {
-  const { data } = await api.get<ApiData<CheckoutOrder>>(`/orders/${orderId}/payment`)
+export async function getOrderDetails(orderId: number): Promise<CheckoutOrder> {
+  const { data } = await api.get<ApiData<CheckoutOrder>>(`/orders/${orderId}`)
 
   return data.data
 }
+
+export const getOrderPaymentDetails = getOrderDetails
 
 export async function uploadManualPaymentProof(orderId: number, file: File): Promise<CheckoutOrder> {
   const formData = new FormData()

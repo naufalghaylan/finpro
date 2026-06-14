@@ -159,7 +159,7 @@ function CheckoutPage() {
       setCreatedOrder(result.order)
       setCartCount(result.cartCount)
       showToast('Pesanan berhasil dibuat', 'success')
-      navigate(`/orders/${result.order.id}/payment`)
+      navigate(`/orders/${result.order.id}`)
     } catch (submitError) {
       showToast(getErrorMessage(submitError), 'error')
     } finally {
@@ -232,8 +232,8 @@ function CheckoutPage() {
                 <Link to="/" className="button primary">
                   Lanjut Belanja
                 </Link>
-                <Link to="/cart" className="button ghost">
-                  Lihat Cart
+                <Link to={`/orders/${createdOrder.id}`} className="button ghost">
+                  Lihat Detail Pesanan
                 </Link>
               </div>
             </section>

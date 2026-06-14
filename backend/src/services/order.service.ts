@@ -1,5 +1,4 @@
 import {
-  MutationStatus,
   OrderStatus,
   PaymentMethod,
   Prisma,
@@ -8,46 +7,25 @@ import {
 } from '../generated/prisma/client'
 import prisma from '../lib/prisma'
 import { midtransCore, midtransSnap } from '../lib/midtrans'
+import { getDistanceFromLatLonInKm } from '../utils/geo.util'
+import { assertAdminCanAccessStore } from './order-admin-access.service'
+import { ORDER_ERRORS, OrderServiceError } from './order.errors'
+import {
+  allocateStockForOrder,
+  assertGlobalStockAvailable,
+  restoreReservedOrderStock,
+} from './order-stock.service'
 import { getCart } from './cart.service'
 
 type DatabaseClient = Prisma.TransactionClient
 
-export const ORDER_ERRORS = {
-  EMPTY_CART: 'EMPTY_CART',
-  ADDRESS_NOT_FOUND: 'ADDRESS_NOT_FOUND',
-  ADDRESS_COORDINATE_REQUIRED: 'ADDRESS_COORDINATE_REQUIRED',
-  STORE_NOT_FOUND: 'STORE_NOT_FOUND',
-  INSUFFICIENT_STOCK: 'INSUFFICIENT_STOCK',
-  ORDER_NUMBER_FAILED: 'ORDER_NUMBER_FAILED',
-  ORDER_NOT_FOUND: 'ORDER_NOT_FOUND',
-  ORDER_NOT_CANCELLABLE: 'ORDER_NOT_CANCELLABLE',
-  STOCK_NOT_FOUND: 'STOCK_NOT_FOUND',
-  STOCK_MUTATION_NOT_FOUND: 'STOCK_MUTATION_NOT_FOUND',
-  STOCK_MUTATION_INVALID_STATUS: 'STOCK_MUTATION_INVALID_STATUS',
-  FULFILLMENT_ACCESS_DENIED: 'FULFILLMENT_ACCESS_DENIED',
-  INVALID_FULFILLMENT_REQUEST: 'INVALID_FULFILLMENT_REQUEST',
-  PAYMENT_PROOF_REQUIRED: 'PAYMENT_PROOF_REQUIRED',
-  PAYMENT_PROOF_NOT_ALLOWED: 'PAYMENT_PROOF_NOT_ALLOWED',
-  PAYMENT_DEADLINE_EXPIRED: 'PAYMENT_DEADLINE_EXPIRED',
-  PAYMENT_GATEWAY_NOT_ALLOWED: 'PAYMENT_GATEWAY_NOT_ALLOWED',
-  PAYMENT_GATEWAY_TOKEN_FAILED: 'PAYMENT_GATEWAY_TOKEN_FAILED',
-  PAYMENT_GATEWAY_STATUS_SYNC_FAILED: 'PAYMENT_GATEWAY_STATUS_SYNC_FAILED',
-} as const
-
-type OrderErrorCode = (typeof ORDER_ERRORS)[keyof typeof ORDER_ERRORS]
-
-export class OrderServiceError extends Error {
-  code: OrderErrorCode
-  statusCode: number
-  details?: unknown
-
-  constructor(code: OrderErrorCode, message: string, statusCode = 400, details?: unknown) {
-    super(message)
-    this.code = code
-    this.statusCode = statusCode
-    this.details = details
-  }
-}
+export { ORDER_ERRORS, OrderServiceError } from './order.errors'
+export {
+  approveFulfillment,
+  receiveFulfillment,
+  rejectFulfillment,
+  requestOrderFulfillment,
+} from './order-fulfillment.service'
 
 type CreateCheckoutOrderParams = {
   userId: number
@@ -69,21 +47,6 @@ type CancelOrderParams = {
   orderId: number
   reason?: string
   isAdmin?: boolean
-}
-
-type RequestFulfillmentParams = {
-  userId: number
-  orderId: number
-  sourceStoreId: number
-  productId: number
-  quantity: number
-  notes?: string
-}
-
-type FulfillmentActionParams = {
-  userId: number
-  mutationId: number
-  notes?: string
 }
 
 type OrderPaymentParams = {
@@ -123,53 +86,6 @@ type MidtransTransactionStatus = {
   transaction_id?: string
 }
 
-type ReservedStockJournal = {
-  stockId: number
-  quantityChange: number
-}
-
-type ReservedStockOrder = {
-  id: number
-  orderNumber: string
-  stockJournals: ReservedStockJournal[]
-}
-
-type CheckoutCartItem = {
-  productId: number
-  quantity: number
-  product: {
-    name: string
-    basePrice: number
-  }
-}
-
-type StockAllocationItem = CheckoutCartItem & {
-  product: {
-    id: number
-    name: string
-    basePrice: number
-  }
-}
-
-type JournalProductSnapshot = {
-  id: number
-  name: string
-  slug: string
-  basePrice: number
-  categoryId: number
-}
-
-type JournalStoreSnapshot = {
-  id: number
-  name: string
-  slug: string
-  address: string
-  city: string
-  province: string
-  latitude: number
-  longitude: number
-}
-
 const PAYMENT_DEADLINE_IN_MS = 60 * 60 * 1000
 
 const orderStatusGroups: Record<OrderStatusGroup, OrderStatus[]> = {
@@ -182,25 +98,6 @@ const orderStatusGroups: Record<OrderStatusGroup, OrderStatus[]> = {
   completed: [OrderStatus.CONFIRMED],
   cancelled: [OrderStatus.CANCELLED],
 }
-
-const buildProductSnapshot = (product: JournalProductSnapshot): Prisma.InputJsonObject => ({
-  id: product.id,
-  name: product.name,
-  slug: product.slug,
-  basePrice: product.basePrice,
-  categoryId: product.categoryId,
-})
-
-const buildStoreSnapshot = (store: JournalStoreSnapshot): Prisma.InputJsonObject => ({
-  id: store.id,
-  name: store.name,
-  slug: store.slug,
-  address: store.address,
-  city: store.city,
-  province: store.province,
-  latitude: store.latitude,
-  longitude: store.longitude,
-})
 
 const orderSelect = {
   id: true,
@@ -285,8 +182,33 @@ const getMidtransFinishUrl = (orderId: number) => `${getFrontendUrl()}/orders/${
 
 type MidtransApiError = {
   httpStatusCode?: string | number
+  message?: string
   ApiResponse?: {
     status_code?: string | number
+    status_message?: string | string[]
+    validation_messages?: unknown
+  }
+}
+
+const getMidtransErrorMessage = (error: unknown) => {
+  const apiError = error as MidtransApiError
+  const statusMessage = apiError.ApiResponse?.status_message
+
+  if (Array.isArray(statusMessage)) return statusMessage.join(', ')
+  if (statusMessage) return statusMessage
+  if (apiError.message) return apiError.message
+
+  return null
+}
+
+const getMidtransErrorDetails = (error: unknown) => {
+  const apiError = error as MidtransApiError
+
+  return {
+    httpStatusCode: apiError.httpStatusCode,
+    statusCode: apiError.ApiResponse?.status_code,
+    statusMessage: apiError.ApiResponse?.status_message,
+    validationMessages: apiError.ApiResponse?.validation_messages,
   }
 }
 
@@ -306,56 +228,6 @@ const getMidtransTransactionStatusOrNull = async (orderNumber: string) => {
 
     throw error
   }
-}
-
-const getDistanceFromLatLonInKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-  const earthRadiusInKm = 6371
-  const dLat = deg2rad(lat2 - lat1)
-  const dLon = deg2rad(lon2 - lon1)
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2)
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-
-  return earthRadiusInKm * c
-}
-
-const deg2rad = (deg: number) => deg * (Math.PI / 180)
-
-const getActor = async (userId: number, db: DatabaseClient) => {
-  const actor = await db.user.findUnique({
-    where: { id: userId },
-    select: {
-      id: true,
-      role: true,
-      storeId: true,
-    },
-  })
-
-  if (!actor) {
-    throw new OrderServiceError(ORDER_ERRORS.FULFILLMENT_ACCESS_DENIED, 'User not found', 401)
-  }
-
-  return actor
-}
-
-const assertAdminCanAccessStore = async (
-  userId: number,
-  storeId: number,
-  db: DatabaseClient,
-) => {
-  const actor = await getActor(userId, db)
-
-  if (actor.role === 'SUPER_ADMIN') return actor
-
-  if (actor.role === 'STORE_ADMIN' && actor.storeId === storeId) return actor
-
-  throw new OrderServiceError(
-    ORDER_ERRORS.FULFILLMENT_ACCESS_DENIED,
-    'You do not have access to this store fulfillment',
-    403,
-  )
 }
 
 const getNearestActiveStore = async (latitude: number, longitude: number, db: DatabaseClient = prisma) => {
@@ -457,37 +329,6 @@ const getCheckoutCart = async (userId: number, db: DatabaseClient) => {
   return cart
 }
 
-const getStockTotals = async (productIds: number[], db: DatabaseClient) => {
-  const stockTotals = await db.stock.groupBy({
-    by: ['productId'],
-    where: { productId: { in: productIds } },
-    _sum: { quantity: true },
-  })
-
-  return new Map(stockTotals.map((stock) => [stock.productId, stock._sum.quantity ?? 0]))
-}
-
-const assertGlobalStockAvailable = async (items: CheckoutCartItem[], db: DatabaseClient) => {
-  const stockTotals = await getStockTotals(items.map((item) => item.productId), db)
-  const insufficientItems = items
-    .map((item) => ({
-      productId: item.productId,
-      productName: item.product.name,
-      requestedQuantity: item.quantity,
-      availableQuantity: stockTotals.get(item.productId) ?? 0,
-    }))
-    .filter((item) => item.requestedQuantity > item.availableQuantity)
-
-  if (insufficientItems.length > 0) {
-    throw new OrderServiceError(
-      ORDER_ERRORS.INSUFFICIENT_STOCK,
-      'Some products do not have enough stock',
-      400,
-      { items: insufficientItems },
-    )
-  }
-}
-
 const getOrderNumberDatePart = (date: Date) => {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -517,182 +358,6 @@ const generateOrderNumber = async (userId: number, db: DatabaseClient) => {
     'Failed to generate unique order number',
     500,
   )
-}
-
-const createStockJournalEntry = async ({
-  db,
-  stock,
-  orderId,
-  stockMutationId,
-  quantityChange,
-  quantityBefore,
-  quantityAfter,
-  type,
-  userId,
-  description,
-  notes,
-}: {
-  db: DatabaseClient
-  stock: {
-    id: number
-    product: JournalProductSnapshot
-    store: JournalStoreSnapshot
-  }
-  orderId?: number
-  stockMutationId?: number
-  quantityChange: number
-  quantityBefore: number
-  quantityAfter: number
-  type: StockJournalType
-  userId: number
-  description: string
-  notes?: string
-}) => {
-  return db.stockJournal.create({
-    data: {
-      stockId: stock.id,
-      orderId,
-      stockMutationId,
-      quantityChange,
-      quantityBefore,
-      quantityAfter,
-      type,
-      createdBy: userId,
-      description,
-      productSnapshot: buildProductSnapshot(stock.product),
-      storeSnapshot: buildStoreSnapshot(stock.store),
-      notes: notes || null,
-    },
-  })
-}
-
-const getStockPriority = (
-  stock: { storeId: number; store: { latitude: number; longitude: number } },
-  nearestStoreId: number,
-  latitude: number,
-  longitude: number,
-) => {
-  if (stock.storeId === nearestStoreId) {
-    return -1
-  }
-
-  return getDistanceFromLatLonInKm(latitude, longitude, stock.store.latitude, stock.store.longitude)
-}
-
-const allocateStockForOrder = async ({
-  db,
-  items,
-  orderId,
-  orderNumber,
-  userId,
-  nearestStoreId,
-  latitude,
-  longitude,
-}: {
-  db: DatabaseClient
-  items: StockAllocationItem[]
-  orderId: number
-  orderNumber: string
-  userId: number
-  nearestStoreId: number
-  latitude: number
-  longitude: number
-}) => {
-  for (const item of items) {
-    let remainingQuantity = item.quantity
-    const availableStocks = await db.stock.findMany({
-      where: {
-        productId: item.productId,
-        quantity: { gt: 0 },
-      },
-      select: {
-        id: true,
-        storeId: true,
-        quantity: true,
-        product: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            basePrice: true,
-            categoryId: true,
-          },
-        },
-        store: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            address: true,
-            city: true,
-            province: true,
-            latitude: true,
-            longitude: true,
-          },
-        },
-      },
-    })
-
-    const prioritizedStocks = availableStocks.sort((firstStock, secondStock) => {
-      const firstPriority = getStockPriority(firstStock, nearestStoreId, latitude, longitude)
-      const secondPriority = getStockPriority(secondStock, nearestStoreId, latitude, longitude)
-
-      return firstPriority - secondPriority
-    })
-
-    for (const stock of prioritizedStocks) {
-      if (remainingQuantity <= 0) break
-
-      const quantityTaken = Math.min(remainingQuantity, stock.quantity)
-      const updatedStock = await db.stock.updateMany({
-        where: {
-          id: stock.id,
-          quantity: { gte: quantityTaken },
-        },
-        data: {
-          quantity: { decrement: quantityTaken },
-        },
-      })
-
-      if (updatedStock.count !== 1) {
-        throw new OrderServiceError(
-          ORDER_ERRORS.INSUFFICIENT_STOCK,
-          'Stock changed while creating order. Please try again.',
-          409,
-        )
-      }
-
-      await createStockJournalEntry({
-        db,
-        stock,
-        orderId,
-        quantityChange: -quantityTaken,
-        quantityBefore: stock.quantity,
-        quantityAfter: stock.quantity - quantityTaken,
-        type: StockJournalType.ORDER,
-        userId,
-        description: `Reserved for order ${orderNumber} - ${item.product.name}`,
-        notes: 'Order stock reserve',
-      })
-
-      remainingQuantity -= quantityTaken
-    }
-
-    if (remainingQuantity > 0) {
-      throw new OrderServiceError(
-        ORDER_ERRORS.INSUFFICIENT_STOCK,
-        'Some products do not have enough stock',
-        400,
-        {
-          items: [{
-            productId: item.productId,
-            productName: item.product.name,
-            remainingQuantity,
-          }],
-        },
-      )
-    }
-  }
 }
 
 export const getCheckoutPreview = async ({ userId, addressId }: CheckoutPreviewParams) => {
@@ -976,77 +641,6 @@ export const uploadManualPaymentProof = async ({
   })
 }
 
-const restoreReservedOrderStock = async ({
-  db,
-  order,
-  actorUserId,
-  notes,
-}: {
-  db: DatabaseClient
-  order: ReservedStockOrder
-  actorUserId: number
-  notes: string
-}) => {
-  for (const journal of order.stockJournals) {
-    const restoreQuantity = Math.abs(journal.quantityChange)
-    const stock = await db.stock.findUnique({
-      where: { id: journal.stockId },
-      select: {
-        id: true,
-        quantity: true,
-        product: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            basePrice: true,
-            categoryId: true,
-          },
-        },
-        store: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            address: true,
-            city: true,
-            province: true,
-            latitude: true,
-            longitude: true,
-          },
-        },
-      },
-    })
-
-    if (!stock) {
-      throw new OrderServiceError(ORDER_ERRORS.STOCK_NOT_FOUND, 'Reserved stock not found', 404)
-    }
-
-    const quantityBefore = stock.quantity
-    const quantityAfter = quantityBefore + restoreQuantity
-
-    await db.stock.update({
-      where: { id: stock.id },
-      data: {
-        quantity: { increment: restoreQuantity },
-      },
-    })
-
-    await createStockJournalEntry({
-      db,
-      stock,
-      orderId: order.id,
-      quantityChange: restoreQuantity,
-      quantityBefore,
-      quantityAfter,
-      type: StockJournalType.CANCEL_RETURN,
-      userId: actorUserId,
-      description: `Returned reserved stock from cancelled order ${order.orderNumber}`,
-      notes,
-    })
-  }
-}
-
 export const createMidtransSnapToken = async ({ userId, orderId }: OrderPaymentParams) => {
   const order = await prisma.order.findFirst({
     where: {
@@ -1175,11 +769,15 @@ export const createMidtransSnapToken = async ({ userId, orderId }: OrderPaymentP
       redirectUrl: snapTransaction.redirect_url,
     }
   } catch (error) {
+    const midtransErrorMessage = getMidtransErrorMessage(error)
+
     throw new OrderServiceError(
       ORDER_ERRORS.PAYMENT_GATEWAY_TOKEN_FAILED,
-      'Failed to create Midtrans payment token',
+      midtransErrorMessage
+        ? `Failed to create Midtrans payment token: ${midtransErrorMessage}`
+        : 'Failed to create Midtrans payment token',
       502,
-      error,
+      getMidtransErrorDetails(error),
     )
   }
 }
@@ -1333,16 +931,25 @@ export const syncMidtransPaymentStatus = async ({ userId, orderId }: OrderPaymen
   }
 
   try {
-    const transactionStatus = await midtransCore.transaction.status(order.orderNumber)
+    const transactionStatus = await getMidtransTransactionStatusOrNull(order.orderNumber)
+
+    if (!transactionStatus) {
+      return getOrderPaymentDetails({ userId, orderId })
+    }
+
     await processMidtransTransactionStatus(transactionStatus)
 
     return getOrderPaymentDetails({ userId, orderId })
   } catch (error) {
+    const midtransErrorMessage = getMidtransErrorMessage(error)
+
     throw new OrderServiceError(
       ORDER_ERRORS.PAYMENT_GATEWAY_STATUS_SYNC_FAILED,
-      'Failed to sync Midtrans payment status',
+      midtransErrorMessage
+        ? `Failed to sync Midtrans payment status: ${midtransErrorMessage}`
+        : 'Failed to sync Midtrans payment status',
       502,
-      error,
+      getMidtransErrorDetails(error),
     )
   }
 }
@@ -1517,395 +1124,4 @@ export const autoCancelExpiredManualTransferOrders = async () => {
     checkedCount: expiredOrders.length,
     cancelledCount,
   }
-}
-
-export const requestOrderFulfillment = async ({
-  userId,
-  orderId,
-  sourceStoreId,
-  productId,
-  quantity,
-  notes,
-}: RequestFulfillmentParams) => {
-  return prisma.$transaction(async (tx) => {
-    const order = await tx.order.findUnique({
-      where: { id: orderId },
-      select: {
-        id: true,
-        storeId: true,
-        status: true,
-        orderNumber: true,
-        items: {
-          where: { productId },
-          select: {
-            productId: true,
-            quantity: true,
-          },
-        },
-      },
-    })
-
-    if (!order) {
-      throw new OrderServiceError(ORDER_ERRORS.ORDER_NOT_FOUND, 'Order not found', 404)
-    }
-
-    if (
-      order.status === OrderStatus.CANCELLED ||
-      order.status === OrderStatus.SHIPPED ||
-      order.status === OrderStatus.CONFIRMED
-    ) {
-      throw new OrderServiceError(
-        ORDER_ERRORS.INVALID_FULFILLMENT_REQUEST,
-        'Cannot request fulfillment for this order status',
-        400,
-      )
-    }
-
-    if (sourceStoreId === order.storeId) {
-      throw new OrderServiceError(
-        ORDER_ERRORS.INVALID_FULFILLMENT_REQUEST,
-        'Source store must be different from destination store',
-        400,
-      )
-    }
-
-    if (order.items.length === 0) {
-      throw new OrderServiceError(
-        ORDER_ERRORS.INVALID_FULFILLMENT_REQUEST,
-        'Product is not part of this order',
-        400,
-      )
-    }
-
-    await assertAdminCanAccessStore(userId, order.storeId, tx)
-
-    const sourceStock = await tx.stock.findUnique({
-      where: {
-        productId_storeId: {
-          productId,
-          storeId: sourceStoreId,
-        },
-      },
-      select: {
-        quantity: true,
-      },
-    })
-
-    if (!sourceStock || sourceStock.quantity < quantity) {
-      throw new OrderServiceError(
-        ORDER_ERRORS.INSUFFICIENT_STOCK,
-        'Source store does not have enough stock for fulfillment',
-        400,
-      )
-    }
-
-    return tx.stockMutation.create({
-      data: {
-        orderId: order.id,
-        sourceStoreId,
-        destinationStoreId: order.storeId,
-        productId,
-        quantity,
-        requestedBy: userId,
-        notes: notes || `Fulfillment request for order ${order.orderNumber}`,
-      },
-      include: {
-        order: true,
-        sourceStore: true,
-        destinationStore: true,
-        product: true,
-      },
-    })
-  })
-}
-
-export const approveFulfillment = async ({
-  userId,
-  mutationId,
-  notes,
-}: FulfillmentActionParams) => {
-  return prisma.$transaction(async (tx) => {
-    const mutation = await tx.stockMutation.findUnique({
-      where: { id: mutationId },
-      include: {
-        product: true,
-        sourceStore: true,
-        destinationStore: true,
-      },
-    })
-
-    if (!mutation) {
-      throw new OrderServiceError(
-        ORDER_ERRORS.STOCK_MUTATION_NOT_FOUND,
-        'Stock mutation not found',
-        404,
-      )
-    }
-
-    if (mutation.status !== MutationStatus.PENDING) {
-      throw new OrderServiceError(
-        ORDER_ERRORS.STOCK_MUTATION_INVALID_STATUS,
-        'Only pending fulfillment requests can be approved',
-        400,
-      )
-    }
-
-    await assertAdminCanAccessStore(userId, mutation.sourceStoreId, tx)
-
-    const sourceStock = await tx.stock.findUnique({
-      where: {
-        productId_storeId: {
-          productId: mutation.productId,
-          storeId: mutation.sourceStoreId,
-        },
-      },
-      select: {
-        id: true,
-        quantity: true,
-        product: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            basePrice: true,
-            categoryId: true,
-          },
-        },
-        store: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            address: true,
-            city: true,
-            province: true,
-            latitude: true,
-            longitude: true,
-          },
-        },
-      },
-    })
-
-    if (!sourceStock || sourceStock.quantity < mutation.quantity) {
-      throw new OrderServiceError(
-        ORDER_ERRORS.INSUFFICIENT_STOCK,
-        'Source store does not have enough stock',
-        400,
-      )
-    }
-
-    const quantityBefore = sourceStock.quantity
-    const quantityAfter = quantityBefore - mutation.quantity
-    const updatedStock = await tx.stock.updateMany({
-      where: {
-        id: sourceStock.id,
-        quantity: { gte: mutation.quantity },
-      },
-      data: {
-        quantity: { decrement: mutation.quantity },
-      },
-    })
-
-    if (updatedStock.count !== 1) {
-      throw new OrderServiceError(
-        ORDER_ERRORS.INSUFFICIENT_STOCK,
-        'Stock changed while approving fulfillment. Please try again.',
-        409,
-      )
-    }
-
-    await createStockJournalEntry({
-      db: tx,
-      stock: sourceStock,
-      stockMutationId: mutation.id,
-      quantityChange: -mutation.quantity,
-      quantityBefore,
-      quantityAfter,
-      type: StockJournalType.MUTATION_OUT,
-      userId,
-      description: `Fulfillment stock out for mutation #${mutation.id}`,
-      notes: notes || mutation.notes || 'Fulfillment approved and stock sent',
-    })
-
-    return tx.stockMutation.update({
-      where: { id: mutation.id },
-      data: {
-        status: MutationStatus.IN_TRANSIT,
-        approvedBy: userId,
-        approvedAt: new Date(),
-        sentAt: new Date(),
-      },
-      include: {
-        order: true,
-        sourceStore: true,
-        destinationStore: true,
-        product: true,
-      },
-    })
-  })
-}
-
-export const receiveFulfillment = async ({
-  userId,
-  mutationId,
-  notes,
-}: FulfillmentActionParams) => {
-  return prisma.$transaction(async (tx) => {
-    const mutation = await tx.stockMutation.findUnique({
-      where: { id: mutationId },
-      include: {
-        product: true,
-        sourceStore: true,
-        destinationStore: true,
-      },
-    })
-
-    if (!mutation) {
-      throw new OrderServiceError(
-        ORDER_ERRORS.STOCK_MUTATION_NOT_FOUND,
-        'Stock mutation not found',
-        404,
-      )
-    }
-
-    if (mutation.status !== MutationStatus.IN_TRANSIT) {
-      throw new OrderServiceError(
-        ORDER_ERRORS.STOCK_MUTATION_INVALID_STATUS,
-        'Only in-transit fulfillment requests can be received',
-        400,
-      )
-    }
-
-    await assertAdminCanAccessStore(userId, mutation.destinationStoreId, tx)
-
-    const destinationStock = await tx.stock.upsert({
-      where: {
-        productId_storeId: {
-          productId: mutation.productId,
-          storeId: mutation.destinationStoreId,
-        },
-      },
-      update: {},
-      create: {
-        productId: mutation.productId,
-        storeId: mutation.destinationStoreId,
-        quantity: 0,
-      },
-      select: {
-        id: true,
-        quantity: true,
-        product: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            basePrice: true,
-            categoryId: true,
-          },
-        },
-        store: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            address: true,
-            city: true,
-            province: true,
-            latitude: true,
-            longitude: true,
-          },
-        },
-      },
-    })
-
-    const quantityBefore = destinationStock.quantity
-    const quantityAfter = quantityBefore + mutation.quantity
-
-    await tx.stock.update({
-      where: { id: destinationStock.id },
-      data: {
-        quantity: { increment: mutation.quantity },
-      },
-    })
-
-    await createStockJournalEntry({
-      db: tx,
-      stock: destinationStock,
-      stockMutationId: mutation.id,
-      quantityChange: mutation.quantity,
-      quantityBefore,
-      quantityAfter,
-      type: StockJournalType.MUTATION_IN,
-      userId,
-      description: `Fulfillment stock received for mutation #${mutation.id}`,
-      notes: notes || mutation.notes || 'Fulfillment received by destination store',
-    })
-
-    return tx.stockMutation.update({
-      where: { id: mutation.id },
-      data: {
-        status: MutationStatus.COMPLETED,
-        receivedBy: userId,
-        receivedAt: new Date(),
-      },
-      include: {
-        order: true,
-        sourceStore: true,
-        destinationStore: true,
-        product: true,
-      },
-    })
-  })
-}
-
-export const rejectFulfillment = async ({
-  userId,
-  mutationId,
-  notes,
-}: FulfillmentActionParams) => {
-  return prisma.$transaction(async (tx) => {
-    const mutation = await tx.stockMutation.findUnique({
-      where: { id: mutationId },
-      select: {
-        id: true,
-        status: true,
-        sourceStoreId: true,
-        notes: true,
-      },
-    })
-
-    if (!mutation) {
-      throw new OrderServiceError(
-        ORDER_ERRORS.STOCK_MUTATION_NOT_FOUND,
-        'Stock mutation not found',
-        404,
-      )
-    }
-
-    if (mutation.status !== MutationStatus.PENDING) {
-      throw new OrderServiceError(
-        ORDER_ERRORS.STOCK_MUTATION_INVALID_STATUS,
-        'Only pending fulfillment requests can be rejected',
-        400,
-      )
-    }
-
-    await assertAdminCanAccessStore(userId, mutation.sourceStoreId, tx)
-
-    return tx.stockMutation.update({
-      where: { id: mutation.id },
-      data: {
-        status: MutationStatus.REJECTED,
-        rejectedBy: userId,
-        rejectedAt: new Date(),
-        notes: notes || mutation.notes || 'Fulfillment request rejected',
-      },
-      include: {
-        order: true,
-        sourceStore: true,
-        destinationStore: true,
-        product: true,
-      },
-    })
-  })
 }

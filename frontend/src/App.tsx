@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import { ToastProvider } from './components/common/Toast'
 import { ProtectedRoute, GuestRoute } from './components/common/RouteGuard'
@@ -27,6 +27,12 @@ import AdminStoreAdminList from './pages/admin/AdminStoreAdminList'
 import AdminStockList from './pages/admin/AdminStockList'
 import AdminStoreDetailPage from './pages/admin/AdminStoreDetailPage'
 import './App.css'
+
+function OrderPaymentRedirect() {
+  const { id } = useParams()
+
+  return <Navigate to={`/orders/${id}`} replace />
+}
 
 
 
@@ -70,7 +76,7 @@ function App() {
         <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
         <Route path="/orders/:id" element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
-        <Route path="/orders/:id/payment" element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
+        <Route path="/orders/:id/payment" element={<ProtectedRoute><OrderPaymentRedirect /></ProtectedRoute>} />
         
         {/* Admin Routes */}
         <Route path="/admin/categories" element={<AdminCategoryPage />} />

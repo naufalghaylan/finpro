@@ -9,7 +9,7 @@ import {
 import {
   cancelOrder,
   createMidtransPayment,
-  getOrderPaymentDetails,
+  getOrderDetails,
   syncMidtransPaymentStatus,
   uploadManualPaymentProof,
 } from '../../api/order.api'
@@ -19,6 +19,7 @@ import { HomeFooter } from '../../components/home/HomeFooter'
 import { CancelOrderDialog } from '../../components/orders/CancelOrderDialog'
 import { ManualPaymentSection, type ManualPaymentGroup } from '../../components/orders/ManualPaymentSection'
 import { OrderProductsPanel } from '../../components/orders/OrderProductsPanel'
+import { OrderTrackingTimeline } from '../../components/orders/OrderTrackingTimeline'
 import { PaymentGatewaySection } from '../../components/orders/PaymentGatewaySection'
 import { PaymentSummaryPanel } from '../../components/orders/PaymentSummaryPanel'
 import { getUploadUrl, orderStatusDisplay } from '../../components/orders/orderDisplay'
@@ -68,6 +69,23 @@ const getRemainingPaymentSeconds = (deadline: string | null) => {
   if (!deadline) return 0
 
   return Math.max(0, Math.floor((new Date(deadline).getTime() - Date.now()) / 1000))
+}
+
+const hasOrderChanged = (currentOrder: CheckoutOrder | null, nextOrder: CheckoutOrder) => {
+  if (!currentOrder) return true
+
+  return (
+    currentOrder.id !== nextOrder.id ||
+    currentOrder.status !== nextOrder.status ||
+    currentOrder.updatedAt !== nextOrder.updatedAt ||
+    currentOrder.paymentProof !== nextOrder.paymentProof ||
+    currentOrder.paymentGatewayId !== nextOrder.paymentGatewayId ||
+    currentOrder.paymentDeadline !== nextOrder.paymentDeadline ||
+    currentOrder.shippedAt !== nextOrder.shippedAt ||
+    currentOrder.confirmedAt !== nextOrder.confirmedAt ||
+    currentOrder.cancelledAt !== nextOrder.cancelledAt ||
+    currentOrder.cancelReason !== nextOrder.cancelReason
+  )
 }
 
 const loadMidtransSnapScript = () =>
@@ -124,6 +142,7 @@ function PaymentPage() {
   const [error, setError] = useState<string | null>(null)
   const copyResetTimeoutRef = useRef<number | null>(null)
   const midtransEmbedOrderRef = useRef<number | null>(null)
+  const midtransSyncInFlightRef = useRef(false)
   const { showToast } = useToast()
   const midtransEmbedContainerId = `midtrans-snap-container-${Number.isFinite(orderId) && orderId > 0 ? orderId : 'order'}`
   const midtransReturnOrderId = searchParams.get('order_id')
@@ -139,7 +158,7 @@ function PaymentPage() {
 
     setIsLoading(true)
     try {
-      const nextOrder = await getOrderPaymentDetails(orderId)
+      const nextOrder = await getOrderDetails(orderId)
       setOrder(nextOrder)
       setRemainingSeconds(getRemainingPaymentSeconds(nextOrder.paymentDeadline))
       setError(null)
@@ -154,14 +173,25 @@ function PaymentPage() {
     async (mode: 'silent' | 'success' | 'pending' | 'return' = 'silent') => {
       if (!Number.isFinite(orderId) || orderId <= 0) return null
 
-      setIsSyncingWithMidtrans(true)
+      const isSilentSync = mode === 'silent'
+      if (isSilentSync && midtransSyncInFlightRef.current) return null
+
+      midtransSyncInFlightRef.current = true
+      if (!isSilentSync) {
+        setIsSyncingWithMidtrans(true)
+      }
+
       try {
         const updatedOrder = await syncMidtransPaymentStatus(orderId)
-        setOrder(updatedOrder)
-        setRemainingSeconds(getRemainingPaymentSeconds(updatedOrder.paymentDeadline))
+        setOrder((currentOrder) => (hasOrderChanged(currentOrder, updatedOrder) ? updatedOrder : currentOrder))
+        setRemainingSeconds((currentSeconds) => {
+          const nextSeconds = getRemainingPaymentSeconds(updatedOrder.paymentDeadline)
+
+          return currentSeconds === nextSeconds ? currentSeconds : nextSeconds
+        })
         setError(null)
 
-        if (mode !== 'silent') {
+        if (!isSilentSync) {
           if (updatedOrder.status === 'PROCESSING') {
             showToast('Pembayaran berhasil. Pesanan masuk proses.', 'success')
           } else if (updatedOrder.status === 'PENDING_PAYMENT') {
@@ -181,7 +211,10 @@ function PaymentPage() {
 
         return null
       } finally {
-        setIsSyncingWithMidtrans(false)
+        midtransSyncInFlightRef.current = false
+        if (!isSilentSync) {
+          setIsSyncingWithMidtrans(false)
+        }
       }
     },
     [orderId, showToast],
@@ -487,7 +520,7 @@ function PaymentPage() {
           ) : error ? (
             <div className="checkout-state-card">
               <AlertCircle className="checkout-state-icon danger" aria-hidden="true" />
-              <h2>Payment page belum bisa dibuka</h2>
+              <h2>Detail pesanan belum bisa dibuka</h2>
               <p>{error}</p>
               <button type="button" className="button primary" onClick={() => void loadOrder()}>
                 Coba Lagi
@@ -497,11 +530,12 @@ function PaymentPage() {
             <>
               <div className="checkout-header">
                 <div>
-                  <p className="eyebrow">Pembayaran Pesanan</p>
+                  <p className="eyebrow">Detail Pesanan</p>
                   <h1>{order.orderNumber}</h1>
                   <p>
-                    Selesaikan pembayaran sesuai metode yang dipilih. Untuk transfer manual, upload bukti bayar
-                    sebelum deadline berakhir.
+                    {order.status === 'PENDING_PAYMENT'
+                      ? 'Selesaikan pembayaran sesuai metode yang dipilih agar pesanan bisa diproses.'
+                      : 'Pantau status pesanan, rincian pembayaran, dan produk yang sudah kamu checkout.'}
                   </p>
                 </div>
                 <span className={`payment-status payment-status--${order.status.toLowerCase()}`}>
@@ -511,6 +545,8 @@ function PaymentPage() {
 
               <div className="payment-layout">
                 <div className="checkout-main-column">
+                  <OrderTrackingTimeline order={order} />
+
                   {isManualTransfer && (
                     <ManualPaymentSection
                       order={order}
