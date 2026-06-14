@@ -1437,7 +1437,6 @@ export const autoCancelExpiredManualTransferOrders = async () => {
   const expiredOrders = await prisma.order.findMany({
     where: {
       status: OrderStatus.PENDING_PAYMENT,
-      paymentMethod: PaymentMethod.MANUAL_TRANSFER,
       paymentDeadline: {
         lte: now,
       },

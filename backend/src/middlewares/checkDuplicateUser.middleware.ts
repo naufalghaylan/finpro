@@ -7,14 +7,20 @@ export const checkDuplicateUser = async (req: Request, res: Response, next: Next
     const { email, username } = req.body;
 
     if (email) {
-      const existingEmail = await prisma.user.findUnique({ where: { email } });
+      const existingEmail = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true }
+      });
       if (existingEmail) {
         throw new AppError(409, 'Email already registered');
       }
     }
 
     if (username) {
-      const existingUsername = await prisma.user.findUnique({ where: { username } });
+      const existingUsername = await prisma.user.findUnique({
+        where: { username },
+        select: { id: true }
+      });
       if (existingUsername) {
         throw new AppError(409, 'Username already taken');
       }
