@@ -7,6 +7,7 @@ import {
   createMidtransSnapToken as createMidtransSnapTokenService,
   getOrderPaymentDetails as getOrderPaymentDetailsService,
   getCheckoutPreview as getCheckoutPreviewService,
+  listAdminOrders as listAdminOrdersService,
   OrderServiceError,
   listOrders as listOrdersService,
   receiveFulfillment as receiveFulfillmentService,
@@ -16,6 +17,7 @@ import {
   uploadManualPaymentProof as uploadManualPaymentProofService,
 } from '../services/order.service'
 import {
+  adminOrderListQuerySchema,
   cancelOrderSchema,
   checkoutQuerySchema,
   createCheckoutOrderSchema,
@@ -91,6 +93,35 @@ export const listOrders = async (req: Request, res: Response): Promise<void> => 
     if (handleOrderError(error, res)) return
 
     console.error('[listOrders]', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+}
+
+export const listAdminOrders = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = req.user
+    if (!user) {
+      res.status(401).json({ message: 'Unauthorized: Login required' })
+      return
+    }
+
+    const parsed = adminOrderListQuerySchema.safeParse(req.query)
+    if (!parsed.success) {
+      res.status(400).json({ message: 'Validation Error', errors: parsed.error.flatten().fieldErrors })
+      return
+    }
+
+    const result = await listAdminOrdersService({
+      actorRole: user.role,
+      actorStoreId: user.storeId,
+      ...parsed.data,
+    })
+
+    res.json(result)
+  } catch (error) {
+    if (handleOrderError(error, res)) return
+
+    console.error('[listAdminOrders]', error)
     res.status(500).json({ message: 'Internal server error' })
   }
 }

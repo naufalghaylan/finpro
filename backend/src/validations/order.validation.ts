@@ -39,30 +39,41 @@ export const checkoutQuerySchema = z.object({
   addressId: positiveIntegerSchema.optional(),
 })
 
-export const orderListQuerySchema = z
-  .object({
-    page: positiveIntegerSchema.default(1),
-    limit: orderListLimitSchema,
-    startDate: optionalDateSchema,
-    endDate: optionalDateSchema,
-    orderNumber: optionalOrderNumberSchema,
-    status: z.enum(orderStatusValues).optional(),
-    statusGroup: z.enum(['ongoing', 'completed', 'cancelled']).optional(),
-  })
-  .superRefine((query, context) => {
-    if (!query.startDate || !query.endDate) return
+const orderListBaseQuerySchema = z.object({
+  page: positiveIntegerSchema.default(1),
+  limit: orderListLimitSchema,
+  startDate: optionalDateSchema,
+  endDate: optionalDateSchema,
+  orderNumber: optionalOrderNumberSchema,
+  status: z.enum(orderStatusValues).optional(),
+  statusGroup: z.enum(['ongoing', 'completed', 'cancelled']).optional(),
+})
 
-    const startDate = new Date(`${query.startDate}T00:00:00.000`)
-    const endDate = new Date(`${query.endDate}T23:59:59.999`)
+const validateOrderDateRange = (
+  query: { startDate?: string; endDate?: string },
+  context: z.RefinementCtx,
+) => {
+  if (!query.startDate || !query.endDate) return
 
-    if (startDate.getTime() > endDate.getTime()) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'End date must be after start date',
-        path: ['endDate'],
-      })
-    }
+  const startDate = new Date(`${query.startDate}T00:00:00.000`)
+  const endDate = new Date(`${query.endDate}T23:59:59.999`)
+
+  if (startDate.getTime() > endDate.getTime()) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'End date must be after start date',
+      path: ['endDate'],
+    })
+  }
+}
+
+export const orderListQuerySchema = orderListBaseQuerySchema.superRefine(validateOrderDateRange)
+
+export const adminOrderListQuerySchema = orderListBaseQuerySchema
+  .extend({
+    storeId: positiveIntegerSchema.optional(),
   })
+  .superRefine(validateOrderDateRange)
 
 export const createCheckoutOrderSchema = z.object({
   addressId: positiveIntegerSchema,
@@ -100,6 +111,7 @@ export const fulfillmentActionSchema = z.object({
 
 export type CheckoutQuery = z.infer<typeof checkoutQuerySchema>
 export type OrderListQuery = z.infer<typeof orderListQuerySchema>
+export type AdminOrderListQuery = z.infer<typeof adminOrderListQuerySchema>
 export type CreateCheckoutOrderInput = z.infer<typeof createCheckoutOrderSchema>
 export type CancelOrderInput = z.infer<typeof cancelOrderSchema>
 export type RequestFulfillmentInput = z.infer<typeof requestFulfillmentSchema>

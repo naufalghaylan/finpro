@@ -35,7 +35,7 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [loadingLocation, setLoadingLocation] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (isOpen) {

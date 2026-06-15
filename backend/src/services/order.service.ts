@@ -67,6 +67,12 @@ type ListOrdersParams = {
   statusGroup?: OrderStatusGroup
 }
 
+type ListAdminOrdersParams = Omit<ListOrdersParams, 'userId'> & {
+  actorRole: string
+  actorStoreId?: number | null
+  storeId?: number
+}
+
 type UploadPaymentProofParams = OrderPaymentParams & {
   paymentProofUrl: string
 }
@@ -171,9 +177,65 @@ const orderSelect = {
   },
 } satisfies Prisma.OrderSelect
 
+const adminOrderSelect = {
+  ...orderSelect,
+  shippingMethod: true,
+  shippingService: true,
+  user: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+    },
+  },
+} satisfies Prisma.OrderSelect
+
 const getStartOfDate = (date: string) => new Date(`${date}T00:00:00.000`)
 
 const getEndOfDate = (date: string) => new Date(`${date}T23:59:59.999`)
+
+const applyOrderListFilters = (
+  where: Prisma.OrderWhereInput,
+  {
+    startDate,
+    endDate,
+    orderNumber,
+    status,
+    statusGroup,
+  }: Pick<ListOrdersParams, 'startDate' | 'endDate' | 'orderNumber' | 'status' | 'statusGroup'>,
+) => {
+  if (orderNumber) {
+    where.orderNumber = {
+      contains: orderNumber,
+      mode: 'insensitive',
+    }
+  }
+
+  if (status) {
+    where.status = status
+  } else if (statusGroup) {
+    where.status = {
+      in: orderStatusGroups[statusGroup],
+    }
+  }
+
+  if (startDate || endDate) {
+    const createdAt: Prisma.DateTimeFilter = {}
+
+    if (startDate) {
+      createdAt.gte = getStartOfDate(startDate)
+    }
+
+    if (endDate) {
+      createdAt.lte = getEndOfDate(endDate)
+    }
+
+    where.createdAt = createdAt
+  }
+
+  return where
+}
 
 const getFrontendUrl = () =>
   (process.env.FRONTEND_URL || process.env.CORS_ORIGIN || 'http://localhost:5173').replace(/\/$/, '')
@@ -520,39 +582,88 @@ export const listOrders = async ({
   const skip = (page - 1) * limit
   const where: Prisma.OrderWhereInput = { userId }
 
-  if (orderNumber) {
-    where.orderNumber = {
-      contains: orderNumber,
-      mode: 'insensitive',
-    }
-  }
-
-  if (status) {
-    where.status = status
-  } else if (statusGroup) {
-    where.status = {
-      in: orderStatusGroups[statusGroup],
-    }
-  }
-
-  if (startDate || endDate) {
-    const createdAt: Prisma.DateTimeFilter = {}
-
-    if (startDate) {
-      createdAt.gte = getStartOfDate(startDate)
-    }
-
-    if (endDate) {
-      createdAt.lte = getEndOfDate(endDate)
-    }
-
-    where.createdAt = createdAt
-  }
+  applyOrderListFilters(where, {
+    startDate,
+    endDate,
+    orderNumber,
+    status,
+    statusGroup,
+  })
 
   const [orders, total] = await Promise.all([
     prisma.order.findMany({
       where,
       select: orderSelect,
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    prisma.order.count({ where }),
+  ])
+  const totalPages = Math.ceil(total / limit)
+
+  return {
+    data: orders,
+    meta: {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    },
+  }
+}
+
+export const listAdminOrders = async ({
+  actorRole,
+  actorStoreId,
+  page,
+  limit,
+  startDate,
+  endDate,
+  orderNumber,
+  status,
+  statusGroup,
+  storeId,
+}: ListAdminOrdersParams) => {
+  const skip = (page - 1) * limit
+  const where: Prisma.OrderWhereInput = {}
+
+  if (actorRole === 'STORE_ADMIN') {
+    if (!actorStoreId) {
+      throw new OrderServiceError(
+        ORDER_ERRORS.FULFILLMENT_ACCESS_DENIED,
+        'Store admin is not assigned to a store',
+        403,
+      )
+    }
+
+    where.storeId = actorStoreId
+  } else if (actorRole === 'SUPER_ADMIN') {
+    if (storeId) {
+      where.storeId = storeId
+    }
+  } else {
+    throw new OrderServiceError(
+      ORDER_ERRORS.FULFILLMENT_ACCESS_DENIED,
+      'You do not have access to admin orders',
+      403,
+    )
+  }
+
+  applyOrderListFilters(where, {
+    startDate,
+    endDate,
+    orderNumber,
+    status,
+    statusGroup,
+  })
+
+  const [orders, total] = await Promise.all([
+    prisma.order.findMany({
+      where,
+      select: adminOrderSelect,
       orderBy: { createdAt: 'desc' },
       skip,
       take: limit,

@@ -58,7 +58,7 @@ export default function StoreFormModal({ store, onClose, onSuccess }: Props) {
   const [destinations, setDestinations] = useState<KomerceDestination[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const searchTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const searchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
