@@ -103,6 +103,14 @@ export async function confirmManualPayment(
   return data.data
 }
 
+export async function adminCancelOrder(orderId: number, reason?: string): Promise<AdminOrder> {
+  const { data } = await api.post<ApiData<AdminOrder>>(`/orders/admin/${orderId}/cancel`, {
+    reason: reason?.trim() || undefined,
+  })
+
+  return data.data
+}
+
 export async function cancelOrder(orderId: number, reason?: string): Promise<CheckoutOrder> {
   const { data } = await api.post<ApiData<CheckoutOrder>>(`/orders/${orderId}/cancel`, {
     reason: reason?.trim() || undefined,
