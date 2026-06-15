@@ -1221,9 +1221,9 @@ export const cancelOrder = async ({
       data: {
         status: OrderStatus.CANCELLED,
         cancelledAt: new Date(),
-        cancelReason: reason || 'Pesanan dibatalkan oleh pelanggan',
+        cancelReason: reason || (isAdmin ? 'Pesanan dibatalkan oleh admin' : 'Pesanan dibatalkan oleh pelanggan'),
       },
-      select: orderSelect,
+      select: isAdmin ? adminOrderSelect : orderSelect,
     })
   })
 }
