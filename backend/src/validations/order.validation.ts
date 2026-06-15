@@ -98,6 +98,10 @@ export const cancelOrderSchema = z.object({
   reason: z.string().trim().max(500, 'Reason must be at most 500 characters').optional(),
 })
 
+export const confirmManualPaymentSchema = z.object({
+  action: z.enum(['approve', 'reject']),
+})
+
 export const requestFulfillmentSchema = z.object({
   sourceStoreId: positiveIntegerSchema,
   productId: positiveIntegerSchema,
@@ -114,5 +118,6 @@ export type OrderListQuery = z.infer<typeof orderListQuerySchema>
 export type AdminOrderListQuery = z.infer<typeof adminOrderListQuerySchema>
 export type CreateCheckoutOrderInput = z.infer<typeof createCheckoutOrderSchema>
 export type CancelOrderInput = z.infer<typeof cancelOrderSchema>
+export type ConfirmManualPaymentInput = z.infer<typeof confirmManualPaymentSchema>
 export type RequestFulfillmentInput = z.infer<typeof requestFulfillmentSchema>
 export type FulfillmentActionInput = z.infer<typeof fulfillmentActionSchema>
