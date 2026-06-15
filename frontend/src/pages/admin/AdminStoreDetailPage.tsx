@@ -7,7 +7,8 @@ import { getStoreById, updateStore } from '../../api/store';
 import { useToast } from '../../components/common/Toast';
 import AdminStockList from './AdminStockList';
 import AdminDiscountList from './AdminDiscountList';
-import { Info, Package, Tag, Loader2, MapPin } from 'lucide-react';
+import AdminOrderList from './AdminOrderList';
+import { Info, Package, Tag, Loader2, MapPin, ClipboardList } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -38,7 +39,7 @@ export default function AdminStoreDetailPage() {
 
   const { showToast } = useToast();
   
-  const [activeTab, setActiveTab] = useState<'details' | 'stocks' | 'discounts'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'stocks' | 'discounts' | 'orders'>('details');
   const [store, setStore] = useState<Store | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -110,6 +111,7 @@ export default function AdminStoreDetailPage() {
     { key: 'details' as const, label: 'Detail Toko', icon: Info },
     { key: 'stocks' as const, label: 'Manajemen Stok', icon: Package },
     { key: 'discounts' as const, label: 'Manajemen Diskon', icon: Tag },
+    { key: 'orders' as const, label: 'Pesanan Toko', icon: ClipboardList },
   ];
 
   if (loading) {
@@ -295,6 +297,7 @@ export default function AdminStoreDetailPage() {
 
         {activeTab === 'stocks' && <AdminStockList storeId={Number(id)} />}
         {activeTab === 'discounts' && <AdminDiscountList storeId={Number(id)} />}
+        {activeTab === 'orders' && <AdminOrderList storeId={Number(id)} />}
       </div>
     </div>
   );

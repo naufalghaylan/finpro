@@ -127,6 +127,10 @@ export type OrderListQuery = {
   statusGroup?: OrderStatusGroup
 }
 
+export type AdminOrderListQuery = OrderListQuery & {
+  storeId?: number
+}
+
 export type OrderListMeta = {
   page: number
   limit: number
@@ -138,5 +142,21 @@ export type OrderListMeta = {
 
 export type OrderListResponse = {
   orders: CheckoutOrder[]
+  meta: OrderListMeta
+}
+
+export type AdminOrder = CheckoutOrder & {
+  shippingMethod: string | null
+  shippingService: string | null
+  user: {
+    id: number
+    name: string
+    email: string
+    phone: string | null
+  }
+}
+
+export type AdminOrderListResponse = {
+  orders: AdminOrder[]
   meta: OrderListMeta
 }

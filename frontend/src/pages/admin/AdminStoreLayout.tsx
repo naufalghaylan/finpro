@@ -3,7 +3,7 @@ import { useAuthStore } from '../../store/authStore';
 import { Navbar } from '../../components/common/Navbar';
 import { HomeFooter } from '../../components/home/HomeFooter';
 import { BRAND, navLinks, footerSections } from '../../data/home/homeData';
-import { Store, Users, LayoutDashboard, Package, ShoppingBag } from 'lucide-react';
+import { Store, Users, LayoutDashboard, Package, ShoppingBag, ClipboardList } from 'lucide-react';
 
 
 export function AdminStoreIndexRedirect() {
@@ -30,6 +30,7 @@ export default function AdminStoreLayout() {
     { to: '/admin/stores/admins', label: 'Daftar Admin', icon: Users, match: '/admins' },
     { to: '/admin/stores/stocks', label: 'Daftar Stok Global', icon: Package, match: '/stocks' },
     { to: '/admin/stores/products', label: 'Manajemen Produk', icon: ShoppingBag, match: '/products' },
+    { to: '/admin/stores/orders', label: 'Pesanan', icon: ClipboardList, match: '/orders' },
   ];
 
   return (

@@ -7,6 +7,7 @@ import {
   createMidtransPayment,
   getCheckoutPreview,
   getOrderPaymentDetails,
+  listAdminOrders,
   listOrders,
   receiveFulfillment,
   rejectFulfillment,
@@ -25,6 +26,7 @@ orderRouter.use(authenticate, requireVerifiedUser)
 orderRouter.get('/', listOrders)
 orderRouter.get('/checkout', getCheckoutPreview)
 orderRouter.post('/checkout', createCheckoutOrder)
+orderRouter.get('/admin', authorize('SUPER_ADMIN', 'STORE_ADMIN'), listAdminOrders)
 orderRouter.get('/:id', getOrderPaymentDetails)
 orderRouter.get('/:id/payment', getOrderPaymentDetails)
 orderRouter.post('/:id/payment-gateway', createMidtransPayment)

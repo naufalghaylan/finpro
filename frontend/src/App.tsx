@@ -26,6 +26,7 @@ import AdminStoreList from './pages/admin/AdminStoreList'
 import AdminStoreAdminList from './pages/admin/AdminStoreAdminList'
 import AdminStockList from './pages/admin/AdminStockList'
 import AdminStoreDetailPage from './pages/admin/AdminStoreDetailPage'
+import AdminOrderList from './pages/admin/AdminOrderList'
 import './App.css'
 
 function OrderPaymentRedirect() {
@@ -87,6 +88,7 @@ function App() {
           <Route path="admins" element={<AdminStoreAdminList />} />
           <Route path="stocks" element={<AdminStockList />} />
           <Route path="products" element={<AdminProductPage />} />
+          <Route path="orders" element={<AdminOrderList />} />
           <Route path=":id" element={<AdminStoreDetailPage />} />
         </Route>
       </Routes>
