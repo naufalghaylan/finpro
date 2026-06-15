@@ -77,6 +77,12 @@ type UploadPaymentProofParams = OrderPaymentParams & {
   paymentProofUrl: string
 }
 
+type ConfirmManualPaymentParams = {
+  userId: number
+  orderId: number
+  action: 'approve' | 'reject'
+}
+
 type MidtransNotificationResult = {
   orderId: number
   orderNumber: string
@@ -748,6 +754,62 @@ export const uploadManualPaymentProof = async ({
         status: OrderStatus.WAITING_CONFIRMATION,
       },
       select: orderSelect,
+    })
+  })
+}
+
+export const confirmManualPayment = async ({
+  userId,
+  orderId,
+  action,
+}: ConfirmManualPaymentParams) => {
+  return prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        storeId: true,
+        status: true,
+        paymentMethod: true,
+        paymentProof: true,
+      },
+    })
+
+    if (!order) {
+      throw new OrderServiceError(ORDER_ERRORS.ORDER_NOT_FOUND, 'Order not found', 404)
+    }
+
+    await assertAdminCanAccessStore(userId, order.storeId, tx)
+
+    if (order.paymentMethod !== PaymentMethod.MANUAL_TRANSFER) {
+      throw new OrderServiceError(
+        ORDER_ERRORS.PAYMENT_CONFIRMATION_NOT_ALLOWED,
+        'Manual payment confirmation is only available for manual transfer orders',
+        400,
+      )
+    }
+
+    if (order.status !== OrderStatus.WAITING_CONFIRMATION || !order.paymentProof) {
+      throw new OrderServiceError(
+        ORDER_ERRORS.PAYMENT_CONFIRMATION_NOT_ALLOWED,
+        'Order is not waiting for manual payment confirmation',
+        400,
+      )
+    }
+
+    return tx.order.update({
+      where: { id: order.id },
+      data: action === 'approve'
+        ? {
+          status: OrderStatus.PROCESSING,
+          paymentDeadline: null,
+        }
+        : {
+          status: OrderStatus.PENDING_PAYMENT,
+          paymentProof: null,
+          paymentDeadline: new Date(Date.now() + PAYMENT_DEADLINE_IN_MS),
+        },
+      select: adminOrderSelect,
     })
   })
 }

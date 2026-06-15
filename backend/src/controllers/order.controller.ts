@@ -3,6 +3,7 @@ import cloudinary from '../lib/cloudinary'
 import {
   approveFulfillment as approveFulfillmentService,
   cancelOrder as cancelOrderService,
+  confirmManualPayment as confirmManualPaymentService,
   createCheckoutOrder as createCheckoutOrderService,
   createMidtransSnapToken as createMidtransSnapTokenService,
   getOrderPaymentDetails as getOrderPaymentDetailsService,
@@ -20,6 +21,7 @@ import {
   adminOrderListQuerySchema,
   cancelOrderSchema,
   checkoutQuerySchema,
+  confirmManualPaymentSchema,
   createCheckoutOrderSchema,
   fulfillmentActionSchema,
   orderListQuerySchema,
@@ -316,6 +318,44 @@ export const syncMidtransPaymentStatus = async (req: Request, res: Response): Pr
     if (handleOrderError(error, res)) return
 
     console.error('[syncMidtransPaymentStatus]', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+}
+
+export const confirmManualPayment = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = getAuthenticatedUserId(req, res)
+    if (!userId) return
+
+    const parsedParams = orderParamsSchema.safeParse(req.params)
+    const parsedBody = confirmManualPaymentSchema.safeParse(req.body)
+
+    if (!parsedParams.success) {
+      res.status(400).json({ message: 'Validation Error', errors: parsedParams.error.flatten().fieldErrors })
+      return
+    }
+
+    if (!parsedBody.success) {
+      res.status(400).json({ message: 'Validation Error', errors: parsedBody.error.flatten().fieldErrors })
+      return
+    }
+
+    const order = await confirmManualPaymentService({
+      userId,
+      orderId: parsedParams.data.id,
+      action: parsedBody.data.action,
+    })
+
+    res.json({
+      message: parsedBody.data.action === 'approve'
+        ? 'Manual payment approved successfully'
+        : 'Manual payment rejected successfully',
+      data: order,
+    })
+  } catch (error) {
+    if (handleOrderError(error, res)) return
+
+    console.error('[confirmManualPayment]', error)
     res.status(500).json({ message: 'Internal server error' })
   }
 }

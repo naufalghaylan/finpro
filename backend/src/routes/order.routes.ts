@@ -3,6 +3,7 @@ import {
   adminCancelOrder,
   approveFulfillment,
   cancelOrder,
+  confirmManualPayment,
   createCheckoutOrder,
   createMidtransPayment,
   getCheckoutPreview,
@@ -33,6 +34,11 @@ orderRouter.post('/:id/payment-gateway', createMidtransPayment)
 orderRouter.post('/:id/payment-gateway/sync', syncMidtransPaymentStatus)
 orderRouter.post('/:id/payment-proof', handlePaymentProofUpload, uploadManualPaymentProof)
 orderRouter.post('/:id/cancel', cancelOrder)
+orderRouter.post(
+  '/admin/:id/confirm-payment',
+  authorize('SUPER_ADMIN', 'STORE_ADMIN'),
+  confirmManualPayment,
+)
 orderRouter.post(
   '/admin/:id/cancel',
   authorize('SUPER_ADMIN', 'STORE_ADMIN'),

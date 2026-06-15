@@ -92,6 +92,17 @@ export async function syncMidtransPaymentStatus(orderId: number): Promise<Checko
   return data.data
 }
 
+export async function confirmManualPayment(
+  orderId: number,
+  action: 'approve' | 'reject',
+): Promise<AdminOrder> {
+  const { data } = await api.post<ApiData<AdminOrder>>(`/orders/admin/${orderId}/confirm-payment`, {
+    action,
+  })
+
+  return data.data
+}
+
 export async function cancelOrder(orderId: number, reason?: string): Promise<CheckoutOrder> {
   const { data } = await api.post<ApiData<CheckoutOrder>>(`/orders/${orderId}/cancel`, {
     reason: reason?.trim() || undefined,
