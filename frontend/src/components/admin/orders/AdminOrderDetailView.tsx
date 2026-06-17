@@ -1,4 +1,4 @@
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, StickyNote, XCircle } from 'lucide-react'
 import {
   getOrderDiscountBreakdown,
   getOrderItemQuantity,
@@ -91,6 +91,19 @@ export function AdminOrderDetailView({
         </div>
       </div>
 
+      {order.status === 'CANCELLED' && order.cancelReason && (
+        <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 mb-0">
+          <XCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-bold text-red-700 m-0">Pesanan Dibatalkan</p>
+            <p className="text-sm text-red-600 m-0 mt-1">{order.cancelReason}</p>
+            {order.cancelledAt && (
+              <p className="text-xs text-red-400 m-0 mt-1">Dibatalkan pada {formatDateTime(order.cancelledAt)}</p>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-6">
         <div className="flex flex-col gap-6">
           <AdminOrderItemsPanel order={order} />
@@ -120,6 +133,16 @@ export function AdminOrderDetailView({
               </div>
             </div>
           </section>
+
+          {order.notes && (
+            <section className="rounded-2xl border border-admin-line-soft bg-admin-surface shadow-sm p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <StickyNote className="w-4 h-4 text-admin-accent-strong" />
+                <h4 className="text-base font-bold text-admin-ink m-0">Catatan Pesanan</h4>
+              </div>
+              <p className="text-sm text-admin-ink-muted m-0 whitespace-pre-wrap">{order.notes}</p>
+            </section>
+          )}
 
           <section className="rounded-2xl border border-admin-line-soft bg-admin-surface shadow-sm p-5">
             <div className="flex items-center gap-2 mb-4">
