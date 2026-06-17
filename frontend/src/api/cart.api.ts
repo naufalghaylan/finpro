@@ -1,9 +1,6 @@
 import api from './axios'
+import type { ApiData } from './api.types'
 import type { Cart, CartMutationResult } from '../types/cart'
-
-type ApiData<T> = {
-  data: T
-}
 
 export async function getCart(): Promise<Cart> {
   const { data } = await api.get<ApiData<Cart>>('/cart')

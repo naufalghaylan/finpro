@@ -1,0 +1,103 @@
+import { AlertTriangle, Loader2, Send, X } from 'lucide-react'
+import type { AdminOrder } from '../../../types/order'
+import { formatCurrency } from '../../../utils/format'
+
+interface AdminShipOrderModalProps {
+  order: AdminOrder
+  isShippingOrder: boolean
+  onClose: () => void
+  onConfirm: () => void
+  hasActiveFulfillment: boolean
+}
+
+export function AdminShipOrderModal({
+  order,
+  isShippingOrder,
+  onClose,
+  onConfirm,
+  hasActiveFulfillment,
+}: AdminShipOrderModalProps) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
+      <div className="w-full max-w-lg rounded-2xl border border-admin-line-soft bg-admin-surface shadow-2xl">
+        <div className="flex items-start justify-between gap-4 px-6 py-5 border-b border-admin-line-soft">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-admin-green m-0">
+              Kirim Pesanan
+            </p>
+            <h3 className="text-lg font-bold text-admin-ink m-0 mt-1">{order.orderNumber}</h3>
+            <p className="text-sm text-admin-ink-muted m-0 mt-1">
+              Pastikan semua barang siap sebelum status diubah menjadi Dikirim.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isShippingOrder}
+            className="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-admin-line-soft bg-admin-surface text-admin-ink-soft
+                       hover:bg-admin-surface-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
+            aria-label="Tutup konfirmasi pengiriman"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="p-6">
+          <div className="rounded-xl border border-admin-amber/30 bg-admin-amber-soft p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-admin-amber shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-bold text-admin-ink m-0">Barang sudah siap dikirim?</h4>
+                <p className="text-xs text-admin-ink-soft leading-relaxed m-0 mt-1">
+                  Status pesanan akan menjadi Dikirim dan customer bisa mengonfirmasi pesanan diterima.
+                  Sistem juga akan otomatis menyelesaikan pesanan setelah 2 x 24 jam.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 my-5 text-sm">
+            <div className="rounded-xl border border-admin-line-soft bg-admin-surface-2/30 p-3">
+              <span className="block text-admin-ink-muted">Customer</span>
+              <strong className="text-admin-ink">{order.user.name}</strong>
+            </div>
+            <div className="rounded-xl border border-admin-line-soft bg-admin-surface-2/30 p-3">
+              <span className="block text-admin-ink-muted">Total</span>
+              <strong className="text-admin-ink">{formatCurrency(order.totalAmount)}</strong>
+            </div>
+          </div>
+
+          {hasActiveFulfillment && (
+            <div className="rounded-xl border border-admin-red/20 bg-admin-red-soft p-4 mb-5">
+              <p className="text-xs text-admin-red leading-relaxed m-0">
+                Masih ada fulfillment yang pending atau dalam pengiriman. Selesaikan receive dulu sebelum pesanan dikirim.
+              </p>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 mt-5">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isShippingOrder}
+              className="px-4 py-2.5 rounded-xl text-sm font-semibold text-admin-ink-soft bg-admin-surface border border-admin-line-soft
+                         cursor-pointer hover:bg-admin-surface-2 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={onConfirm}
+              disabled={isShippingOrder || hasActiveFulfillment}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-admin-green border-none
+                         cursor-pointer hover:brightness-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              {isShippingOrder ? <Loader2 className="w-4 h-4 admin-spin" /> : <Send className="w-4 h-4" />}
+              Ya, Kirim
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

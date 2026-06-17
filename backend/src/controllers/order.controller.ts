@@ -31,17 +31,11 @@ import {
   requestFulfillmentSchema,
   stockMutationParamsSchema,
 } from '../validations/order.validation'
-
-const getAuthenticatedUserId = (req: Request, res: Response) => {
-  const userId = req.user?.userId
-
-  if (!userId) {
-    res.status(401).json({ message: 'Unauthorized: Login required' })
-    return null
-  }
-
-  return userId
-}
+import {
+  getAuthenticatedUserId,
+  sendInternalError,
+  sendValidationError,
+} from './controller.utils'
 
 const handleOrderError = (error: unknown, res: Response) => {
   if (error instanceof OrderServiceError) {
@@ -83,7 +77,7 @@ export const listOrders = async (req: Request, res: Response): Promise<void> => 
 
     const parsed = orderListQuerySchema.safeParse(req.query)
     if (!parsed.success) {
-      res.status(400).json({ message: 'Validation Error', errors: parsed.error.flatten().fieldErrors })
+      sendValidationError(res, parsed.error)
       return
     }
 
@@ -96,8 +90,7 @@ export const listOrders = async (req: Request, res: Response): Promise<void> => 
   } catch (error) {
     if (handleOrderError(error, res)) return
 
-    console.error('[listOrders]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'listOrders', error)
   }
 }
 
@@ -111,7 +104,7 @@ export const listAdminOrders = async (req: Request, res: Response): Promise<void
 
     const parsed = adminOrderListQuerySchema.safeParse(req.query)
     if (!parsed.success) {
-      res.status(400).json({ message: 'Validation Error', errors: parsed.error.flatten().fieldErrors })
+      sendValidationError(res, parsed.error)
       return
     }
 
@@ -125,8 +118,7 @@ export const listAdminOrders = async (req: Request, res: Response): Promise<void
   } catch (error) {
     if (handleOrderError(error, res)) return
 
-    console.error('[listAdminOrders]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'listAdminOrders', error)
   }
 }
 
@@ -137,7 +129,7 @@ export const getCheckoutPreview = async (req: Request, res: Response): Promise<v
 
     const parsed = checkoutQuerySchema.safeParse(req.query)
     if (!parsed.success) {
-      res.status(400).json({ message: 'Validation Error', errors: parsed.error.flatten().fieldErrors })
+      sendValidationError(res, parsed.error)
       return
     }
 
@@ -152,8 +144,7 @@ export const getCheckoutPreview = async (req: Request, res: Response): Promise<v
   } catch (error) {
     if (handleOrderError(error, res)) return
 
-    console.error('[getCheckoutPreview]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'getCheckoutPreview', error)
   }
 }
 
@@ -164,7 +155,7 @@ export const createCheckoutOrder = async (req: Request, res: Response): Promise<
 
     const parsed = createCheckoutOrderSchema.safeParse(req.body)
     if (!parsed.success) {
-      res.status(400).json({ message: 'Validation Error', errors: parsed.error.flatten().fieldErrors })
+      sendValidationError(res, parsed.error)
       return
     }
 
@@ -185,8 +176,7 @@ export const createCheckoutOrder = async (req: Request, res: Response): Promise<
   } catch (error) {
     if (handleOrderError(error, res)) return
 
-    console.error('[createCheckoutOrder]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'createCheckoutOrder', error)
   }
 }
 
@@ -198,7 +188,7 @@ export const getOrderPaymentDetails = async (req: Request, res: Response): Promi
     const parsedParams = orderParamsSchema.safeParse(req.params)
 
     if (!parsedParams.success) {
-      res.status(400).json({ message: 'Validation Error', errors: parsedParams.error.flatten().fieldErrors })
+      sendValidationError(res, parsedParams.error)
       return
     }
 
@@ -213,8 +203,7 @@ export const getOrderPaymentDetails = async (req: Request, res: Response): Promi
   } catch (error) {
     if (handleOrderError(error, res)) return
 
-    console.error('[getOrderPaymentDetails]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'getOrderPaymentDetails', error)
   }
 }
 
@@ -230,7 +219,7 @@ export const uploadManualPaymentProof = async (req: Request, res: Response): Pro
     const parsedParams = orderParamsSchema.safeParse(req.params)
 
     if (!parsedParams.success) {
-      res.status(400).json({ message: 'Validation Error', errors: parsedParams.error.flatten().fieldErrors })
+      sendValidationError(res, parsedParams.error)
       return
     }
 
@@ -261,8 +250,7 @@ export const uploadManualPaymentProof = async (req: Request, res: Response): Pro
     await removeCloudinaryAsset(uploadedPaymentProofPublicId)
     if (handleOrderError(error, res)) return
 
-    console.error('[uploadManualPaymentProof]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'uploadManualPaymentProof', error)
   }
 }
 
@@ -274,7 +262,7 @@ export const createMidtransPayment = async (req: Request, res: Response): Promis
     const parsedParams = orderParamsSchema.safeParse(req.params)
 
     if (!parsedParams.success) {
-      res.status(400).json({ message: 'Validation Error', errors: parsedParams.error.flatten().fieldErrors })
+      sendValidationError(res, parsedParams.error)
       return
     }
 
@@ -290,8 +278,7 @@ export const createMidtransPayment = async (req: Request, res: Response): Promis
   } catch (error) {
     if (handleOrderError(error, res)) return
 
-    console.error('[createMidtransPayment]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'createMidtransPayment', error)
   }
 }
 
@@ -303,7 +290,7 @@ export const syncMidtransPaymentStatus = async (req: Request, res: Response): Pr
     const parsedParams = orderParamsSchema.safeParse(req.params)
 
     if (!parsedParams.success) {
-      res.status(400).json({ message: 'Validation Error', errors: parsedParams.error.flatten().fieldErrors })
+      sendValidationError(res, parsedParams.error)
       return
     }
 
@@ -319,8 +306,7 @@ export const syncMidtransPaymentStatus = async (req: Request, res: Response): Pr
   } catch (error) {
     if (handleOrderError(error, res)) return
 
-    console.error('[syncMidtransPaymentStatus]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'syncMidtransPaymentStatus', error)
   }
 }
 
@@ -333,12 +319,12 @@ export const confirmManualPayment = async (req: Request, res: Response): Promise
     const parsedBody = confirmManualPaymentSchema.safeParse(req.body)
 
     if (!parsedParams.success) {
-      res.status(400).json({ message: 'Validation Error', errors: parsedParams.error.flatten().fieldErrors })
+      sendValidationError(res, parsedParams.error)
       return
     }
 
     if (!parsedBody.success) {
-      res.status(400).json({ message: 'Validation Error', errors: parsedBody.error.flatten().fieldErrors })
+      sendValidationError(res, parsedBody.error)
       return
     }
 
@@ -357,8 +343,7 @@ export const confirmManualPayment = async (req: Request, res: Response): Promise
   } catch (error) {
     if (handleOrderError(error, res)) return
 
-    console.error('[confirmManualPayment]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'confirmManualPayment', error)
   }
 }
 
@@ -371,12 +356,12 @@ export const cancelOrder = async (req: Request, res: Response): Promise<void> =>
     const parsedBody = cancelOrderSchema.safeParse(req.body)
 
     if (!parsedParams.success) {
-      res.status(400).json({ message: 'Validation Error', errors: parsedParams.error.flatten().fieldErrors })
+      sendValidationError(res, parsedParams.error)
       return
     }
 
     if (!parsedBody.success) {
-      res.status(400).json({ message: 'Validation Error', errors: parsedBody.error.flatten().fieldErrors })
+      sendValidationError(res, parsedBody.error)
       return
     }
 
@@ -393,8 +378,7 @@ export const cancelOrder = async (req: Request, res: Response): Promise<void> =>
   } catch (error) {
     if (handleOrderError(error, res)) return
 
-    console.error('[cancelOrder]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'cancelOrder', error)
   }
 }
 
@@ -407,12 +391,12 @@ export const adminCancelOrder = async (req: Request, res: Response): Promise<voi
     const parsedBody = cancelOrderSchema.safeParse(req.body)
 
     if (!parsedParams.success) {
-      res.status(400).json({ message: 'Validation Error', errors: parsedParams.error.flatten().fieldErrors })
+      sendValidationError(res, parsedParams.error)
       return
     }
 
     if (!parsedBody.success) {
-      res.status(400).json({ message: 'Validation Error', errors: parsedBody.error.flatten().fieldErrors })
+      sendValidationError(res, parsedBody.error)
       return
     }
 
@@ -430,8 +414,7 @@ export const adminCancelOrder = async (req: Request, res: Response): Promise<voi
   } catch (error) {
     if (handleOrderError(error, res)) return
 
-    console.error('[adminCancelOrder]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'adminCancelOrder', error)
   }
 }
 
@@ -443,7 +426,7 @@ export const shipOrder = async (req: Request, res: Response): Promise<void> => {
     const parsedParams = orderParamsSchema.safeParse(req.params)
 
     if (!parsedParams.success) {
-      res.status(400).json({ message: 'Validation Error', errors: parsedParams.error.flatten().fieldErrors })
+      sendValidationError(res, parsedParams.error)
       return
     }
 
@@ -459,8 +442,7 @@ export const shipOrder = async (req: Request, res: Response): Promise<void> => {
   } catch (error) {
     if (handleOrderError(error, res)) return
 
-    console.error('[shipOrder]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'shipOrder', error)
   }
 }
 
@@ -472,7 +454,7 @@ export const confirmOrderReceived = async (req: Request, res: Response): Promise
     const parsedParams = orderParamsSchema.safeParse(req.params)
 
     if (!parsedParams.success) {
-      res.status(400).json({ message: 'Validation Error', errors: parsedParams.error.flatten().fieldErrors })
+      sendValidationError(res, parsedParams.error)
       return
     }
 
@@ -488,8 +470,7 @@ export const confirmOrderReceived = async (req: Request, res: Response): Promise
   } catch (error) {
     if (handleOrderError(error, res)) return
 
-    console.error('[confirmOrderReceived]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'confirmOrderReceived', error)
   }
 }
 
@@ -502,12 +483,12 @@ export const requestOrderFulfillment = async (req: Request, res: Response): Prom
     const parsedBody = requestFulfillmentSchema.safeParse(req.body)
 
     if (!parsedParams.success) {
-      res.status(400).json({ message: 'Validation Error', errors: parsedParams.error.flatten().fieldErrors })
+      sendValidationError(res, parsedParams.error)
       return
     }
 
     if (!parsedBody.success) {
-      res.status(400).json({ message: 'Validation Error', errors: parsedBody.error.flatten().fieldErrors })
+      sendValidationError(res, parsedBody.error)
       return
     }
 
@@ -527,8 +508,7 @@ export const requestOrderFulfillment = async (req: Request, res: Response): Prom
   } catch (error) {
     if (handleOrderError(error, res)) return
 
-    console.error('[requestOrderFulfillment]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'requestOrderFulfillment', error)
   }
 }
 
@@ -544,12 +524,12 @@ const handleFulfillmentAction = async (
   const parsedBody = fulfillmentActionSchema.safeParse(req.body)
 
   if (!parsedParams.success) {
-    res.status(400).json({ message: 'Validation Error', errors: parsedParams.error.flatten().fieldErrors })
+    sendValidationError(res, parsedParams.error)
     return
   }
 
   if (!parsedBody.success) {
-    res.status(400).json({ message: 'Validation Error', errors: parsedBody.error.flatten().fieldErrors })
+    sendValidationError(res, parsedBody.error)
     return
   }
 
@@ -582,8 +562,7 @@ export const approveFulfillment = async (req: Request, res: Response): Promise<v
   } catch (error) {
     if (handleOrderError(error, res)) return
 
-    console.error('[approveFulfillment]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'approveFulfillment', error)
   }
 }
 
@@ -599,8 +578,7 @@ export const receiveFulfillment = async (req: Request, res: Response): Promise<v
   } catch (error) {
     if (handleOrderError(error, res)) return
 
-    console.error('[receiveFulfillment]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'receiveFulfillment', error)
   }
 }
 
@@ -616,7 +594,6 @@ export const rejectFulfillment = async (req: Request, res: Response): Promise<vo
   } catch (error) {
     if (handleOrderError(error, res)) return
 
-    console.error('[rejectFulfillment]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'rejectFulfillment', error)
   }
 }

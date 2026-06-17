@@ -1,231 +1,52 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { isAxiosError } from 'axios'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import {
   AlertCircle,
   ArrowLeft,
   CheckCircle2,
-  CreditCard,
   Loader2,
-  MapPin,
-  ShoppingBasket,
   ShoppingBag,
   StickyNote,
-  Store,
-  Truck,
-  WalletCards,
 } from 'lucide-react'
-import { createCheckoutOrder, getCheckoutPreview } from '../../api/order.api'
-import { calculateShippingCost, type ShippingCostResult } from '../../api/rajaongkir'
-
-const AVAILABLE_COURIERS = [
-  { code: 'jne', label: 'JNE' },
-  { code: 'pos', label: 'POS Indonesia' },
-  { code: 'tiki', label: 'TIKI' },
-  { code: 'sicepat', label: 'SiCepat' },
-  { code: 'jnt', label: 'J&T Express' },
-  { code: 'anteraja', label: 'AnterAja' },
-  { code: 'ninja', label: 'Ninja Xpress' },
-  { code: 'idexpress', label: 'ID Express' },
-  { code: 'sap', label: 'SAP Express' },
-]
 import { Navbar } from '../../components/common/Navbar'
-import { useToast } from '../../components/common/toastContext'
 import { HomeFooter } from '../../components/home/HomeFooter'
 import { BRAND, footerSections, navLinks } from '../../data/home/homeData'
-import { useCartStore } from '../../store/cartStore'
-import type { CartItem } from '../../types/cart'
-import type {
-  CheckoutAddress,
-  CheckoutOrder,
-  CheckoutPreview,
-  PaymentMethod,
-} from '../../types/order'
-
-type ErrorResponse = {
-  message?: string
-  error?: string
-  code?: string
-}
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(value)
-
-const formatDateTime = (value: string | null) => {
-  if (!value) return '-'
-
-  return new Intl.DateTimeFormat('id-ID', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(value))
-}
-
-const getErrorMessage = (error: unknown) => {
-  if (isAxiosError<ErrorResponse>(error)) {
-    return error.response?.data?.message ?? error.response?.data?.error ?? 'Gagal memproses checkout'
-  }
-
-  return 'Gagal memproses checkout'
-}
-
-const getPrimaryImage = (item: CartItem) =>
-  item.product.images.find((image) => image.isPrimary) ?? item.product.images[0]
-
-const getAddressLine = (address: CheckoutAddress) =>
-  [address.district, address.city, address.province, address.postalCode]
-    .filter(Boolean)
-    .join(', ')
-
-const getPaymentIcon = (paymentMethod: PaymentMethod) =>
-  paymentMethod === 'PAYMENT_GATEWAY' ? CreditCard : WalletCards
+import { formatCurrency, formatDateTime } from '../../utils/format'
+import { useCheckout } from '../../hooks/checkout/useCheckout'
+import { CheckoutAddressList } from '../../components/checkout/CheckoutAddressList'
+import { CheckoutProductList } from '../../components/checkout/CheckoutProductList'
+import { CheckoutStorePanel } from '../../components/checkout/CheckoutStorePanel'
+import { CheckoutShippingPanel } from '../../components/checkout/CheckoutShippingPanel'
+import { CheckoutPaymentPanel } from '../../components/checkout/CheckoutPaymentPanel'
+import { CheckoutSummaryPanel } from '../../components/checkout/CheckoutSummaryPanel'
 
 function CheckoutPage() {
-  const [preview, setPreview] = useState<CheckoutPreview | null>(null)
-  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null)
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('MANUAL_TRANSFER')
-  const [notes, setNotes] = useState('')
-  const [createdOrder, setCreatedOrder] = useState<CheckoutOrder | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isRefreshingPreview, setIsRefreshingPreview] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const [selectedCourier, setSelectedCourier] = useState<string>('')
-  const [shippingCosts, setShippingCosts] = useState<ShippingCostResult[]>([])
-  const [selectedShippingService, setSelectedShippingService] = useState<ShippingCostResult | null>(null)
-  const [isFetchingShipping, setIsFetchingShipping] = useState(false)
-  const { showToast } = useToast()
-  const navigate = useNavigate()
-  const setCartCount = useCartStore((state) => state.setCartCount)
-
-  const loadPreview = useCallback(async (addressId?: number, showInitialLoading = false) => {
-    if (showInitialLoading) {
-      setIsLoading(true)
-    } else {
-      setIsRefreshingPreview(true)
-    }
-
-    try {
-      const nextPreview = await getCheckoutPreview(addressId)
-      setPreview(nextPreview)
-      setSelectedAddressId(nextPreview.selectedAddress?.id ?? null)
-      setError(null)
-    } catch (loadError) {
-      setError(getErrorMessage(loadError))
-    } finally {
-      setIsLoading(false)
-      setIsRefreshingPreview(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    const initialLoadId = window.setTimeout(() => {
-      void loadPreview(undefined, true)
-    }, 0)
-
-    return () => {
-      window.clearTimeout(initialLoadId)
-    }
-  }, [loadPreview])
-
-  const selectedAddress = useMemo(
-    () => preview?.addresses.find((address) => address.id === selectedAddressId) ?? null,
-    [preview?.addresses, selectedAddressId],
-  )
-  const hasSelectedAddressCoordinates =
-    selectedAddress?.latitude !== null &&
-    selectedAddress?.latitude !== undefined &&
-    selectedAddress.longitude !== null &&
-    selectedAddress.longitude !== undefined
-  const isCartEmpty = (preview?.cart.items.length ?? 0) === 0
-
-  const totalWeight = useMemo(() => {
-    return preview?.cart.items.reduce((acc, item) => acc + (item.product.weight * item.quantity), 0) ?? 0
-  }, [preview?.cart.items])
-
-  const paymentSummary = useMemo(() => {
-    const subtotal = preview?.cart.summary.subtotal ?? 0
-    const shippingCost = selectedShippingService?.cost ?? 0
-
-    return {
-      subtotal,
-      shippingCost,
-      totalPayment: Math.max(0, subtotal + shippingCost),
-    }
-  }, [preview?.cart.summary.subtotal, selectedShippingService])
-
-  const canCreateOrder =
-    Boolean(selectedAddressId) &&
-    hasSelectedAddressCoordinates &&
-    Boolean(preview?.nearestStore) &&
-    !isCartEmpty &&
-    !isRefreshingPreview &&
-    !isSubmitting &&
-    Boolean(selectedShippingService)
-
-  const handleAddressChange = (addressId: number) => {
-    setSelectedAddressId(addressId)
-    void loadPreview(addressId)
-  }
-
-  useEffect(() => {
-    if (!selectedAddressId || !preview?.nearestStore || !selectedCourier || totalWeight === 0) {
-      setShippingCosts([])
-      setSelectedShippingService(null)
-      return
-    }
-
-    const fetchShippingCosts = async () => {
-      setIsFetchingShipping(true)
-      try {
-        const results = await calculateShippingCost({
-          addressId: selectedAddressId,
-          storeId: preview.nearestStore!.id,
-          weight: Math.max(1, Math.ceil(totalWeight)),
-          courier: selectedCourier,
-        })
-        setShippingCosts(results)
-        setSelectedShippingService(null)
-      } catch (err) {
-        showToast('Gagal memuat ongkos kirim. Silakan coba kurir lain.', 'error')
-        setShippingCosts([])
-        setSelectedShippingService(null)
-      } finally {
-        setIsFetchingShipping(false)
-      }
-    }
-
-    void fetchShippingCosts()
-  }, [selectedAddressId, preview?.nearestStore, selectedCourier, totalWeight, showToast])
-
-  const handleCreateOrder = async () => {
-    if (!selectedAddressId || !canCreateOrder || !selectedShippingService) return
-
-    setIsSubmitting(true)
-    try {
-      const result = await createCheckoutOrder({
-        addressId: selectedAddressId,
-        shippingMethod: selectedCourier,
-        shippingService: selectedShippingService.service,
-        shippingCost: selectedShippingService.cost,
-        paymentMethod,
-        notes: notes.trim() || undefined,
-      })
-
-      setCreatedOrder(result.order)
-      setCartCount(result.cartCount)
-      showToast('Pesanan berhasil dibuat', 'success')
-      navigate(`/orders/${result.order.id}`)
-    } catch (submitError) {
-      showToast(getErrorMessage(submitError), 'error')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
+  const {
+    preview,
+    selectedAddressId,
+    selectedAddress,
+    paymentMethod,
+    notes,
+    createdOrder,
+    isLoading,
+    isRefreshingPreview,
+    isSubmitting,
+    error,
+    selectedCourier,
+    shippingCosts,
+    selectedShippingService,
+    isFetchingShipping,
+    paymentSummary,
+    canCreateOrder,
+    isCartEmpty,
+    hasSelectedAddressCoordinates,
+    setPaymentMethod,
+    setNotes,
+    setSelectedCourier,
+    setSelectedShippingService,
+    handleAddressChange,
+    handleCreateOrder,
+    loadPreview,
+  } = useCheckout()
 
   return (
     <div>
@@ -328,231 +149,32 @@ function CheckoutPage() {
               ) : (
                 <div className="checkout-layout">
                   <div className="checkout-main-column">
-                    <section className="checkout-panel">
-                      <div className="checkout-section-title">
-                        <MapPin aria-hidden="true" />
-                        <div>
-                          <h2>Alamat Pengiriman</h2>
-                          <p>Pilih alamat yang punya koordinat agar store terdekat bisa dihitung.</p>
-                        </div>
-                      </div>
+                    <CheckoutAddressList
+                      addresses={preview.addresses}
+                      selectedAddressId={selectedAddressId}
+                      onAddressChange={handleAddressChange}
+                    />
 
-                      {preview.addresses.length === 0 ? (
-                        <div className="checkout-inline-alert">
-                          <AlertCircle aria-hidden="true" />
-                          Belum ada alamat tersimpan. Tambahkan alamat terlebih dahulu di fitur profil/alamat.
-                        </div>
-                      ) : (
-                        <div className="checkout-address-grid">
-                          {preview.addresses.map((address) => {
-                            const hasCoordinates = address.latitude !== null && address.longitude !== null
+                    <CheckoutProductList items={preview.cart.items} />
 
-                            return (
-                              <label
-                                key={address.id}
-                                className={`checkout-address-card ${
-                                  selectedAddressId === address.id ? 'selected' : ''
-                                } ${!hasCoordinates ? 'warning' : ''}`}
-                              >
-                                <input
-                                  type="radio"
-                                  name="addressId"
-                                  checked={selectedAddressId === address.id}
-                                  onChange={() => handleAddressChange(address.id)}
-                                />
-                                <span className="checkout-address-topline">
-                                  <strong>{address.recipientName}</strong>
-                                  {address.isPrimary && <em>Utama</em>}
-                                </span>
-                                <span>{address.phone}</span>
-                                <span>{address.address}</span>
-                                <span>{getAddressLine(address)}</span>
-                                <span className={hasCoordinates ? 'checkout-coordinate-ok' : 'checkout-coordinate-missing'}>
-                                  {hasCoordinates ? 'Koordinat tersedia' : 'Koordinat belum tersedia'}
-                                </span>
-                              </label>
-                            )
-                          })}
-                        </div>
-                      )}
-                    </section>
+                    <CheckoutStorePanel nearestStore={preview.nearestStore} />
 
-                    <section className="checkout-panel">
-                      <div className="checkout-section-title">
-                        <ShoppingBasket aria-hidden="true" />
-                        <div>
-                          <h2>Ringkasan Produk</h2>
-                          <p>Item dari cart yang akan dibuat menjadi pesanan.</p>
-                        </div>
-                      </div>
+                    <CheckoutShippingPanel
+                      hasSelectedAddressCoordinates={hasSelectedAddressCoordinates}
+                      hasNearestStore={Boolean(preview.nearestStore)}
+                      selectedCourier={selectedCourier}
+                      shippingCosts={shippingCosts}
+                      selectedShippingService={selectedShippingService}
+                      isFetchingShipping={isFetchingShipping}
+                      onCourierChange={setSelectedCourier}
+                      onShippingServiceChange={setSelectedShippingService}
+                    />
 
-                      <div className="checkout-product-list">
-                        {preview.cart.items.map((item) => {
-                          const image = getPrimaryImage(item)
-
-                          return (
-                            <div key={item.id} className="checkout-product-item">
-                              <div className="checkout-summary-image">
-                                {image ? <img src={image.imageUrl} alt={item.product.name} /> : <span>Produk</span>}
-                              </div>
-                              <div className="checkout-product-info">
-                                <strong>{item.product.name}</strong>
-                                <span>{item.product.category.name}</span>
-                                <span>{item.quantity} x {formatCurrency(item.product.basePrice)}</span>
-                              </div>
-                              <strong>{formatCurrency(item.lineTotal)}</strong>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </section>
-
-                    <section className="checkout-panel">
-                      <div className="checkout-section-title">
-                        <Store aria-hidden="true" />
-                        <div>
-                          <h2>Store Terdekat</h2>
-                          <p>Order akan diarahkan ke gudang/store paling dekat dari alamat yang dipilih.</p>
-                        </div>
-                      </div>
-
-                      {preview.nearestStore ? (
-                        <div className="checkout-store-card">
-                          <div>
-                            <span className="store-chip">Store Terpilih</span>
-                            <h3>{preview.nearestStore.name}</h3>
-                            <p>{preview.nearestStore.address}</p>
-                            <p>{preview.nearestStore.city}, {preview.nearestStore.province}</p>
-                          </div>
-                          <div
-                            className={`checkout-distance-badge ${
-                              preview.nearestStore.isOutOfRange ? 'warning' : 'success'
-                            }`}
-                          >
-                            <strong>{preview.nearestStore.distance} km</strong>
-                            <span>{preview.nearestStore.isOutOfRange ? 'Di luar radius' : 'Dalam radius'}</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="checkout-inline-alert">
-                          <AlertCircle aria-hidden="true" />
-                          Pilih alamat dengan koordinat untuk menghitung store terdekat.
-                        </div>
-                      )}
-                    </section>
-
-                    <section className="checkout-panel">
-                      <div className="checkout-section-title">
-                        <Truck aria-hidden="true" />
-                        <div>
-                          <h2>Metode Pengiriman</h2>
-                          <p>Pilih kurir dan layanan pengiriman untuk pesanan ini.</p>
-                        </div>
-                      </div>
-
-                      {!hasSelectedAddressCoordinates ? (
-                        <div className="checkout-inline-alert">
-                          <AlertCircle aria-hidden="true" />
-                          Pilih alamat dengan koordinat untuk menampilkan metode pengiriman.
-                        </div>
-                      ) : !preview.nearestStore ? (
-                        <div className="checkout-inline-alert">
-                          <AlertCircle aria-hidden="true" />
-                          Store terdekat belum tersedia.
-                        </div>
-                      ) : (
-                        <div className="checkout-shipping-container">
-                          <div className="checkout-courier-grid">
-                            {AVAILABLE_COURIERS.map((courier) => (
-                              <label
-                                key={courier.code}
-                                className={`checkout-courier-card ${selectedCourier === courier.code ? 'selected' : ''}`}
-                              >
-                                <input
-                                  type="radio"
-                                  name="courier"
-                                  checked={selectedCourier === courier.code}
-                                  onChange={() => setSelectedCourier(courier.code)}
-                                />
-                                <strong>{courier.label}</strong>
-                              </label>
-                            ))}
-                          </div>
-
-                          {isFetchingShipping ? (
-                            <div className="checkout-inline-alert">
-                              <Loader2 className="button-icon spin" aria-hidden="true" />
-                              Memuat ongkos kirim...
-                            </div>
-                          ) : shippingCosts.length > 0 ? (
-                            <div className="checkout-shipping-service-grid">
-                              {shippingCosts.map((service, idx) => (
-                                <label
-                                  key={idx}
-                                  className={`checkout-shipping-service-card ${selectedShippingService?.service === service.service ? 'selected' : ''}`}
-                                >
-                                  <input
-                                    type="radio"
-                                    name="shippingService"
-                                    checked={selectedShippingService?.service === service.service}
-                                    onChange={() => setSelectedShippingService(service)}
-                                  />
-                                  <div className="shipping-service-info">
-                                    <strong>{service.service}</strong>
-                                    <span>{service.description}</span>
-                                    <span>Estimasi: {service.etd}</span>
-                                  </div>
-                                  <strong className="shipping-service-cost">{formatCurrency(service.cost)}</strong>
-                                </label>
-                              ))}
-                            </div>
-                          ) : selectedCourier ? (
-                            <div className="checkout-inline-alert">
-                              <AlertCircle aria-hidden="true" />
-                              Layanan pengiriman tidak tersedia untuk kurir ini ke alamat tujuan.
-                            </div>
-                          ) : (
-                            <div className="checkout-inline-alert">
-                              <AlertCircle aria-hidden="true" />
-                              Pilih kurir untuk melihat tarif pengiriman.
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </section>
-
-                    <section className="checkout-panel">
-                      <div className="checkout-section-title">
-                        <CreditCard aria-hidden="true" />
-                        <div>
-                          <h2>Metode Pembayaran</h2>
-                          <p>Transfer manual menunggu upload bukti bayar, payment gateway langsung masuk proses.</p>
-                        </div>
-                      </div>
-
-                      <div className="checkout-payment-grid">
-                        {preview.paymentMethods.map((method) => {
-                          const Icon = getPaymentIcon(method.value)
-
-                          return (
-                            <label
-                              key={method.value}
-                              className={`checkout-payment-card ${paymentMethod === method.value ? 'selected' : ''}`}
-                            >
-                              <input
-                                type="radio"
-                                name="paymentMethod"
-                                checked={paymentMethod === method.value}
-                                onChange={() => setPaymentMethod(method.value)}
-                              />
-                              <Icon aria-hidden="true" />
-                              <strong>{method.label}</strong>
-                              <span>{method.description}</span>
-                            </label>
-                          )
-                        })}
-                      </div>
-                    </section>
+                    <CheckoutPaymentPanel
+                      paymentMethods={preview.paymentMethods}
+                      selectedPaymentMethod={paymentMethod}
+                      onPaymentMethodChange={setPaymentMethod}
+                    />
 
                     <section className="checkout-panel">
                       <div className="checkout-section-title">
@@ -573,47 +195,17 @@ function CheckoutPage() {
                     </section>
                   </div>
 
-                  <aside className="checkout-summary-panel">
-                    <h2>Rincian Pembayaran</h2>
-                    <div className="cart-summary-row">
-                      <span>Total Harga ({preview.cart.summary.totalQuantity} item)</span>
-                      <strong>{formatCurrency(paymentSummary.subtotal)}</strong>
-                    </div>
-                    <div className="cart-summary-row">
-                      <span>Ongkir</span>
-                      <strong>{selectedShippingService ? formatCurrency(selectedShippingService.cost) : 'Rp -'}</strong>
-                    </div>
-                    <div className="cart-summary-row checkout-summary-total">
-                      <span>Total Bayar</span>
-                      <strong>{formatCurrency(paymentSummary.totalPayment)}</strong>
-                    </div>
-
-                    {!hasSelectedAddressCoordinates && selectedAddress && (
-                      <div className="checkout-inline-alert compact">
-                        <AlertCircle aria-hidden="true" />
-                        Alamat terpilih belum punya koordinat.
-                      </div>
-                    )}
-
-                    <button
-                      type="button"
-                      className="button primary checkout-create-button"
-                      disabled={!canCreateOrder}
-                      onClick={handleCreateOrder}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="button-icon spin" aria-hidden="true" />
-                          Membuat Pesanan
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle2 className="button-icon" aria-hidden="true" />
-                          Buat Pesanan
-                        </>
-                      )}
-                    </button>
-                  </aside>
+                  <CheckoutSummaryPanel
+                    totalQuantity={preview.cart.summary.totalQuantity}
+                    subtotal={paymentSummary.subtotal}
+                    selectedShippingService={selectedShippingService}
+                    totalPayment={paymentSummary.totalPayment}
+                    hasSelectedAddressCoordinates={hasSelectedAddressCoordinates}
+                    hasSelectedAddress={Boolean(selectedAddress)}
+                    canCreateOrder={canCreateOrder}
+                    isSubmitting={isSubmitting}
+                    onCreateOrder={handleCreateOrder}
+                  />
                 </div>
               )}
             </>

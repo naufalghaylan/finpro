@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
-import { isAxiosError } from 'axios'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import {
   AlertCircle,
@@ -27,11 +26,7 @@ import { PaymentSummaryPanel } from '../../components/orders/PaymentSummaryPanel
 import { getUploadUrl, orderStatusDisplay } from '../../components/orders/orderDisplay'
 import { BRAND, footerSections, navLinks } from '../../data/home/homeData'
 import type { CheckoutOrder } from '../../types/order'
-
-type ErrorResponse = {
-  message?: string
-  error?: string
-}
+import { getApiErrorMessage } from '../../utils/apiError'
 
 type MidtransSnapCallbacks = {
   onSuccess?: (result: unknown) => void
@@ -55,17 +50,7 @@ const MIDTRANS_SNAP_SCRIPT_ID = 'midtrans-snap-script'
 const MIDTRANS_SNAP_SCRIPT_URL = 'https://app.sandbox.midtrans.com/snap/snap.js'
 const MIDTRANS_STATUS_POLL_INTERVAL_MS = 5000
 
-const getErrorMessage = (error: unknown) => {
-  if (isAxiosError<ErrorResponse>(error)) {
-    return error.response?.data?.message ?? error.response?.data?.error ?? 'Gagal memproses pembayaran'
-  }
-
-  if (error instanceof Error) {
-    return error.message
-  }
-
-  return 'Gagal memproses pembayaran'
-}
+const getErrorMessage = (error: unknown) => getApiErrorMessage(error, 'Gagal memproses pembayaran')
 
 const getRemainingPaymentSeconds = (deadline: string | null) => {
   if (!deadline) return 0

@@ -1,4 +1,5 @@
 import api from './axios'
+import type { ApiData, ApiListData } from './api.types'
 import type {
   AdminOrder,
   AdminOrderListQuery,
@@ -12,15 +13,6 @@ import type {
   OrderListQuery,
   OrderListResponse,
 } from '../types/order'
-
-type ApiData<T> = {
-  data: T
-}
-
-type ApiListData<T> = {
-  data: T
-  meta: OrderListResponse['meta']
-}
 
 export async function getOrders(params?: OrderListQuery): Promise<OrderListResponse> {
   const { data } = await api.get<ApiListData<CheckoutOrder[]>>('/orders', {

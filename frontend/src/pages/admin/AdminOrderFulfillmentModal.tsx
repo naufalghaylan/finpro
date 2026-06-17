@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { AxiosError } from 'axios'
 import {
   CheckCircle2,
   Loader2,
@@ -22,6 +21,7 @@ import { formatDateTime } from '../../components/orders/orderDisplay'
 import { useAuthStore } from '../../store/authStore'
 import type { AdminOrder, MutationStatus, OrderFulfillmentMutation } from '../../types/order'
 import type { Store } from '../../types/store'
+import { getApiErrorMessage } from '../../utils/apiError'
 
 type AdminOrderFulfillmentModalProps = {
   order: AdminOrder
@@ -45,10 +45,7 @@ const mutationStatusClass: Record<MutationStatus, string> = {
   REJECTED: 'bg-admin-red-soft text-admin-red',
 }
 
-const getErrorMessage = (error: unknown, fallback: string) => {
-  const axiosError = error as AxiosError<{ message?: string }>
-  return axiosError.response?.data?.message || fallback
-}
+const getErrorMessage = (error: unknown, fallback: string) => getApiErrorMessage(error, fallback)
 
 export default function AdminOrderFulfillmentModal({
   order,
@@ -76,7 +73,7 @@ export default function AdminOrderFulfillmentModal({
   const canActForStore = (storeId: number) => user?.role === 'SUPER_ADMIN' || user?.storeId === storeId
 
   useEffect(() => {
-    setIsLoadingStores(true)
+    window.setTimeout(() => { setIsLoadingStores(true) }, 0)
     getPublicStores(1, 100)
       .then((response) => setStores(response.data))
       .catch(() => setStores([]))
@@ -85,7 +82,7 @@ export default function AdminOrderFulfillmentModal({
 
   useEffect(() => {
     if (!selectedOrderItem) return
-    setQuantity(selectedOrderItem.quantity)
+    window.setTimeout(() => { setQuantity(selectedOrderItem.quantity) }, 0)
   }, [selectedOrderItem])
 
   const runAction = async (
