@@ -123,6 +123,7 @@ export type OrderListQuery = {
   limit?: number
   startDate?: string
   endDate?: string
+  search?: string
   orderNumber?: string
   status?: OrderStatus
   statusGroup?: OrderStatusGroup

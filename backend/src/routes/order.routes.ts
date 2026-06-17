@@ -1,23 +1,29 @@
 import { Router } from 'express'
 import {
-  adminCancelOrder,
-  approveFulfillment,
-  cancelOrder,
-  confirmOrderReceived,
-  confirmManualPayment,
   createCheckoutOrder,
-  createMidtransPayment,
   getCheckoutPreview,
-  getOrderPaymentDetails,
-  listAdminOrders,
-  listOrders,
+} from '../controllers/order-checkout.controller'
+import {
+  approveFulfillment,
   receiveFulfillment,
   rejectFulfillment,
   requestOrderFulfillment,
+} from '../controllers/order-fulfillment.controller'
+import {
+  adminCancelOrder,
+  cancelOrder,
+  confirmOrderReceived,
+  listAdminOrders,
+  listOrders,
   shipOrder,
+} from '../controllers/order-management.controller'
+import {
+  confirmManualPayment,
+  createMidtransPayment,
+  getOrderPaymentDetails,
   syncMidtransPaymentStatus,
   uploadManualPaymentProof,
-} from '../controllers/order.controller'
+} from '../controllers/order-payment.controller'
 import { authenticate, authorize } from '../middlewares/auth.middleware'
 import { handlePaymentProofUpload } from '../middlewares/payment-proof-upload.middleware'
 import { requireVerifiedUser } from '../middlewares/verified.middleware'
