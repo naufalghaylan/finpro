@@ -14,12 +14,34 @@ const applyOrderListFilters = (
   {
     startDate,
     endDate,
+    search,
     orderNumber,
     status,
     statusGroup,
-  }: Pick<ListOrdersParams, 'startDate' | 'endDate' | 'orderNumber' | 'status' | 'statusGroup'>,
+  }: Pick<ListOrdersParams, 'startDate' | 'endDate' | 'search' | 'orderNumber' | 'status' | 'statusGroup'>,
 ) => {
-  if (orderNumber) {
+  if (search) {
+    where.OR = [
+      {
+        orderNumber: {
+          contains: search,
+          mode: 'insensitive',
+        },
+      },
+      {
+        items: {
+          some: {
+            product: {
+              name: {
+                contains: search,
+                mode: 'insensitive',
+              },
+            },
+          },
+        },
+      },
+    ]
+  } else if (orderNumber) {
     where.orderNumber = {
       contains: orderNumber,
       mode: 'insensitive',
@@ -57,6 +79,7 @@ export const listOrders = async ({
   limit,
   startDate,
   endDate,
+  search,
   orderNumber,
   status,
   statusGroup,
@@ -67,6 +90,7 @@ export const listOrders = async ({
   applyOrderListFilters(where, {
     startDate,
     endDate,
+    search,
     orderNumber,
     status,
     statusGroup,
@@ -104,6 +128,7 @@ export const listAdminOrders = async ({
   limit,
   startDate,
   endDate,
+  search,
   orderNumber,
   status,
   statusGroup,
@@ -137,6 +162,7 @@ export const listAdminOrders = async ({
   applyOrderListFilters(where, {
     startDate,
     endDate,
+    search,
     orderNumber,
     status,
     statusGroup,

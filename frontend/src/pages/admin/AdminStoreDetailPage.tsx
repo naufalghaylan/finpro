@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { AxiosError } from 'axios';
 import type { Store } from '../../types/store';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -8,30 +8,8 @@ import { useToast } from '../../components/common/Toast';
 import AdminStockList from './AdminStockList';
 import AdminDiscountList from './AdminDiscountList';
 import AdminOrderList from './AdminOrderList';
-import { Info, Package, Tag, Loader2, MapPin, ClipboardList } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-
-// Fix leaflet icon issue in React
-delete (L.Icon.Default.prototype as L.Icon.Default & { _getIconUrl?: string })._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
-
-function LocationMarker({ position, setPosition }: { position: [number, number], setPosition: (pos: [number, number]) => void }) {
-  useMapEvents({
-    click(e) {
-      setPosition([e.latlng.lat, e.latlng.lng]);
-    },
-  });
-
-  return position === null ? null : (
-    <Marker position={position}></Marker>
-  );
-}
+import { Info, Package, Tag, Loader2, ClipboardList } from 'lucide-react';
+import { AdminStoreDetailsForm, type StoreDetailFormData } from '../../components/admin/AdminStoreDetailsForm';
 
 export default function AdminStoreDetailPage() {
   const { id } = useParams();
@@ -43,7 +21,7 @@ export default function AdminStoreDetailPage() {
   const [store, setStore] = useState<Store | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<StoreDetailFormData>({
     name: '',
     address: '',
     phone: '',
@@ -92,7 +70,7 @@ export default function AdminStoreDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const handleUpdateStore = async (e: React.FormEvent) => {
+  const handleUpdateStore = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       setSaving(true);
@@ -167,132 +145,14 @@ export default function AdminStoreDetailPage() {
       {/* Tab Content */}
       <div className="admin-fade-in" key={activeTab}>
         {activeTab === 'details' && (
-          <div className="rounded-2xl border border-admin-line-soft bg-admin-surface shadow-sm p-6 md:p-8 max-w-4xl">
-            <h4 className="text-base font-bold text-admin-ink m-0 mb-6 flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-admin-accent" />
-              Ubah Detail Toko & Lokasi
-            </h4>
-            <form onSubmit={handleUpdateStore} className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="flex flex-col gap-5">
-              <div>
-                <label className="block text-xs font-semibold text-admin-ink-soft uppercase tracking-wider mb-2">Nama Toko</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="w-full px-4 py-3 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink
-                             focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-admin-ink-soft uppercase tracking-wider mb-2">Alamat Lengkap</label>
-                <input
-                  type="text"
-                  value={formData.address}
-                  onChange={(e) => setFormData({...formData, address: e.target.value})}
-                  className="w-full px-4 py-3 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink
-                             focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-admin-ink-soft uppercase tracking-wider mb-2">Nomor Telepon</label>
-                <input
-                  type="text"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                  className="w-full px-4 py-3 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink
-                             focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-admin-ink-soft uppercase tracking-wider mb-2">Deskripsi</label>
-                <textarea
-                  rows={4}
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  className="w-full px-4 py-3 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink resize-y
-                             focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all"
-                />
-              </div>
-              </div>
-
-              <div className="flex flex-col gap-5">
-                <div>
-                  <label className="block text-xs font-semibold text-admin-ink-soft uppercase tracking-wider mb-2">
-                    Tentukan Titik Koordinat
-                  </label>
-                  <p className="text-[11px] text-admin-ink-muted mb-3 leading-relaxed">
-                    Klik pada peta untuk mengubah lokasi toko. Ini akan memperbarui latitude dan longitude secara otomatis.
-                  </p>
-                  
-                  <div className="h-[240px] w-full rounded-xl overflow-hidden border border-admin-line bg-admin-surface-2 mb-4 z-0 relative">
-                    <MapContainer center={position} zoom={13} style={{ height: '100%', width: '100%' }}>
-                      <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      />
-                      <LocationMarker position={position} setPosition={setPosition} />
-                    </MapContainer>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div>
-                      <label className="block text-[10px] font-semibold text-admin-ink-soft uppercase tracking-wider mb-1">Latitude</label>
-                      <input
-                        type="number"
-                        step="any"
-                        value={formData.latitude}
-                        readOnly
-                        className="w-full px-3 py-2 rounded-lg border border-admin-line bg-admin-surface-2 text-xs text-admin-ink-soft cursor-not-allowed"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-semibold text-admin-ink-soft uppercase tracking-wider mb-1">Longitude</label>
-                      <input
-                        type="number"
-                        step="any"
-                        value={formData.longitude}
-                        readOnly
-                        className="w-full px-3 py-2 rounded-lg border border-admin-line bg-admin-surface-2 text-xs text-admin-ink-soft cursor-not-allowed"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-semibold text-admin-ink-soft uppercase tracking-wider mb-1">Radius Layanan (km)</label>
-                    <input
-                      type="number"
-                      value={formData.serviceRadius}
-                      onChange={(e) => setFormData({...formData, serviceRadius: Number(e.target.value)})}
-                      className="w-full px-4 py-3 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink
-                                 focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-2 mt-auto">
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="w-full inline-flex justify-center items-center gap-2 px-6 py-3 rounded-xl bg-admin-accent text-white
-                               text-sm font-semibold border-none cursor-pointer shadow-md
-                               hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                  >
-                    {saving ? (
-                      <>
-                        <Loader2 className="w-4 h-4 admin-spin" />
-                        Menyimpan...
-                      </>
-                    ) : (
-                      'Simpan Perubahan'
-                    )}
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
+          <AdminStoreDetailsForm
+            formData={formData}
+            position={position}
+            saving={saving}
+            setFormData={setFormData}
+            setPosition={setPosition}
+            onSubmit={handleUpdateStore}
+          />
         )}
 
         {activeTab === 'stocks' && <AdminStockList storeId={Number(id)} />}

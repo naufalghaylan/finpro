@@ -14,7 +14,7 @@ import { formatTrackingDateTime } from './orderDisplay'
 type TrackingStep = {
   key: string
   titleLines: string[]
-  description: string
+  description?: string
   Icon: LucideIcon
 }
 
@@ -27,13 +27,6 @@ const statusStepIndex: Record<OrderStatus, number> = {
   SHIPPED: 3,
   CONFIRMED: 4,
   CANCELLED: 1,
-}
-
-const addHours = (dateValue: string, hours: number) => {
-  const date = new Date(dateValue)
-  date.setHours(date.getHours() + hours)
-
-  return date.toISOString()
 }
 
 const getPaymentStepTitle = (order: CheckoutOrder) => {
@@ -53,16 +46,14 @@ const getPaymentStepDescription = (order: CheckoutOrder) => {
     return order.paymentMethod === 'PAYMENT_GATEWAY' ? 'Pembayaran berhasil' : 'Pembayaran dikonfirmasi'
   }
 
-  return 'Menunggu update'
+  return undefined
 }
 
 const getProcessingDescription = (order: CheckoutOrder) => {
   if (order.status === 'PROCESSING') return `Update ${formatTrackingDateTime(order.updatedAt)}`
   if (order.status === 'SHIPPED' || order.status === 'CONFIRMED') return 'Sudah diproses'
-  if (order.status === 'CANCELLED') return 'Tidak dilanjutkan'
 
-  const estimatedDate = order.paymentDeadline ?? addHours(order.createdAt, 1)
-  return `Estimasi ${formatTrackingDateTime(estimatedDate)}`
+  return undefined
 }
 
 const getTrackingSteps = (order: CheckoutOrder): TrackingStep[] => [
@@ -87,13 +78,13 @@ const getTrackingSteps = (order: CheckoutOrder): TrackingStep[] => [
   {
     key: 'shipping',
     titleLines: ['Sedang', 'Dikirim'],
-    description: order.shippedAt ? formatTrackingDateTime(order.shippedAt) : 'Menunggu update',
+    description: order.shippedAt ? formatTrackingDateTime(order.shippedAt) : undefined,
     Icon: Truck,
   },
   {
     key: 'completed',
     titleLines: ['Pesanan', 'Selesai'],
-    description: order.confirmedAt ? formatTrackingDateTime(order.confirmedAt) : 'Menunggu update',
+    description: order.confirmedAt ? formatTrackingDateTime(order.confirmedAt) : undefined,
     Icon: CheckCircle2,
   },
 ]
@@ -143,7 +134,12 @@ export function OrderTrackingTimeline({ order }: { order: CheckoutOrder }) {
                   <span key={line}>{line}</span>
                 ))}
               </strong>
-              <span className="order-tracking-description">{step.description}</span>
+              <span
+                className={`order-tracking-description ${step.description ? '' : 'empty'}`}
+                aria-hidden={step.description ? undefined : true}
+              >
+                {step.description}
+              </span>
             </div>
           )
         })}

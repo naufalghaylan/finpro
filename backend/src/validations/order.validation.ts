@@ -26,6 +26,13 @@ const optionalOrderNumberSchema = z
   .optional()
   .transform((value) => value || undefined)
 
+const optionalOrderSearchSchema = z
+  .string()
+  .trim()
+  .max(100, 'Search must be at most 100 characters')
+  .optional()
+  .transform((value) => value || undefined)
+
 const orderStatusValues = [
   OrderStatus.PENDING_PAYMENT,
   OrderStatus.WAITING_CONFIRMATION,
@@ -44,6 +51,7 @@ const orderListBaseQuerySchema = z.object({
   limit: orderListLimitSchema,
   startDate: optionalDateSchema,
   endDate: optionalDateSchema,
+  search: optionalOrderSearchSchema,
   orderNumber: optionalOrderNumberSchema,
   status: z.enum(orderStatusValues).optional(),
   statusGroup: z.enum(['ongoing', 'completed', 'cancelled']).optional(),

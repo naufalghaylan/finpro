@@ -31,15 +31,27 @@ export default function SearchPage() {
 
   useEffect(() => {
     if (!keyword) return
-    setLoading(true)
-    setError(null)
-    searchProducts({ keyword, ...filters })
-      .then(res => {
-        setProducts(res.products)
-        setTotal(res.total)
-      })
-      .catch(() => setError('Gagal mencari produk'))
-      .finally(() => setLoading(false))
+    let isMounted = true
+
+    const loadSearchProducts = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await searchProducts({ keyword, ...filters })
+        if (isMounted) {
+          setProducts(res.products)
+          setTotal(res.total)
+        }
+      } catch (err: any) {
+        if (isMounted) setError(err.response?.data?.message || 'Gagal mencari produk')
+      } finally {
+        if (isMounted) setLoading(false)
+      }
+    }
+
+    void loadSearchProducts()
+
+    return () => { isMounted = false }
   }, [keyword, JSON.stringify(filters)])
 
   const handleFilterChange = (next: Partial<typeof filters>) => {
