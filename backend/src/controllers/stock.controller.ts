@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getStocksService, getStockByIdService, adjustStockService, addStockService } from '../services/stock.service';
+import { getStocksService, getStockByIdService, adjustStockService, addStockService, deleteStockService } from '../services/stock.service';
 import { adjustStockSchema, addStockSchema } from '../validations/stock.validation';
 
 export const getStocks = async (req: Request, res: Response): Promise<void> => {
@@ -123,3 +123,32 @@ export const addStock = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
+
+export const deleteStock = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = parseInt(req.params.id as string);
+
+    const stock = await getStockByIdService(id);
+    if (!stock) {
+      res.status(404).json({ message: 'Stock not found' });
+      return;
+    }
+
+    // Store admin hanya boleh menghapus stok di tokonya sendiri
+    if (req.user?.role === 'STORE_ADMIN' && stock.storeId !== req.user.storeId) {
+      res.status(403).json({ message: 'Forbidden: You can only delete stocks of your own store' });
+      return;
+    }
+
+    await deleteStockService(id);
+
+    res.status(200).json({ message: 'Stock deleted successfully' });
+  } catch (error: any) {
+    if (error.message === 'Stock not found') {
+      res.status(404).json({ message: error.message });
+      return;
+    }
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+};
+

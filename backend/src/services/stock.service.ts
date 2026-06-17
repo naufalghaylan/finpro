@@ -145,3 +145,17 @@ export const addStockService = async (productId: number, storeId: number, quanti
     return newStock;
   });
 };
+
+export const deleteStockService = async (stockId: number) => {
+  const stock = await prisma.stock.findUnique({ where: { id: stockId } });
+  if (!stock) {
+    throw new Error('Stock not found');
+  }
+
+  // Menghapus data stok produk dari toko ini.
+  // Seluruh riwayat jurnal stok ini ikut terhapus otomatis,
+  // karena di schema relasi StockJournal -> Stock memakai onDelete: Cascade.
+  await prisma.stock.delete({ where: { id: stockId } });
+
+  return { id: stockId };
+};

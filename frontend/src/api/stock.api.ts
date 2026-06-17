@@ -52,3 +52,8 @@ export const addStock = async (data: { storeId: number; productId: number; quant
   const response = await api.post<{ message: string; data: Stock }>('/stocks', data);
   return response.data;
 };
+
+export const deleteStock = async (id: number) => {
+  const response = await api.delete<{ message: string }>(`/stocks/${id}`);
+  return response.data;
+};

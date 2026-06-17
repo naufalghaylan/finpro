@@ -145,6 +145,7 @@ model Category {
   description String?
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at") // untuk soft delete
 
   products Product[]
 
@@ -161,7 +162,7 @@ model Product {
   weight      Float    @default(0) // dalam gram, untuk kalkulasi ongkir
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
-
+  deletedAt   DateTime? @map("deleted_at") // untuk soft delete
   category       Category        @relation(fields: [categoryId], references: [id])
   images         ProductImage[]
   stocks         Stock[]
@@ -304,8 +305,6 @@ model StockMutation {
   @@index([status])
   @@map("stock_mutations")
 }
-
-
 
 model UserAddress {
   id            Int      @id @default(autoincrement())

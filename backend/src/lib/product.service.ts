@@ -21,7 +21,7 @@ export async function getAllProducts(filters: ProductFilters) {
     limit = 20, offset = 0, sortBy = 'newest'
   } = filters
 
-  const where: any = {}
+  const where: any = {deletedAt: null}
   if (categoryId) where.categoryId = categoryId
   if (minPrice || maxPrice) {
     where.basePrice = {}
@@ -59,7 +59,7 @@ export async function getAllProducts(filters: ProductFilters) {
 export async function searchProducts(keyword: string, filters: SearchFilters) {
   const { limit = 20, offset = 0, sortBy = 'newest', ...otherFilters } = filters
 
-  const where: any = {}
+  const where: any = { deletedAt: null }
   if (keyword) {
     where.OR = [
       { name: { contains: keyword, mode: 'insensitive' } },
@@ -103,8 +103,8 @@ export async function searchProducts(keyword: string, filters: SearchFilters) {
 
 // Get product by ID
 export async function getProductById(id: number) {
-  const product = await prisma.product.findUnique({
-    where: { id },
+  const product = await prisma.product.findFirst({
+    where: { id, deletedAt: null },
     include: {
       category: true,
       images: { select: { id: true, imageUrl: true, isPrimary: true, sortOrder: true } },
@@ -126,6 +126,7 @@ export async function getProductById(id: number) {
 // Get all categories
 export async function getCategories() {
   return await prisma.category.findMany({
+    where: { deletedAt: null },
     select: { id: true, name: true, slug: true, icon: true, description: true },
     orderBy: { name: 'asc' }
   })
@@ -153,7 +154,7 @@ export async function createProduct(data: {
   categoryId: number
   basePrice: number
 }) {
-  const existing = await prisma.product.findFirst({ where: { name: data.name } })
+  const existing = await prisma.product.findFirst({ where: { name: data.name, deletedAt: null } })
   if (existing) throw new Error('Produk dengan nama yang sama sudah ada')
   return await prisma.product.create({ data })
 }
@@ -170,7 +171,7 @@ export async function updateProduct(id: number, data: {
   if (!product) throw new Error('Product not found')
 
   if (data.name && data.name !== product.name) {
-    const existing = await prisma.product.findFirst({ where: { name: data.name } })
+    const existing = await prisma.product.findFirst({ where: { name: data.name, deletedAt: null } })
     if (existing) throw new Error('Produk dengan nama yang sama sudah ada')
   }
 
@@ -180,13 +181,13 @@ export async function updateProduct(id: number, data: {
 export async function deleteProduct(id: number) {
   const product = await prisma.product.findUnique({ where: { id } })
   if (!product) throw new Error('Product not found')
-  await prisma.product.delete({ where: { id } })
+  await prisma.product.update({ where: { id }, data: { deletedAt: new Date() } })
 }
 
 // ─── Admin: Category CRUD ──────────────────────────────────────────────────
 
 export async function createCategory(data: { name: string; slug: string; icon?: string; description?: string }) {
-  const existing = await prisma.category.findFirst({ where: { name: data.name } })
+  const existing = await prisma.category.findFirst({ where: { name: data.name, deletedAt: null } })
   if (existing) throw new Error('Kategori dengan nama yang sama sudah ada')
   return await prisma.category.create({ data })
 }
@@ -195,7 +196,7 @@ export async function updateCategory(id: number, data: { name?: string; slug?: s
   const category = await prisma.category.findUnique({ where: { id } })
   if (!category) throw new Error('Category not found')
   if (data.name && data.name !== category.name) {
-    const existing = await prisma.category.findFirst({ where: { name: data.name } })
+    const existing = await prisma.category.findFirst({ where: { name: data.name, deletedAt: null } })
     if (existing) throw new Error('Kategori dengan nama yang sama sudah ada')
   }
   return await prisma.category.update({ where: { id }, data })
@@ -204,8 +205,13 @@ export async function updateCategory(id: number, data: { name?: string; slug?: s
 export async function deleteCategory(id: number) {
   const category = await prisma.category.findUnique({ where: { id } })
   if (!category) throw new Error('Category not found')
-  await prisma.category.delete({ where: { id } })
+
+  const activeProducts = await prisma.product.count({ where: { categoryId: id, deletedAt: null } })
+  if (activeProducts > 0) throw new Error('Kategori masih memiliki produk aktif, tidak bisa dihapus')
+
+  await prisma.category.update({ where: { id }, data: { deletedAt: new Date() } })
 }
+
 
 // ─── Product Images ────────────────────────────────────────────────────────
 

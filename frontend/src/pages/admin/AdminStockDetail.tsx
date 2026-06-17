@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { AxiosError } from 'axios';
-import { getStockById, adjustStock, type StockDetail } from '../../api/stock.api';
+import { getStockById, adjustStock, deleteStock, type StockDetail } from '../../api/stock.api';
 import { useToast } from '../../components/common/Toast';
-import { ArrowLeft, Package, Loader2, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { ArrowLeft, Package, Loader2, TrendingUp, TrendingDown, Minus, Trash2 } from 'lucide-react';
 
 export default function AdminStockDetail({ stockId, onBack }: { stockId: number, onBack: () => void }) {
   const { showToast } = useToast();
@@ -10,6 +10,7 @@ export default function AdminStockDetail({ stockId, onBack }: { stockId: number,
   const [loading, setLoading] = useState(true);
   
   const [adjusting, setAdjusting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [adjustmentForm, setAdjustmentForm] = useState({
     quantityChange: '',
     notes: ''
@@ -54,6 +55,20 @@ export default function AdminStockDetail({ stockId, onBack }: { stockId: number,
     }
   };
 
+  const handleDelete = async () => {
+    if (!window.confirm('Hapus data stok produk ini dari toko? Seluruh riwayat jurnalnya juga akan ikut terhapus.')) return;
+    try {
+      setDeleting(true);
+      await deleteStock(stockId);
+      showToast('Data stok berhasil dihapus', 'success');
+      onBack();
+    } catch (e) {
+      const error = e as AxiosError<{ message?: string }>;
+      showToast(error.response?.data?.message || 'Gagal menghapus stok', 'error');
+      setDeleting(false);
+    }
+  };
+
   if (loading || !stock) {
     return (
       <div className="font-[family-name:var(--font-admin)] flex flex-col items-center justify-center py-20 gap-3">
@@ -65,16 +80,29 @@ export default function AdminStockDetail({ stockId, onBack }: { stockId: number,
 
   return (
     <div className="font-[family-name:var(--font-admin)] admin-fade-in">
-      {/* Back Button */}
-      <button
-        onClick={onBack}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium mb-6
-                   text-admin-ink-soft bg-admin-surface border border-admin-line-soft cursor-pointer
-                   hover:bg-admin-surface-2 hover:text-admin-ink transition-all duration-150"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Kembali
-      </button>
+      {/* Action Bar */}
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium
+                     text-admin-ink-soft bg-admin-surface border border-admin-line-soft cursor-pointer
+                     hover:bg-admin-surface-2 hover:text-admin-ink transition-all duration-150"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Kembali
+        </button>
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold
+                     text-admin-red bg-admin-red-soft border-none cursor-pointer
+                     hover:bg-admin-red/15 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
+        >
+          {deleting ? <Loader2 className="w-4 h-4 admin-spin" /> : <Trash2 className="w-4 h-4" />}
+          Hapus Stok
+        </button>
+      </div>
+
 
       {/* Top Section: Stat Card + Adjustment Form */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
