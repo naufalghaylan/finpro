@@ -8,6 +8,11 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import type { CheckoutOrder, OrderStatus } from '../../types/order'
+import {
+  formatCompactDateTime,
+  formatCurrency,
+  formatDateTime,
+} from '../../utils/format'
 
 type OrderStatusDisplay = {
   label: string
@@ -48,32 +53,9 @@ export const orderStatusDisplay: Record<OrderStatus, OrderStatusDisplay> = {
   },
 }
 
-export const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(value)
+export { formatCurrency, formatDateTime }
 
-export const formatDateTime = (value: string | null) => {
-  if (!value) return '-'
-
-  return new Intl.DateTimeFormat('id-ID', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(value))
-}
-
-export const formatTrackingDateTime = (value: string | null) => {
-  if (!value) return 'Menunggu update'
-
-  return new Intl.DateTimeFormat('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value))
-}
+export const formatTrackingDateTime = formatCompactDateTime
 
 export const getPrimaryOrderImage = (order: CheckoutOrder) => {
   const itemWithImage = order.items.find((item) => item.product.images.length > 0)

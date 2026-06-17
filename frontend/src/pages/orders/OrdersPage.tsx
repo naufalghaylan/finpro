@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
-import { isAxiosError } from 'axios'
 import { Link, useSearchParams } from 'react-router-dom'
 import {
   AlertCircle,
@@ -17,11 +16,7 @@ import { OrderCard } from '../../components/orders/OrderCard'
 import { getOrderItemQuantity } from '../../components/orders/orderDisplay'
 import { BRAND, footerSections, navLinks } from '../../data/home/homeData'
 import type { CheckoutOrder, OrderStatusGroup, OrderListMeta } from '../../types/order'
-
-type ErrorResponse = {
-  message?: string
-  error?: string
-}
+import { getApiErrorMessage } from '../../utils/apiError'
 
 type OrderStatusTab = 'all' | OrderStatusGroup
 
@@ -46,13 +41,8 @@ const getPositivePage = (value: string | null) => {
 const getSearchValue = (searchParams: URLSearchParams, key: string) =>
   searchParams.get(key)?.trim() ?? ''
 
-const getErrorMessage = (error: unknown, fallback = 'Gagal memuat daftar pesanan') => {
-  if (isAxiosError<ErrorResponse>(error)) {
-    return error.response?.data?.message ?? error.response?.data?.error ?? fallback
-  }
-
-  return fallback
-}
+const getErrorMessage = (error: unknown, fallback = 'Gagal memuat daftar pesanan') =>
+  getApiErrorMessage(error, fallback)
 
 const setParamOrDelete = (params: URLSearchParams, key: string, value: string) => {
   if (value.trim()) {
