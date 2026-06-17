@@ -110,7 +110,7 @@ function CheckoutPage() {
                     />
 
                     <CheckoutVoucherPanel
-                      vouchers={preview.vouchers}
+                      vouchers={preview.vouchers ?? []}
                       items={preview.cart.items}
                       subtotal={paymentSummary.subtotal}
                       shippingCost={paymentSummary.shippingCost}
