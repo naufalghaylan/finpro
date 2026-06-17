@@ -3,6 +3,7 @@ import cloudinary from '../lib/cloudinary'
 import {
   approveFulfillment as approveFulfillmentService,
   cancelOrder as cancelOrderService,
+  confirmOrderReceived as confirmOrderReceivedService,
   confirmManualPayment as confirmManualPaymentService,
   createCheckoutOrder as createCheckoutOrderService,
   createMidtransSnapToken as createMidtransSnapTokenService,
@@ -14,6 +15,7 @@ import {
   receiveFulfillment as receiveFulfillmentService,
   rejectFulfillment as rejectFulfillmentService,
   requestOrderFulfillment as requestOrderFulfillmentService,
+  shipOrder as shipOrderService,
   syncMidtransPaymentStatus as syncMidtransPaymentStatusService,
   uploadManualPaymentProof as uploadManualPaymentProofService,
 } from '../services/order.service'
@@ -429,6 +431,64 @@ export const adminCancelOrder = async (req: Request, res: Response): Promise<voi
     if (handleOrderError(error, res)) return
 
     console.error('[adminCancelOrder]', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+}
+
+export const shipOrder = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = getAuthenticatedUserId(req, res)
+    if (!userId) return
+
+    const parsedParams = orderParamsSchema.safeParse(req.params)
+
+    if (!parsedParams.success) {
+      res.status(400).json({ message: 'Validation Error', errors: parsedParams.error.flatten().fieldErrors })
+      return
+    }
+
+    const order = await shipOrderService({
+      userId,
+      orderId: parsedParams.data.id,
+    })
+
+    res.json({
+      message: 'Order marked as shipped',
+      data: order,
+    })
+  } catch (error) {
+    if (handleOrderError(error, res)) return
+
+    console.error('[shipOrder]', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+}
+
+export const confirmOrderReceived = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = getAuthenticatedUserId(req, res)
+    if (!userId) return
+
+    const parsedParams = orderParamsSchema.safeParse(req.params)
+
+    if (!parsedParams.success) {
+      res.status(400).json({ message: 'Validation Error', errors: parsedParams.error.flatten().fieldErrors })
+      return
+    }
+
+    const order = await confirmOrderReceivedService({
+      userId,
+      orderId: parsedParams.data.id,
+    })
+
+    res.json({
+      message: 'Order received successfully',
+      data: order,
+    })
+  } catch (error) {
+    if (handleOrderError(error, res)) return
+
+    console.error('[confirmOrderReceived]', error)
     res.status(500).json({ message: 'Internal server error' })
   }
 }

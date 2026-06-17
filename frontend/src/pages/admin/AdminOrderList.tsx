@@ -9,12 +9,14 @@ import {
   ClipboardList,
   ExternalLink,
   Loader2,
+  PackageCheck,
   Search,
+  Send,
   Store as StoreIcon,
   X,
   XCircle,
 } from 'lucide-react'
-import { adminCancelOrder, confirmManualPayment, getAdminOrders } from '../../api/order.api'
+import { adminCancelOrder, confirmManualPayment, getAdminOrders, shipAdminOrder } from '../../api/order.api'
 import { getStores } from '../../api/store'
 import { useToast } from '../../components/common/Toast'
 import {
@@ -27,6 +29,7 @@ import {
 import { useAuthStore } from '../../store/authStore'
 import type { AdminOrder, OrderListMeta, OrderStatus } from '../../types/order'
 import type { Store } from '../../types/store'
+import AdminOrderFulfillmentModal from './AdminOrderFulfillmentModal'
 
 const PAGE_LIMIT = 10
 
@@ -59,6 +62,9 @@ type PaymentConfirmationAction = 'approve' | 'reject'
 const canAdminCancelOrder = (order: AdminOrder) =>
   !['SHIPPED', 'CONFIRMED', 'CANCELLED'].includes(order.status)
 
+const hasActiveFulfillment = (order: AdminOrder) =>
+  order.stockMutations.some((mutation) => ['PENDING', 'IN_TRANSIT'].includes(mutation.status))
+
 const emptyMeta: OrderListMeta = {
   page: 1,
   limit: PAGE_LIMIT,
@@ -85,6 +91,9 @@ export default function AdminOrderList({ storeId }: { storeId?: number }) {
   const [cancelOrderTarget, setCancelOrderTarget] = useState<AdminOrder | null>(null)
   const [cancelReason, setCancelReason] = useState('')
   const [isCancellingOrder, setIsCancellingOrder] = useState(false)
+  const [fulfillmentOrder, setFulfillmentOrder] = useState<AdminOrder | null>(null)
+  const [shipOrderTarget, setShipOrderTarget] = useState<AdminOrder | null>(null)
+  const [isShippingOrder, setIsShippingOrder] = useState(false)
 
   const showStoreFilter = !storeId && user?.role === 'SUPER_ADMIN'
 
@@ -179,6 +188,29 @@ export default function AdminOrderList({ storeId }: { storeId?: number }) {
       showToast(error.response?.data?.message || 'Gagal membatalkan pesanan', 'error')
     } finally {
       setIsCancellingOrder(false)
+    }
+  }
+
+  const closeShipDialog = () => {
+    if (isShippingOrder) return
+
+    setShipOrderTarget(null)
+  }
+
+  const handleShipOrder = async () => {
+    if (!shipOrderTarget) return
+
+    try {
+      setIsShippingOrder(true)
+      await shipAdminOrder(shipOrderTarget.id)
+      showToast('Pesanan berhasil ditandai sedang dikirim', 'success')
+      setShipOrderTarget(null)
+      await fetchOrders()
+    } catch (e) {
+      const error = e as AxiosError<{ message?: string }>
+      showToast(error.response?.data?.message || 'Gagal mengirim pesanan', 'error')
+    } finally {
+      setIsShippingOrder(false)
     }
   }
 
@@ -296,6 +328,9 @@ export default function AdminOrderList({ storeId }: { storeId?: number }) {
                     order.status === 'WAITING_CONFIRMATION' &&
                     Boolean(order.paymentProof)
                   const canCancel = canAdminCancelOrder(order)
+                  const canManageFulfillment = order.status === 'PROCESSING'
+                  const fulfillmentInProgress = hasActiveFulfillment(order)
+                  const canShowActions = canReviewPayment || canManageFulfillment || canCancel
 
                   return (
                     <tr key={order.id} className="admin-table-row border-b border-admin-line-soft/50 last:border-b-0">
@@ -335,7 +370,7 @@ export default function AdminOrderList({ storeId }: { storeId?: number }) {
                         {formatCurrency(order.totalAmount)}
                       </td>
                       <td className="px-5 py-4 text-right">
-                        {canReviewPayment || canCancel ? (
+                        {canShowActions ? (
                           <div className="flex items-center justify-end gap-2">
                             {canReviewPayment && (
                               <button
@@ -351,6 +386,32 @@ export default function AdminOrderList({ storeId }: { storeId?: number }) {
                                 Review
                                 <ChevronRight className="w-3.5 h-3.5" />
                               </button>
+                            )}
+                            {canManageFulfillment && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => setFulfillmentOrder(order)}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold
+                                             text-admin-blue bg-admin-blue-soft border-none cursor-pointer
+                                             hover:bg-admin-blue/15 transition-all duration-150"
+                                >
+                                  <PackageCheck className="w-3.5 h-3.5" />
+                                  Fulfillment
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setShipOrderTarget(order)}
+                                  disabled={fulfillmentInProgress}
+                                  title={fulfillmentInProgress ? 'Selesaikan fulfillment aktif sebelum kirim pesanan' : undefined}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold
+                                             text-white bg-admin-green border-none cursor-pointer
+                                             hover:brightness-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
+                                >
+                                  <Send className="w-3.5 h-3.5" />
+                                  Kirim
+                                </button>
+                              </>
                             )}
                             {canCancel && (
                               <button
@@ -645,6 +706,98 @@ export default function AdminOrderList({ storeId }: { storeId?: number }) {
             </div>
           </div>
         </div>
+      )}
+
+      {shipOrderTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
+          <div className="w-full max-w-lg rounded-2xl border border-admin-line-soft bg-admin-surface shadow-2xl">
+            <div className="flex items-start justify-between gap-4 px-6 py-5 border-b border-admin-line-soft">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-admin-green m-0">
+                  Kirim Pesanan
+                </p>
+                <h3 className="text-lg font-bold text-admin-ink m-0 mt-1">{shipOrderTarget.orderNumber}</h3>
+                <p className="text-sm text-admin-ink-muted m-0 mt-1">
+                  Pastikan semua barang siap sebelum status diubah menjadi Dikirim.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeShipDialog}
+                disabled={isShippingOrder}
+                className="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-admin-line-soft bg-admin-surface text-admin-ink-soft
+                           hover:bg-admin-surface-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
+                aria-label="Tutup konfirmasi pengiriman"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="rounded-xl border border-admin-amber/30 bg-admin-amber-soft p-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-admin-amber shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-sm font-bold text-admin-ink m-0">Barang sudah siap dikirim?</h4>
+                    <p className="text-xs text-admin-ink-soft leading-relaxed m-0 mt-1">
+                      Status pesanan akan menjadi Dikirim dan customer bisa mengonfirmasi pesanan diterima.
+                      Sistem juga akan otomatis menyelesaikan pesanan setelah 7 hari.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 my-5 text-sm">
+                <div className="rounded-xl border border-admin-line-soft bg-admin-surface-2/30 p-3">
+                  <span className="block text-admin-ink-muted">Customer</span>
+                  <strong className="text-admin-ink">{shipOrderTarget.user.name}</strong>
+                </div>
+                <div className="rounded-xl border border-admin-line-soft bg-admin-surface-2/30 p-3">
+                  <span className="block text-admin-ink-muted">Total</span>
+                  <strong className="text-admin-ink">{formatCurrency(shipOrderTarget.totalAmount)}</strong>
+                </div>
+              </div>
+
+              {hasActiveFulfillment(shipOrderTarget) && (
+                <div className="rounded-xl border border-admin-red/20 bg-admin-red-soft p-4 mb-5">
+                  <p className="text-xs text-admin-red leading-relaxed m-0">
+                    Masih ada fulfillment yang pending atau dalam pengiriman. Selesaikan receive dulu sebelum pesanan dikirim.
+                  </p>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 mt-5">
+                <button
+                  type="button"
+                  onClick={closeShipDialog}
+                  disabled={isShippingOrder}
+                  className="px-4 py-2.5 rounded-xl text-sm font-semibold text-admin-ink-soft bg-admin-surface border border-admin-line-soft
+                             cursor-pointer hover:bg-admin-surface-2 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleShipOrder()}
+                  disabled={isShippingOrder || hasActiveFulfillment(shipOrderTarget)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-admin-green border-none
+                             cursor-pointer hover:brightness-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                >
+                  {isShippingOrder ? <Loader2 className="w-4 h-4 admin-spin" /> : <Send className="w-4 h-4" />}
+                  Ya, Kirim
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {fulfillmentOrder && (
+        <AdminOrderFulfillmentModal
+          order={fulfillmentOrder}
+          onClose={() => setFulfillmentOrder(null)}
+          onUpdated={fetchOrders}
+        />
       )}
     </div>
   )

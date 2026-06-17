@@ -1,4 +1,4 @@
-import { Loader2, XCircle } from 'lucide-react'
+import { CheckCircle2, Loader2, XCircle } from 'lucide-react'
 import type { CheckoutOrder } from '../../types/order'
 import { formatCurrency } from './orderDisplay'
 
@@ -7,7 +7,10 @@ type PaymentSummaryPanelProps = {
   isManualTransfer: boolean
   canCancel: boolean
   isCancelling: boolean
+  canConfirmReceipt: boolean
+  isConfirmingReceipt: boolean
   onCancelClick: () => void
+  onConfirmReceiptClick: () => void
 }
 
 export function PaymentSummaryPanel({
@@ -15,7 +18,10 @@ export function PaymentSummaryPanel({
   isManualTransfer,
   canCancel,
   isCancelling,
+  canConfirmReceipt,
+  isConfirmingReceipt,
   onCancelClick,
+  onConfirmReceiptClick,
 }: PaymentSummaryPanelProps) {
   return (
     <aside className="checkout-summary-panel payment-summary-panel">
@@ -60,6 +66,31 @@ export function PaymentSummaryPanel({
               <>
                 <XCircle className="button-icon" aria-hidden="true" />
                 Batalkan Pesanan
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
+      {canConfirmReceipt && (
+        <div className="payment-receipt-panel">
+          <h3>Konfirmasi Pesanan</h3>
+          <p>Pastikan pesanan sudah kamu terima sebelum menyelesaikan pesanan.</p>
+          <button
+            type="button"
+            className="button primary payment-receipt-button"
+            disabled={isConfirmingReceipt}
+            onClick={onConfirmReceiptClick}
+          >
+            {isConfirmingReceipt ? (
+              <>
+                <Loader2 className="button-icon spin" aria-hidden="true" />
+                Memproses...
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="button-icon" aria-hidden="true" />
+                Pesanan Diterima
               </>
             )}
           </button>

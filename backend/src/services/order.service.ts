@@ -1,4 +1,5 @@
 import {
+  MutationStatus,
   OrderStatus,
   PaymentMethod,
   Prisma,
@@ -99,6 +100,7 @@ type MidtransTransactionStatus = {
 }
 
 const PAYMENT_DEADLINE_IN_MS = 60 * 60 * 1000
+const SHIPPED_AUTO_CONFIRM_IN_MS = 7 * 24 * 60 * 60 * 1000
 
 const orderStatusGroups: Record<OrderStatusGroup, OrderStatus[]> = {
   ongoing: [
@@ -193,6 +195,44 @@ const adminOrderSelect = {
       name: true,
       email: true,
       phone: true,
+    },
+  },
+  stockMutations: {
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      orderId: true,
+      sourceStoreId: true,
+      destinationStoreId: true,
+      productId: true,
+      quantity: true,
+      status: true,
+      notes: true,
+      approvedAt: true,
+      rejectedAt: true,
+      sentAt: true,
+      receivedAt: true,
+      createdAt: true,
+      updatedAt: true,
+      sourceStore: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      destinationStore: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      product: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+        },
+      },
     },
   },
 } satisfies Prisma.OrderSelect
@@ -1228,6 +1268,95 @@ export const cancelOrder = async ({
   })
 }
 
+export const shipOrder = async ({ userId, orderId }: OrderPaymentParams) => {
+  return prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        storeId: true,
+        status: true,
+        stockMutations: {
+          where: {
+            status: {
+              in: [MutationStatus.PENDING, MutationStatus.IN_TRANSIT],
+            },
+          },
+          select: {
+            id: true,
+            status: true,
+          },
+        },
+      },
+    })
+
+    if (!order) {
+      throw new OrderServiceError(ORDER_ERRORS.ORDER_NOT_FOUND, 'Order not found', 404)
+    }
+
+    await assertAdminCanAccessStore(userId, order.storeId, tx)
+
+    if (order.status !== OrderStatus.PROCESSING) {
+      throw new OrderServiceError(
+        ORDER_ERRORS.ORDER_NOT_SHIPPABLE,
+        'Only processing orders can be sent',
+        400,
+      )
+    }
+
+    if (order.stockMutations.length > 0) {
+      throw new OrderServiceError(
+        ORDER_ERRORS.ORDER_NOT_SHIPPABLE,
+        'Complete pending fulfillment requests before sending this order',
+        400,
+      )
+    }
+
+    return tx.order.update({
+      where: { id: order.id },
+      data: {
+        status: OrderStatus.SHIPPED,
+        shippedAt: new Date(),
+      },
+      select: adminOrderSelect,
+    })
+  })
+}
+
+export const confirmOrderReceived = async ({ userId, orderId }: OrderPaymentParams) => {
+  const order = await prisma.order.findFirst({
+    where: {
+      id: orderId,
+      userId,
+    },
+    select: {
+      id: true,
+      status: true,
+    },
+  })
+
+  if (!order) {
+    throw new OrderServiceError(ORDER_ERRORS.ORDER_NOT_FOUND, 'Order not found', 404)
+  }
+
+  if (order.status !== OrderStatus.SHIPPED) {
+    throw new OrderServiceError(
+      ORDER_ERRORS.ORDER_NOT_CONFIRMABLE,
+      'Only shipped orders can be confirmed',
+      400,
+    )
+  }
+
+  return prisma.order.update({
+    where: { id: order.id },
+    data: {
+      status: OrderStatus.CONFIRMED,
+      confirmedAt: new Date(),
+    },
+    select: orderSelect,
+  })
+}
+
 export const autoCancelExpiredManualTransferOrders = async () => {
   const now = new Date()
   const expiredOrders = await prisma.order.findMany({
@@ -1312,5 +1441,27 @@ export const autoCancelExpiredManualTransferOrders = async () => {
   return {
     checkedCount: expiredOrders.length,
     cancelledCount,
+  }
+}
+
+export const autoConfirmShippedOrders = async () => {
+  const now = new Date()
+  const autoConfirmBefore = new Date(now.getTime() - SHIPPED_AUTO_CONFIRM_IN_MS)
+
+  const result = await prisma.order.updateMany({
+    where: {
+      status: OrderStatus.SHIPPED,
+      shippedAt: {
+        lte: autoConfirmBefore,
+      },
+    },
+    data: {
+      status: OrderStatus.CONFIRMED,
+      confirmedAt: now,
+    },
+  })
+
+  return {
+    confirmedCount: result.count,
   }
 }

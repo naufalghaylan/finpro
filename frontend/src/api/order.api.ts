@@ -8,6 +8,7 @@ import type {
   CreateCheckoutOrderPayload,
   CreateCheckoutOrderResult,
   CreateMidtransPaymentResult,
+  OrderFulfillmentMutation,
   OrderListQuery,
   OrderListResponse,
 } from '../types/order'
@@ -111,10 +112,75 @@ export async function adminCancelOrder(orderId: number, reason?: string): Promis
   return data.data
 }
 
+export async function shipAdminOrder(orderId: number): Promise<AdminOrder> {
+  const { data } = await api.post<ApiData<AdminOrder>>(`/orders/admin/${orderId}/ship`)
+
+  return data.data
+}
+
+export async function requestOrderFulfillment(
+  orderId: number,
+  payload: {
+    sourceStoreId: number
+    productId: number
+    quantity: number
+    notes?: string
+  },
+): Promise<OrderFulfillmentMutation> {
+  const { data } = await api.post<ApiData<OrderFulfillmentMutation>>(
+    `/orders/admin/${orderId}/fulfillments`,
+    payload,
+  )
+
+  return data.data
+}
+
+export async function approveOrderFulfillment(
+  mutationId: number,
+  notes?: string,
+): Promise<OrderFulfillmentMutation> {
+  const { data } = await api.post<ApiData<OrderFulfillmentMutation>>(
+    `/orders/admin/fulfillments/${mutationId}/approve`,
+    { notes: notes?.trim() || undefined },
+  )
+
+  return data.data
+}
+
+export async function receiveOrderFulfillment(
+  mutationId: number,
+  notes?: string,
+): Promise<OrderFulfillmentMutation> {
+  const { data } = await api.post<ApiData<OrderFulfillmentMutation>>(
+    `/orders/admin/fulfillments/${mutationId}/receive`,
+    { notes: notes?.trim() || undefined },
+  )
+
+  return data.data
+}
+
+export async function rejectOrderFulfillment(
+  mutationId: number,
+  notes?: string,
+): Promise<OrderFulfillmentMutation> {
+  const { data } = await api.post<ApiData<OrderFulfillmentMutation>>(
+    `/orders/admin/fulfillments/${mutationId}/reject`,
+    { notes: notes?.trim() || undefined },
+  )
+
+  return data.data
+}
+
 export async function cancelOrder(orderId: number, reason?: string): Promise<CheckoutOrder> {
   const { data } = await api.post<ApiData<CheckoutOrder>>(`/orders/${orderId}/cancel`, {
     reason: reason?.trim() || undefined,
   })
+
+  return data.data
+}
+
+export async function confirmOrderReceived(orderId: number): Promise<CheckoutOrder> {
+  const { data } = await api.post<ApiData<CheckoutOrder>>(`/orders/${orderId}/confirm`)
 
   return data.data
 }
