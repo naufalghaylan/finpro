@@ -9,6 +9,9 @@ interface CheckoutProductListProps {
 const getPrimaryImage = (item: CartItem) =>
   item.product.images.find((image) => image.isPrimary) ?? item.product.images[0]
 
+const getItemUnitPrice = (item: CartItem) =>
+  item.quantity > 0 ? item.lineTotal / item.quantity : item.product.basePrice
+
 export function CheckoutProductList({ items }: CheckoutProductListProps) {
   return (
     <section className="checkout-panel">
@@ -32,7 +35,7 @@ export function CheckoutProductList({ items }: CheckoutProductListProps) {
               <div className="checkout-product-info">
                 <strong>{item.product.name}</strong>
                 <span>{item.product.category.name}</span>
-                <span>{item.quantity} x {formatCurrency(item.product.basePrice)}</span>
+                <span>{item.quantity} x {formatCurrency(getItemUnitPrice(item))}</span>
               </div>
               <strong>{formatCurrency(item.lineTotal)}</strong>
             </div>

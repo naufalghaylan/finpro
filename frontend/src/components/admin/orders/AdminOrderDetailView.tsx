@@ -1,5 +1,9 @@
 import { ArrowLeft } from 'lucide-react'
-import { getOrderItemQuantity, orderStatusDisplay } from '../../orders/orderDisplay'
+import {
+  getOrderDiscountBreakdown,
+  getOrderItemQuantity,
+  orderStatusDisplay,
+} from '../../orders/orderDisplay'
 import type { AdminOrder, OrderStatus } from '../../../types/order'
 import { formatCurrency, formatDateTime } from '../../../utils/format'
 import { AdminOrderItemsPanel } from './AdminOrderItemsPanel'
@@ -50,6 +54,12 @@ export function AdminOrderDetailView({
   const canManageFulfillment = order.status === 'PROCESSING'
   const fulfillmentInProgress = hasActiveFulfillment(order)
   const canShowActions = canReviewPayment || canManageFulfillment || canCancel
+  const {
+    storeDiscountAmount,
+    referralVoucherAmount,
+    otherVoucherAmount,
+    voucherLabel,
+  } = getOrderDiscountBreakdown(order)
 
   return (
     <div className="admin-fade-in">
@@ -128,10 +138,24 @@ export function AdminOrderDetailView({
                 <span className="text-admin-ink-muted">Ongkir</span>
                 <strong className="text-admin-ink">{formatCurrency(order.shippingCost)}</strong>
               </div>
-              <div className="flex justify-between gap-3">
-                <span className="text-admin-ink-muted">Diskon</span>
-                <strong className="text-admin-ink">{formatCurrency(order.discountAmount)}</strong>
-              </div>
+              {storeDiscountAmount > 0 && (
+                <div className="flex justify-between gap-3">
+                  <span className="text-admin-ink-muted">Diskon toko</span>
+                  <strong className="text-admin-ink">-{formatCurrency(storeDiscountAmount)}</strong>
+                </div>
+              )}
+              {referralVoucherAmount > 0 && (
+                <div className="flex justify-between gap-3">
+                  <span className="text-admin-ink-muted">Voucher referral</span>
+                  <strong className="text-admin-ink">-{formatCurrency(referralVoucherAmount)}</strong>
+                </div>
+              )}
+              {otherVoucherAmount > 0 && (
+                <div className="flex justify-between gap-3">
+                  <span className="text-admin-ink-muted">{voucherLabel ?? 'Voucher'}</span>
+                  <strong className="text-admin-ink">-{formatCurrency(otherVoucherAmount)}</strong>
+                </div>
+              )}
               <div className="flex justify-between gap-3 pt-3 border-t border-admin-line-soft">
                 <span className="font-semibold text-admin-ink">Total bayar</span>
                 <strong className="text-admin-ink">{formatCurrency(order.totalAmount)}</strong>

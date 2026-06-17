@@ -1,6 +1,9 @@
 import type { Cart } from './cart'
 
 export type PaymentMethod = 'MANUAL_TRANSFER' | 'PAYMENT_GATEWAY'
+export type DiscountType = 'PERCENTAGE' | 'NOMINAL' | 'BUY_ONE_GET_ONE'
+export type VoucherSource = 'REFERRAL' | 'MIN_PURCHASE_REWARD' | 'PROMO' | 'FREE_SHIPPING_REWARD'
+export type VoucherApplicableTo = 'ALL_PRODUCTS' | 'SPECIFIC_PRODUCT' | 'SHIPPING'
 export type OrderStatus =
   | 'PENDING_PAYMENT'
   | 'WAITING_CONFIRMATION'
@@ -49,6 +52,7 @@ export type CheckoutPaymentMethod = {
 export type CheckoutPreview = {
   cart: Cart
   addresses: CheckoutAddress[]
+  vouchers: CheckoutVoucher[]
   selectedAddress: CheckoutAddress | null
   nearestStore: CheckoutStore | null
   paymentMethods: CheckoutPaymentMethod[]
@@ -72,6 +76,22 @@ export type CheckoutOrderItem = {
   }
 }
 
+export type OrderVoucher = {
+  id: number
+  code: string
+  name: string
+  productId: number | null
+  source: VoucherSource
+  discountType: DiscountType
+  discountValue: number
+  maxDiscount: number | null
+  minPurchase: number
+  applicableTo: VoucherApplicableTo
+  expiredAt: string
+}
+
+export type CheckoutVoucher = OrderVoucher
+
 export type CheckoutOrder = {
   id: number
   orderNumber: string
@@ -80,6 +100,7 @@ export type CheckoutOrder = {
   totalAmount: number
   shippingCost: number
   discountAmount: number
+  voucher: OrderVoucher | null
   paymentMethod: PaymentMethod
   paymentProof: string | null
   paymentGatewayId: string | null
@@ -102,6 +123,7 @@ export type CreateCheckoutOrderPayload = {
   shippingService: string
   shippingCost: number
   paymentMethod: PaymentMethod
+  voucherId?: number
   notes?: string
 }
 

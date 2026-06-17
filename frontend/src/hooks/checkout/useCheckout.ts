@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createCheckoutOrder, getCheckoutPreview } from '../../api/order.api'
 import { calculateShippingCost, type ShippingCostResult } from '../../api/rajaongkir'
+import { getVoucherDiscountPreview } from '../../components/checkout/checkoutVoucher'
 import { useToast } from '../../components/common/toastContext'
 import { useCartStore } from '../../store/cartStore'
 import type { CheckoutOrder, CheckoutPreview, PaymentMethod } from '../../types/order'
@@ -9,10 +10,12 @@ import { getApiErrorMessage } from '../../utils/apiError'
 
 const getErrorMessage = (error: unknown) => getApiErrorMessage(error, 'Gagal memproses checkout')
 
+
 export function useCheckout() {
   const [preview, setPreview] = useState<CheckoutPreview | null>(null)
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('MANUAL_TRANSFER')
+  const [selectedVoucherId, setSelectedVoucherId] = useState<number | null>(null)
   const [notes, setNotes] = useState('')
   const [createdOrder, setCreatedOrder] = useState<CheckoutOrder | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -21,7 +24,7 @@ export function useCheckout() {
   const [error, setError] = useState<string | null>(null)
 
   const [selectedCourier, setSelectedCourier] = useState<string>('')
-  const [shippingCosts, setShippingCosts] = useState<ShippingCostResult[]>([])
+  const [courierServices, setCourierServices] = useState<Record<string, ShippingCostResult[]>>({})
   const [selectedShippingService, setSelectedShippingService] = useState<ShippingCostResult | null>(null)
   const [isFetchingShipping, setIsFetchingShipping] = useState(false)
   const { showToast } = useToast()
@@ -68,6 +71,10 @@ export function useCheckout() {
     selectedAddress.longitude !== null &&
     selectedAddress.longitude !== undefined
   const isCartEmpty = (preview?.cart.items.length ?? 0) === 0
+  const selectedVoucher = useMemo(
+    () => preview?.vouchers.find((voucher) => voucher.id === selectedVoucherId) ?? null,
+    [preview?.vouchers, selectedVoucherId],
+  )
 
   const totalWeight = useMemo(() => {
     return preview?.cart.items.reduce((acc, item) => acc + (item.product.weight * item.quantity), 0) ?? 0
@@ -76,13 +83,34 @@ export function useCheckout() {
   const paymentSummary = useMemo(() => {
     const subtotal = preview?.cart.summary.subtotal ?? 0
     const shippingCost = selectedShippingService?.cost ?? 0
+    const storeDiscountAmount = preview?.cart.summary.storeDiscountAmount ?? 0
+    const selectedVoucherAmount = selectedVoucher && preview
+      ? getVoucherDiscountPreview(selectedVoucher, preview.cart.items, subtotal, shippingCost)
+      : 0
+    const voucherReferralAmount = selectedVoucher?.source === 'REFERRAL'
+      ? selectedVoucherAmount
+      : preview?.cart.summary.voucherReferralAmount ?? 0
+    const discountAmount =
+      preview?.cart.summary.discountAmount ??
+      storeDiscountAmount + voucherReferralAmount + (selectedVoucher?.source !== 'REFERRAL' ? selectedVoucherAmount : 0)
 
     return {
       subtotal,
       shippingCost,
-      totalPayment: Math.max(0, subtotal + shippingCost),
+      storeDiscountAmount,
+      voucherReferralAmount,
+      discountAmount,
+      totalPayment: Math.max(0, subtotal - discountAmount + shippingCost),
     }
-  }, [preview?.cart.summary.subtotal, selectedShippingService])
+  }, [
+    preview?.cart.summary.discountAmount,
+    preview?.cart.summary.storeDiscountAmount,
+    preview?.cart.summary.subtotal,
+    preview?.cart.summary.voucherReferralAmount,
+    preview?.cart.items,
+    selectedVoucher,
+    selectedShippingService,
+  ])
 
   const canCreateOrder =
     Boolean(selectedAddressId) &&
@@ -99,36 +127,62 @@ export function useCheckout() {
   }
 
   useEffect(() => {
-    if (!selectedAddressId || !preview?.nearestStore || !selectedCourier || totalWeight === 0) {
+    if (selectedVoucherId && !selectedVoucher) {
+      setSelectedVoucherId(null)
+    }
+  }, [selectedVoucher, selectedVoucherId])
+
+  useEffect(() => {
+    if (!selectedAddressId || !preview?.nearestStore || totalWeight === 0) {
       window.setTimeout(() => {
-        setShippingCosts([])
+        setCourierServices({})
+        setSelectedCourier('')
         setSelectedShippingService(null)
       }, 0)
       return
     }
 
-    const fetchShippingCosts = async () => {
+    const fetchAllCouriers = async () => {
       setIsFetchingShipping(true)
+      const ALL_COURIERS = ['jne', 'pos', 'tiki', 'sicepat', 'jnt', 'anteraja', 'ninja', 'idexpress', 'sap']
+      
       try {
-        const results = await calculateShippingCost({
-          addressId: selectedAddressId,
-          storeId: preview.nearestStore!.id,
-          weight: Math.max(1, Math.ceil(totalWeight)),
-          courier: selectedCourier,
+        const newCourierServices: Record<string, ShippingCostResult[]> = {}
+        
+        for (const c of ALL_COURIERS) {
+          try {
+            const results = await calculateShippingCost({
+              addressId: selectedAddressId,
+              storeId: preview.nearestStore!.id,
+              weight: Math.max(1, Math.ceil(totalWeight)),
+              courier: c,
+            })
+            if (results && results.length > 0) {
+              newCourierServices[c] = results
+            }
+          } catch (err) {
+            // Ignore individual courier errors (e.g. unsupported route)
+          }
+        }
+        
+        setCourierServices(newCourierServices)
+        
+        // Auto-select first available courier if current is invalid
+        setSelectedCourier(prev => {
+          if (prev && newCourierServices[prev]) return prev;
+          return Object.keys(newCourierServices)[0] || '';
         })
-        setShippingCosts(results)
         setSelectedShippingService(null)
       } catch (err) {
-        showToast('Gagal memuat ongkos kirim. Silakan coba kurir lain.', 'error')
-        setShippingCosts([])
-        setSelectedShippingService(null)
+        showToast('Gagal memuat daftar kurir.', 'error')
+        setCourierServices({})
       } finally {
         setIsFetchingShipping(false)
       }
     }
 
-    void fetchShippingCosts()
-  }, [selectedAddressId, preview?.nearestStore, selectedCourier, totalWeight, showToast])
+    void fetchAllCouriers()
+  }, [selectedAddressId, preview?.nearestStore, totalWeight, showToast])
 
   const handleCreateOrder = async () => {
     if (!selectedAddressId || !canCreateOrder || !selectedShippingService) return
@@ -141,6 +195,7 @@ export function useCheckout() {
         shippingService: selectedShippingService.service,
         shippingCost: selectedShippingService.cost,
         paymentMethod,
+        voucherId: selectedVoucherId ?? undefined,
         notes: notes.trim() || undefined,
       })
 
@@ -160,6 +215,7 @@ export function useCheckout() {
     selectedAddressId,
     selectedAddress,
     paymentMethod,
+    selectedVoucherId,
     notes,
     createdOrder,
     isLoading,
@@ -167,7 +223,7 @@ export function useCheckout() {
     isSubmitting,
     error,
     selectedCourier,
-    shippingCosts,
+    courierServices,
     selectedShippingService,
     isFetchingShipping,
     paymentSummary,
@@ -175,6 +231,7 @@ export function useCheckout() {
     isCartEmpty,
     hasSelectedAddressCoordinates,
     setPaymentMethod,
+    setSelectedVoucherId,
     setNotes,
     setSelectedCourier,
     setSelectedShippingService,

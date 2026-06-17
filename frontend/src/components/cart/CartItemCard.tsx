@@ -4,6 +4,7 @@ import { formatCurrency } from '../../utils/format'
 
 type CartItemView = CartItem & {
   displayQuantity: number
+  displayUnitPrice: number
   displayLineTotal: number
 }
 
@@ -81,7 +82,7 @@ export function CartItemCard({
         </div>
 
         <div className="cart-item-bottom">
-          <p className="cart-item-price">{formatCurrency(item.product.basePrice)}</p>
+          <p className="cart-item-price">{formatCurrency(item.displayUnitPrice)}</p>
           <div className="cart-quantity-control" aria-label={`Jumlah ${item.product.name}`}>
             <button
               type="button"

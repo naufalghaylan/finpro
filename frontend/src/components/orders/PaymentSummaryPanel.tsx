@@ -1,6 +1,6 @@
 import { CheckCircle2, Loader2, XCircle } from 'lucide-react'
 import type { CheckoutOrder } from '../../types/order'
-import { formatCurrency } from './orderDisplay'
+import { formatCurrency, getOrderDiscountBreakdown } from './orderDisplay'
 
 type PaymentSummaryPanelProps = {
   order: CheckoutOrder
@@ -23,6 +23,13 @@ export function PaymentSummaryPanel({
   onCancelClick,
   onConfirmReceiptClick,
 }: PaymentSummaryPanelProps) {
+  const {
+    storeDiscountAmount,
+    referralVoucherAmount,
+    otherVoucherAmount,
+    voucherLabel,
+  } = getOrderDiscountBreakdown(order)
+
   return (
     <aside className="checkout-summary-panel payment-summary-panel">
       <h2>Rincian Pembayaran</h2>
@@ -30,6 +37,24 @@ export function PaymentSummaryPanel({
         <span>Subtotal Produk</span>
         <strong>{formatCurrency(order.totalProductAmount)}</strong>
       </div>
+      {storeDiscountAmount > 0 && (
+        <div className="cart-summary-row">
+          <span>Diskon Toko</span>
+          <strong>-{formatCurrency(storeDiscountAmount)}</strong>
+        </div>
+      )}
+      {referralVoucherAmount > 0 && (
+        <div className="cart-summary-row">
+          <span>Voucher Referral</span>
+          <strong>-{formatCurrency(referralVoucherAmount)}</strong>
+        </div>
+      )}
+      {otherVoucherAmount > 0 && (
+        <div className="cart-summary-row">
+          <span>{voucherLabel ?? 'Voucher'}</span>
+          <strong>-{formatCurrency(otherVoucherAmount)}</strong>
+        </div>
+      )}
       <div className="cart-summary-row">
         <span>Ongkir</span>
         <strong>{order.shippingCost > 0 ? formatCurrency(order.shippingCost) : 'Rp -'}</strong>
