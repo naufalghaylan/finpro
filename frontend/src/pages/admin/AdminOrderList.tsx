@@ -741,7 +741,7 @@ export default function AdminOrderList({ storeId }: { storeId?: number }) {
                     <h4 className="text-sm font-bold text-admin-ink m-0">Barang sudah siap dikirim?</h4>
                     <p className="text-xs text-admin-ink-soft leading-relaxed m-0 mt-1">
                       Status pesanan akan menjadi Dikirim dan customer bisa mengonfirmasi pesanan diterima.
-                      Sistem juga akan otomatis menyelesaikan pesanan setelah 7 hari.
+                      Sistem juga akan otomatis menyelesaikan pesanan setelah 2 x 24 jam.
                     </p>
                   </div>
                 </div>

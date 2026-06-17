@@ -100,7 +100,7 @@ type MidtransTransactionStatus = {
 }
 
 const PAYMENT_DEADLINE_IN_MS = 60 * 60 * 1000
-const SHIPPED_AUTO_CONFIRM_IN_MS = 7 * 24 * 60 * 60 * 1000
+const SHIPPED_AUTO_CONFIRM_IN_MS = 2 * 24 * 60 * 60 * 1000
 
 const orderStatusGroups: Record<OrderStatusGroup, OrderStatus[]> = {
   ongoing: [
