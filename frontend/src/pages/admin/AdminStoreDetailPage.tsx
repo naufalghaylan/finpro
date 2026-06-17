@@ -94,7 +94,7 @@ export default function AdminStoreDetailPage() {
 
   if (loading) {
     return (
-      <div className="font-[family-name:var(--font-admin)] flex flex-col items-center justify-center py-20 gap-3">
+      <div className="font-admin flex flex-col items-center justify-center py-20 gap-3">
         <Loader2 className="w-8 h-8 text-admin-accent admin-spin" />
         <p className="text-sm text-admin-ink-muted m-0">Memuat data toko...</p>
       </div>
@@ -103,14 +103,14 @@ export default function AdminStoreDetailPage() {
 
   if (!store) {
     return (
-      <div className="font-[family-name:var(--font-admin)] text-center py-20">
+      <div className="font-admin text-center py-20">
         <p className="text-admin-ink-muted">Toko tidak ditemukan</p>
       </div>
     );
   }
 
   return (
-    <div className="font-[family-name:var(--font-admin)]">
+    <div className="font-admin">
       {/* Store Name Header */}
       <div className="mb-6">
         <h3 className="text-xl font-bold text-admin-ink m-0">{store.name}</h3>

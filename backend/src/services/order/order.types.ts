@@ -9,6 +9,7 @@ export type CreateCheckoutOrderParams = {
   shippingService: string
   shippingCost: number
   paymentMethod: PaymentMethod
+  voucherId?: number
   notes?: string
 }
 

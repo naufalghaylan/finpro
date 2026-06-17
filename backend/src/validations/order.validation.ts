@@ -91,6 +91,7 @@ export const createCheckoutOrderSchema = z.object({
   paymentMethod: z
     .enum([PaymentMethod.MANUAL_TRANSFER, PaymentMethod.PAYMENT_GATEWAY])
     .default(PaymentMethod.MANUAL_TRANSFER),
+  voucherId: positiveIntegerSchema.optional(),
   notes: z.string().trim().max(500, 'Notes must be at most 500 characters').optional(),
 })
 

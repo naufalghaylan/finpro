@@ -12,8 +12,12 @@ import type { CartItem } from '../../types/cart'
 
 type CartItemView = CartItem & {
   displayQuantity: number
+  displayUnitPrice: number
   displayLineTotal: number
 }
+
+const getDisplayUnitPrice = (item: CartItem) =>
+  item.quantity > 0 ? item.lineTotal / item.quantity : item.product.basePrice
 
 const getDisplayQuantity = (item: CartItem, drafts: Record<number, string>) => {
   const draft = drafts[item.id]
@@ -51,11 +55,13 @@ function CartPage() {
     () =>
       cart.items.map((item) => {
         const displayQuantity = getDisplayQuantity(item, quantityDrafts)
+        const displayUnitPrice = getDisplayUnitPrice(item)
 
         return {
           ...item,
           displayQuantity,
-          displayLineTotal: displayQuantity * item.product.basePrice,
+          displayUnitPrice,
+          displayLineTotal: displayQuantity * displayUnitPrice,
         }
       }),
     [cart.items, quantityDrafts],

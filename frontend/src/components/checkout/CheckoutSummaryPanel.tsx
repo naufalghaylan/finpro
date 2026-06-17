@@ -5,6 +5,9 @@ import { formatCurrency } from '../../utils/format'
 interface CheckoutSummaryPanelProps {
   totalQuantity: number
   subtotal: number
+  storeDiscountAmount?: number
+  voucherReferralAmount?: number
+  discountAmount?: number
   selectedShippingService: ShippingCostResult | null
   totalPayment: number
   hasSelectedAddressCoordinates: boolean
@@ -17,6 +20,9 @@ interface CheckoutSummaryPanelProps {
 export function CheckoutSummaryPanel({
   totalQuantity,
   subtotal,
+  storeDiscountAmount = 0,
+  voucherReferralAmount = 0,
+  discountAmount = 0,
   selectedShippingService,
   totalPayment,
   hasSelectedAddressCoordinates,
@@ -25,6 +31,8 @@ export function CheckoutSummaryPanel({
   isSubmitting,
   onCreateOrder,
 }: CheckoutSummaryPanelProps) {
+  const otherDiscountAmount = Math.max(0, discountAmount - storeDiscountAmount - voucherReferralAmount)
+
   return (
     <aside className="checkout-summary-panel">
       <h2>Rincian Pembayaran</h2>
@@ -32,6 +40,24 @@ export function CheckoutSummaryPanel({
         <span>Total Harga ({totalQuantity} item)</span>
         <strong>{formatCurrency(subtotal)}</strong>
       </div>
+      {storeDiscountAmount > 0 && (
+        <div className="cart-summary-row">
+          <span>Diskon Toko</span>
+          <strong>-{formatCurrency(storeDiscountAmount)}</strong>
+        </div>
+      )}
+      {voucherReferralAmount > 0 && (
+        <div className="cart-summary-row">
+          <span>Voucher Referral</span>
+          <strong>-{formatCurrency(voucherReferralAmount)}</strong>
+        </div>
+      )}
+      {otherDiscountAmount > 0 && (
+        <div className="cart-summary-row">
+          <span>Potongan Lainnya</span>
+          <strong>-{formatCurrency(otherDiscountAmount)}</strong>
+        </div>
+      )}
       <div className="cart-summary-row">
         <span>Ongkir</span>
         <strong>{selectedShippingService ? formatCurrency(selectedShippingService.cost) : 'Rp -'}</strong>

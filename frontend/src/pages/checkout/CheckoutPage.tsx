@@ -13,13 +13,16 @@ import { CheckoutPaymentPanel } from '../../components/checkout/CheckoutPaymentP
 import { CheckoutSummaryPanel } from '../../components/checkout/CheckoutSummaryPanel'
 import { CheckoutSuccessPanel } from '../../components/checkout/CheckoutSuccessPanel'
 import { CheckoutEmptyState, CheckoutErrorState, CheckoutLoadingState } from '../../components/checkout/CheckoutStatePanel'
+import { CheckoutVoucherPanel } from '../../components/checkout/CheckoutVoucherPanel'
 
 function CheckoutPage() {
   const {
+
     preview,
     selectedAddressId,
     selectedAddress,
     paymentMethod,
+    selectedVoucherId,
     notes,
     createdOrder,
     isLoading,
@@ -27,7 +30,7 @@ function CheckoutPage() {
     isSubmitting,
     error,
     selectedCourier,
-    shippingCosts,
+    courierServices,
     selectedShippingService,
     isFetchingShipping,
     paymentSummary,
@@ -35,6 +38,7 @@ function CheckoutPage() {
     isCartEmpty,
     hasSelectedAddressCoordinates,
     setPaymentMethod,
+    setSelectedVoucherId,
     setNotes,
     setSelectedCourier,
     setSelectedShippingService,
@@ -98,11 +102,20 @@ function CheckoutPage() {
                       hasSelectedAddressCoordinates={hasSelectedAddressCoordinates}
                       hasNearestStore={Boolean(preview.nearestStore)}
                       selectedCourier={selectedCourier}
-                      shippingCosts={shippingCosts}
+                      courierServices={courierServices}
                       selectedShippingService={selectedShippingService}
                       isFetchingShipping={isFetchingShipping}
                       onCourierChange={setSelectedCourier}
                       onShippingServiceChange={setSelectedShippingService}
+                    />
+
+                    <CheckoutVoucherPanel
+                      vouchers={preview.vouchers}
+                      items={preview.cart.items}
+                      subtotal={paymentSummary.subtotal}
+                      shippingCost={paymentSummary.shippingCost}
+                      selectedVoucherId={selectedVoucherId}
+                      onVoucherChange={setSelectedVoucherId}
                     />
 
                     <CheckoutPaymentPanel
@@ -133,6 +146,9 @@ function CheckoutPage() {
                   <CheckoutSummaryPanel
                     totalQuantity={preview.cart.summary.totalQuantity}
                     subtotal={paymentSummary.subtotal}
+                    storeDiscountAmount={paymentSummary.storeDiscountAmount}
+                    voucherReferralAmount={paymentSummary.voucherReferralAmount}
+                    discountAmount={paymentSummary.discountAmount}
                     selectedShippingService={selectedShippingService}
                     totalPayment={paymentSummary.totalPayment}
                     hasSelectedAddressCoordinates={hasSelectedAddressCoordinates}

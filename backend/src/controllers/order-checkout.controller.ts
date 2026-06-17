@@ -58,6 +58,7 @@ export const createCheckoutOrder = async (req: Request, res: Response): Promise<
       shippingService: parsed.data.shippingService,
       shippingCost: parsed.data.shippingCost,
       paymentMethod: parsed.data.paymentMethod,
+      voucherId: parsed.data.voucherId,
       notes: parsed.data.notes,
     })
 

@@ -22,6 +22,7 @@ export const cancelOrder = async ({
         status: true,
         orderNumber: true,
         paymentProof: true,
+        voucherId: true,
         stockJournals: {
           where: {
             type: StockJournalType.ORDER,
@@ -79,6 +80,16 @@ export const cancelOrder = async ({
       notes: reason || 'Order cancelled, reserved stock restored',
     })
 
+    if (order.voucherId) {
+      await tx.voucher.update({
+        where: { id: order.voucherId },
+        data: {
+          used: false,
+          usedAt: null,
+        },
+      })
+    }
+
     return tx.order.update({
       where: { id: order.id },
       data: {
@@ -123,6 +134,7 @@ export const autoCancelExpiredManualTransferOrders = async () => {
           id: true,
           userId: true,
           orderNumber: true,
+          voucherId: true,
           stockJournals: {
             where: {
               type: StockJournalType.ORDER,
@@ -163,6 +175,16 @@ export const autoCancelExpiredManualTransferOrders = async () => {
         actorUserId: claimedOrder.userId,
         notes: cancelReason,
       })
+
+      if (claimedOrder.voucherId) {
+        await tx.voucher.update({
+          where: { id: claimedOrder.voucherId },
+          data: {
+            used: false,
+            usedAt: null,
+          },
+        })
+      }
 
       return claimedOrder
     })
