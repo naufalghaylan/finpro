@@ -490,6 +490,11 @@
   color: #dc2626;
 }
 
+.dialog-icon.success {
+  background: #ecfdf5;
+  color: #3f7f5b;
+}
+
 .dialog-icon svg {
   width: 26px;
   height: 26px;
@@ -2124,6 +2129,7 @@
 }
 
 .payment-cancel-panel,
+.payment-receipt-panel,
 .payment-cancel-note {
   display: grid;
   gap: 10px;
@@ -2133,6 +2139,8 @@
 }
 
 .payment-cancel-panel h3,
+.payment-receipt-panel h3,
+.payment-receipt-panel p,
 .payment-cancel-panel p,
 .payment-cancel-note span,
 .payment-cancel-note strong {
@@ -2144,7 +2152,13 @@
   font-size: 1rem;
 }
 
+.payment-receipt-panel h3 {
+  color: #2f6d4a;
+  font-size: 1rem;
+}
+
 .payment-cancel-panel p,
+.payment-receipt-panel p,
 .payment-cancel-panel label span,
 .payment-cancel-note span {
   color: var(--ink-soft);
@@ -2176,6 +2190,10 @@
 }
 
 .payment-cancel-button {
+  width: 100%;
+}
+
+.payment-receipt-button {
   width: 100%;
 }
 

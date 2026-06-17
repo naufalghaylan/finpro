@@ -9,6 +9,7 @@ export type OrderStatus =
   | 'CONFIRMED'
   | 'CANCELLED'
 export type OrderStatusGroup = 'ongoing' | 'completed' | 'cancelled'
+export type MutationStatus = 'PENDING' | 'APPROVED' | 'IN_TRANSIT' | 'COMPLETED' | 'REJECTED'
 
 export type CheckoutAddress = {
   id: number
@@ -153,6 +154,37 @@ export type AdminOrder = CheckoutOrder & {
     name: string
     email: string
     phone: string | null
+  }
+  stockMutations: OrderFulfillmentMutation[]
+}
+
+export type OrderFulfillmentMutation = {
+  id: number
+  orderId: number | null
+  sourceStoreId: number
+  destinationStoreId: number
+  productId: number
+  quantity: number
+  status: MutationStatus
+  notes: string | null
+  approvedAt: string | null
+  rejectedAt: string | null
+  sentAt: string | null
+  receivedAt: string | null
+  createdAt: string
+  updatedAt: string
+  sourceStore: {
+    id: number
+    name: string
+  }
+  destinationStore: {
+    id: number
+    name: string
+  }
+  product: {
+    id: number
+    name: string
+    slug: string
   }
 }
 

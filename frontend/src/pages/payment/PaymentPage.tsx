@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import {
   cancelOrder,
+  confirmOrderReceived,
   createMidtransPayment,
   getOrderDetails,
   syncMidtransPaymentStatus,
@@ -17,6 +18,7 @@ import { Navbar } from '../../components/common/Navbar'
 import { useToast } from '../../components/common/toastContext'
 import { HomeFooter } from '../../components/home/HomeFooter'
 import { CancelOrderDialog } from '../../components/orders/CancelOrderDialog'
+import { ConfirmReceiptDialog } from '../../components/orders/ConfirmReceiptDialog'
 import { ManualPaymentSection, type ManualPaymentGroup } from '../../components/orders/ManualPaymentSection'
 import { OrderProductsPanel } from '../../components/orders/OrderProductsPanel'
 import { OrderTrackingTimeline } from '../../components/orders/OrderTrackingTimeline'
@@ -130,6 +132,7 @@ function PaymentPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isUploading, setIsUploading] = useState(false)
   const [isCancellingOrder, setIsCancellingOrder] = useState(false)
+  const [isConfirmingReceipt, setIsConfirmingReceipt] = useState(false)
   const [isPayingWithMidtrans, setIsPayingWithMidtrans] = useState(false)
   const [isSyncingWithMidtrans, setIsSyncingWithMidtrans] = useState(false)
   const [isMidtransPaymentOpen, setIsMidtransPaymentOpen] = useState(false)
@@ -138,6 +141,7 @@ function PaymentPage() {
   const [hasCopiedManualDestination, setHasCopiedManualDestination] = useState(false)
   const [isPaymentProofExpanded, setIsPaymentProofExpanded] = useState(false)
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
+  const [isConfirmReceiptDialogOpen, setIsConfirmReceiptDialogOpen] = useState(false)
   const [cancelReason, setCancelReason] = useState('')
   const [error, setError] = useState<string | null>(null)
   const copyResetTimeoutRef = useRef<number | null>(null)
@@ -393,6 +397,7 @@ function PaymentPage() {
     !isCancellingOrder &&
     !isPayingWithMidtrans &&
     !isSyncingWithMidtrans
+  const canConfirmReceipt = order?.status === 'SHIPPED'
 
   const handleCopyPaymentDestination = async (destinationValue: string) => {
     try {
@@ -495,6 +500,22 @@ function PaymentPage() {
     }
   }
 
+  const handleConfirmReceipt = async () => {
+    if (!order || order.status !== 'SHIPPED') return
+
+    setIsConfirmingReceipt(true)
+    try {
+      const updatedOrder = await confirmOrderReceived(order.id)
+      setOrder(updatedOrder)
+      setIsConfirmReceiptDialogOpen(false)
+      showToast('Pesanan berhasil dikonfirmasi selesai', 'success')
+    } catch (confirmError) {
+      showToast(getErrorMessage(confirmError), 'error')
+    } finally {
+      setIsConfirmingReceipt(false)
+    }
+  }
+
   const handleRetryMidtransEmbed = () => {
     midtransEmbedOrderRef.current = null
     setMidtransEmbedRetryKey((current) => current + 1)
@@ -587,7 +608,10 @@ function PaymentPage() {
                   isManualTransfer={Boolean(isManualTransfer)}
                   canCancel={Boolean(canCancelOrder)}
                   isCancelling={isCancellingOrder}
+                  canConfirmReceipt={Boolean(canConfirmReceipt)}
+                  isConfirmingReceipt={isConfirmingReceipt}
                   onCancelClick={() => setIsCancelDialogOpen(true)}
+                  onConfirmReceiptClick={() => setIsConfirmReceiptDialogOpen(true)}
                 />
               </div>
             </>
@@ -603,6 +627,14 @@ function PaymentPage() {
         onReasonChange={setCancelReason}
         onClose={() => setIsCancelDialogOpen(false)}
         onConfirm={() => void handleCancelOrder()}
+      />
+
+      <ConfirmReceiptDialog
+        isOpen={isConfirmReceiptDialogOpen}
+        orderNumber={order?.orderNumber}
+        isSubmitting={isConfirmingReceipt}
+        onClose={() => setIsConfirmReceiptDialogOpen(false)}
+        onConfirm={() => void handleConfirmReceipt()}
       />
 
       <HomeFooter sections={footerSections} brandName={BRAND.name} />
