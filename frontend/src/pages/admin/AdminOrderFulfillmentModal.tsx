@@ -131,7 +131,7 @@ export default function AdminOrderFulfillmentModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
+    <div className="fixed left-0 right-0 bottom-0 top-[72px] z-50 flex items-center justify-center bg-black/40 px-4 py-6">
       <div className="w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl border border-admin-line-soft bg-admin-surface shadow-2xl">
         <div className="flex items-start justify-between gap-4 px-6 py-5 border-b border-admin-line-soft">
           <div>

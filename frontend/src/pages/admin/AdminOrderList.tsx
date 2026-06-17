@@ -1,4 +1,5 @@
-import { Ban, ChevronLeft, ChevronRight, ClipboardList, Loader2, PackageCheck, Search, Send, Store as StoreIcon } from 'lucide-react'
+import { useState } from 'react'
+import { ChevronLeft, ChevronRight, ClipboardList, Eye, Loader2, Search, Store as StoreIcon } from 'lucide-react'
 import { formatCurrency, formatDateTime, getOrderItemQuantity, orderStatusDisplay } from '../../components/orders/orderDisplay'
 import type { AdminOrder, OrderStatus } from '../../types/order'
 import AdminOrderFulfillmentModal from './AdminOrderFulfillmentModal'
@@ -6,6 +7,7 @@ import { useAdminOrderList } from '../../hooks/admin/useAdminOrderList'
 import { AdminPaymentReviewModal } from '../../components/admin/orders/AdminPaymentReviewModal'
 import { AdminCancelOrderModal } from '../../components/admin/orders/AdminCancelOrderModal'
 import { AdminShipOrderModal } from '../../components/admin/orders/AdminShipOrderModal'
+import { AdminOrderDetailView } from '../../components/admin/orders/AdminOrderDetailView'
 
 const statusOptions: { value: OrderStatus | ''; label: string }[] = [
   { value: '', label: 'Semua Status' },
@@ -31,13 +33,11 @@ const paymentMethodLabel: Record<AdminOrder['paymentMethod'], string> = {
   PAYMENT_GATEWAY: 'Payment Gateway',
 }
 
-const canAdminCancelOrder = (order: AdminOrder) =>
-  !['SHIPPED', 'CONFIRMED', 'CANCELLED'].includes(order.status)
-
 const hasActiveFulfillment = (order: AdminOrder) =>
   order.stockMutations.some((mutation) => ['PENDING', 'IN_TRANSIT'].includes(mutation.status))
 
 export default function AdminOrderList({ storeId }: { storeId?: number }) {
+  const [detailOrder, setDetailOrder] = useState<AdminOrder | null>(null)
   const {
     orders,
     stores,
@@ -74,9 +74,33 @@ export default function AdminOrderList({ storeId }: { storeId?: number }) {
     closeShipDialog,
     fetchOrders,
   } = useAdminOrderList(storeId)
+  const activeDetailOrder = detailOrder
+    ? orders.find((order) => order.id === detailOrder.id) ?? detailOrder
+    : null
 
   return (
     <div className="font-admin">
+      {activeDetailOrder ? (
+        <AdminOrderDetailView
+          order={activeDetailOrder}
+          onBack={() => setDetailOrder(null)}
+          onReviewPayment={() => {
+            setSelectedOrder(activeDetailOrder)
+            setPendingAction(null)
+          }}
+          onCancelOrder={() => {
+            setCancelOrderTarget(activeDetailOrder)
+            setCancelReason('')
+          }}
+          onManageFulfillment={() => {
+            setFulfillmentOrder(activeDetailOrder)
+          }}
+          onShipOrder={() => {
+            setShipOrderTarget(activeDetailOrder)
+          }}
+        />
+      ) : (
+        <>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div>
           <h3 className="text-lg font-bold text-admin-ink m-0">
@@ -182,14 +206,6 @@ export default function AdminOrderList({ storeId }: { storeId?: number }) {
                 {orders.map((order) => {
                   const statusMeta = orderStatusDisplay[order.status]
                   const StatusIcon = statusMeta.Icon
-                  const canReviewPayment =
-                    order.paymentMethod === 'MANUAL_TRANSFER' &&
-                    order.status === 'WAITING_CONFIRMATION' &&
-                    Boolean(order.paymentProof)
-                  const canCancel = canAdminCancelOrder(order)
-                  const canManageFulfillment = order.status === 'PROCESSING'
-                  const fulfillmentInProgress = hasActiveFulfillment(order)
-                  const canShowActions = canReviewPayment || canManageFulfillment || canCancel
 
                   return (
                     <tr key={order.id} className="admin-table-row border-b border-admin-line-soft/50 last:border-b-0">
@@ -229,68 +245,16 @@ export default function AdminOrderList({ storeId }: { storeId?: number }) {
                         {formatCurrency(order.totalAmount)}
                       </td>
                       <td className="px-5 py-4 text-right">
-                        {canShowActions ? (
-                          <div className="flex items-center justify-end gap-2">
-                            {canReviewPayment && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setSelectedOrder(order)
-                                  setPendingAction(null)
-                                }}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold
-                                           text-admin-accent-strong bg-admin-accent-soft border-none cursor-pointer
-                                           hover:bg-admin-accent/15 transition-all duration-150"
-                              >
-                                Review
-                                <ChevronRight className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                            {canManageFulfillment && (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() => setFulfillmentOrder(order)}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold
-                                             text-admin-blue bg-admin-blue-soft border-none cursor-pointer
-                                             hover:bg-admin-blue/15 transition-all duration-150"
-                                >
-                                  <PackageCheck className="w-3.5 h-3.5" />
-                                  Fulfillment
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setShipOrderTarget(order)}
-                                  disabled={fulfillmentInProgress}
-                                  title={fulfillmentInProgress ? 'Selesaikan fulfillment aktif sebelum kirim pesanan' : undefined}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold
-                                             text-white bg-admin-green border-none cursor-pointer
-                                             hover:brightness-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
-                                >
-                                  <Send className="w-3.5 h-3.5" />
-                                  Kirim
-                                </button>
-                              </>
-                            )}
-                            {canCancel && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setCancelOrderTarget(order)
-                                  setCancelReason('')
-                                }}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold
-                                           text-admin-red bg-admin-red-soft border-none cursor-pointer
-                                           hover:bg-admin-red/15 transition-all duration-150"
-                              >
-                                <Ban className="w-3.5 h-3.5" />
-                                Batalkan
-                              </button>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-xs text-admin-ink-muted">-</span>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => setDetailOrder(order)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold
+                                     text-admin-accent-strong bg-admin-accent-soft border-none cursor-pointer
+                                     hover:bg-admin-accent/15 transition-all duration-150"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          Detail
+                        </button>
                       </td>
                     </tr>
                   )
@@ -328,6 +292,8 @@ export default function AdminOrderList({ storeId }: { storeId?: number }) {
           </div>
         )}
       </div>
+        </>
+      )}
 
       {selectedOrder && (
         <AdminPaymentReviewModal
