@@ -72,7 +72,7 @@ export function useCheckout() {
     selectedAddress.longitude !== undefined
   const isCartEmpty = (preview?.cart.items.length ?? 0) === 0
   const selectedVoucher = useMemo(
-    () => preview?.vouchers.find((voucher) => voucher.id === selectedVoucherId) ?? null,
+    () => (preview?.vouchers ?? []).find((voucher) => voucher.id === selectedVoucherId) ?? null,
     [preview?.vouchers, selectedVoucherId],
   )
 
@@ -148,6 +148,7 @@ export function useCheckout() {
       
       try {
         const newCourierServices: Record<string, ShippingCostResult[]> = {}
+        const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
         
         for (const c of ALL_COURIERS) {
           try {
@@ -163,6 +164,7 @@ export function useCheckout() {
           } catch (err) {
             // Ignore individual courier errors (e.g. unsupported route)
           }
+          await delay(300)
         }
         
         setCourierServices(newCourierServices)
