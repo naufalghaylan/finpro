@@ -2,6 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../../api/axios';
 import { Eye, EyeOff, ChevronLeft } from 'lucide-react';
+import { z } from 'zod';
+
+const resetPasswordSchema = z.object({
+  newPassword: z.string().min(6, 'Password minimal harus 6 karakter'),
+  confirmPassword: z.string().min(1, 'Konfirmasi password tidak boleh kosong'),
+}).refine(data => data.newPassword === data.confirmPassword, {
+  message: 'Password baru dan konfirmasi password tidak cocok',
+  path: ['confirmPassword'],
+});
+
+type ResetErrors = Partial<Record<'newPassword' | 'confirmPassword', string>>;
 
 export default function ResetPasswordPage() {
   const [newPassword, setNewPassword] = useState('');
@@ -9,6 +20,7 @@ export default function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
+  const [formErrors, setFormErrors] = useState<ResetErrors>({});
   const [success, setSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -26,14 +38,15 @@ export default function ResetPasswordPage() {
     e.preventDefault();
     setError('');
     setSuccess('');
-    
-    if (newPassword !== confirmPassword) {
-      setError('Password baru dan konfirmasi password tidak cocok.');
-      return;
-    }
-    
-    if (newPassword.length < 6) {
-      setError('Password minimal harus 6 karakter.');
+    setFormErrors({});
+
+    const result = resetPasswordSchema.safeParse({ newPassword, confirmPassword });
+    if (!result.success) {
+      const errors: ResetErrors = {};
+      result.error.issues.forEach((issue: z.ZodIssue) => {
+        if (issue.path[0]) errors[issue.path[0] as keyof ResetErrors] = issue.message;
+      });
+      setFormErrors(errors);
       return;
     }
 
@@ -91,50 +104,56 @@ export default function ResetPasswordPage() {
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <label htmlFor="newPassword" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--ink)' }}>Password Baru</label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    id="newPassword"
-                    type={showPassword ? "text" : "password"}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    style={{ width: '100%', borderRadius: '14px', border: '1px solid var(--line)', padding: '14px 48px 14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
-                    placeholder="Minimal 6 karakter"
-                    required
-                    disabled={!token}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-                    aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
-                  >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
-                </div>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      id="newPassword"
+                      type={showPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => {
+                        setNewPassword(e.target.value);
+                        if (formErrors.newPassword) setFormErrors(prev => ({ ...prev, newPassword: '' }));
+                      }}
+                      style={{ width: '100%', borderRadius: '14px', border: formErrors.newPassword ? '1px solid #dc2626' : '1px solid var(--line)', padding: '14px 48px 14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
+                      placeholder="Minimal 6 karakter"
+                      disabled={!token}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                      aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                  {formErrors.newPassword && <span style={{ color: '#dc2626', fontSize: '0.8rem' }}>{formErrors.newPassword}</span>}
                 </div>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <label htmlFor="confirmPassword" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--ink)' }}>Konfirmasi Password Baru</label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    style={{ width: '100%', borderRadius: '14px', border: '1px solid var(--line)', padding: '14px 48px 14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
-                    placeholder="Masukkan ulang password baru"
-                    required
-                    disabled={!token}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-                    aria-label={showConfirmPassword ? "Sembunyikan password" : "Tampilkan password"}
-                  >
-                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
-                </div>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        if (formErrors.confirmPassword) setFormErrors(prev => ({ ...prev, confirmPassword: '' }));
+                      }}
+                      style={{ width: '100%', borderRadius: '14px', border: formErrors.confirmPassword ? '1px solid #dc2626' : '1px solid var(--line)', padding: '14px 48px 14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
+                      placeholder="Masukkan ulang password baru"
+                      disabled={!token}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                      aria-label={showConfirmPassword ? "Sembunyikan password" : "Tampilkan password"}
+                    >
+                      {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                  {formErrors.confirmPassword && <span style={{ color: '#dc2626', fontSize: '0.8rem' }}>{formErrors.confirmPassword}</span>}
                 </div>
                 
                 <button 

@@ -3,12 +3,37 @@ import { useProfileStore } from '../../store/profileStore'
 import { useAuthStore } from '../../store/authStore'
 import api from '../../api/axios'
 import { Eye, EyeOff } from 'lucide-react'
+import { z } from 'zod'
+
+const profileSchema = z.object({
+  name: z.string().min(2, 'Nama lengkap minimal 2 karakter'),
+  phone: z.string().optional().refine(val => !val || /^[0-9]{10,15}$/.test(val), {
+    message: 'Nomor telepon harus 10-15 angka'
+  }),
+  newPassword: z.string().optional(),
+  currentPassword: z.string().optional(),
+}).refine(data => {
+  if (data.newPassword && !data.currentPassword) return false;
+  return true;
+}, {
+  message: 'Password saat ini harus diisi jika ingin mengubah password',
+  path: ['currentPassword'],
+}).refine(data => {
+  if (data.newPassword && data.newPassword.length < 6) return false;
+  return true;
+}, {
+  message: 'Password baru minimal 6 karakter',
+  path: ['newPassword'],
+});
+
+type ProfileErrors = Partial<Record<'name' | 'phone' | 'newPassword' | 'currentPassword', string>>;
 
 export const ProfileForm = () => {
   const { profile, updateProfile, isUpdating, error } = useProfileStore()
   const { checkAuth, logout } = useAuthStore()
   const [successMsg, setSuccessMsg] = useState('')
   const [localError, setLocalError] = useState('')
+  const [formErrors, setFormErrors] = useState<ProfileErrors>({})
   const [resetMsg, setResetMsg] = useState('')
   const [isResetting, setIsResetting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -61,15 +86,22 @@ export const ProfileForm = () => {
     e.preventDefault()
     setSuccessMsg('')
     setLocalError('')
+    setFormErrors({})
+
+    const result = profileSchema.safeParse(formData)
+    if (!result.success) {
+      const errors: ProfileErrors = {}
+      result.error.issues.forEach((issue: z.ZodIssue) => {
+        if (issue.path[0]) errors[issue.path[0] as keyof ProfileErrors] = issue.message
+      })
+      setFormErrors(errors)
+      return
+    }
 
     const data = new FormData()
     if (formData.name !== profile?.name) data.append('name', formData.name)
     if (formData.phone !== profile?.phone) data.append('phone', formData.phone)
     if (formData.newPassword) {
-      if (!formData.currentPassword) {
-        setLocalError('Password saat ini harus diisi jika ingin mengubah password.')
-        return
-      }
       data.append('currentPassword', formData.currentPassword)
       data.append('newPassword', formData.newPassword)
     }
@@ -175,10 +207,13 @@ export const ProfileForm = () => {
             type="text" 
             name="name" 
             value={formData.name} 
-            onChange={handleChange} 
-            style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--surface)' }} 
-            required 
+            onChange={e => {
+              handleChange(e)
+              if (formErrors.name) setFormErrors(prev => ({ ...prev, name: '' }))
+            }}
+            style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: formErrors.name ? '1px solid #dc2626' : '1px solid var(--line)', background: 'var(--surface)' }} 
           />
+          {formErrors.name && <span style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>{formErrors.name}</span>}
         </div>
 
         <div className="input-group">
@@ -187,9 +222,13 @@ export const ProfileForm = () => {
             type="tel" 
             name="phone" 
             value={formData.phone} 
-            onChange={handleChange} 
-            style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--surface)' }} 
+            onChange={e => {
+              handleChange(e)
+              if (formErrors.phone) setFormErrors(prev => ({ ...prev, phone: '' }))
+            }}
+            style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: formErrors.phone ? '1px solid #dc2626' : '1px solid var(--line)', background: 'var(--surface)' }} 
           />
+          {formErrors.phone && <span style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>{formErrors.phone}</span>}
         </div>
         
         <div style={{ height: '1px', background: 'var(--line)', margin: '10px 0' }}></div>
@@ -203,9 +242,12 @@ export const ProfileForm = () => {
               type={showCurrentPassword ? "text" : "password"} 
               name="currentPassword" 
               value={formData.currentPassword} 
-              onChange={handleChange} 
+              onChange={e => {
+                handleChange(e)
+                if (formErrors.currentPassword) setFormErrors(prev => ({ ...prev, currentPassword: '' }))
+              }}
               placeholder="Masukkan jika ingin mengubah password"
-              style={{ width: '100%', padding: '12px 48px 12px 16px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--surface)' }} 
+              style={{ width: '100%', padding: '12px 48px 12px 16px', borderRadius: '12px', border: formErrors.currentPassword ? '1px solid #dc2626' : '1px solid var(--line)', background: 'var(--surface)' }} 
             />
             <button
               type="button"
@@ -216,6 +258,7 @@ export const ProfileForm = () => {
               {showCurrentPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
+          {formErrors.currentPassword && <span style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>{formErrors.currentPassword}</span>}
         </div>
 
         <div className="input-group">
@@ -225,9 +268,12 @@ export const ProfileForm = () => {
               type={showNewPassword ? "text" : "password"} 
               name="newPassword" 
               value={formData.newPassword} 
-              onChange={handleChange} 
+              onChange={e => {
+                handleChange(e)
+                if (formErrors.newPassword) setFormErrors(prev => ({ ...prev, newPassword: '' }))
+              }}
               placeholder="Minimal 6 karakter"
-              style={{ width: '100%', padding: '12px 48px 12px 16px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--surface)' }} 
+              style={{ width: '100%', padding: '12px 48px 12px 16px', borderRadius: '12px', border: formErrors.newPassword ? '1px solid #dc2626' : '1px solid var(--line)', background: 'var(--surface)' }} 
             />
             <button
               type="button"
@@ -238,6 +284,7 @@ export const ProfileForm = () => {
               {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
+          {formErrors.newPassword && <span style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>{formErrors.newPassword}</span>}
         </div>
 
         <div style={{ fontSize: '0.9rem', color: 'var(--ink-soft)' }}>

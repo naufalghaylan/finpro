@@ -3,6 +3,15 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import GoogleLoginButton from '../../components/auth/GoogleLoginButton';
 import { ChevronLeft } from 'lucide-react';
+import { z } from 'zod';
+
+const registerSchema = z.object({
+  name: z.string().min(2, 'Nama lengkap minimal 2 karakter'),
+  username: z.string().min(3, 'Username minimal 3 karakter').regex(/^[a-zA-Z0-9_]+$/, 'Username hanya boleh mengandung huruf, angka, dan underscore'),
+  email: z.string().min(1, 'Email tidak boleh kosong').email('Format email tidak valid'),
+});
+
+type RegisterErrors = Partial<Record<keyof z.infer<typeof registerSchema>, string>>;
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -10,17 +19,28 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [error, setError] = useState('');
+  const [formErrors, setFormErrors] = useState<RegisterErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  
 
   const { register } = useAuthStore();
   const navigate = useNavigate();
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setFormErrors({});
+
+    const result = registerSchema.safeParse({ name, username, email });
+    if (!result.success) {
+      const errors: RegisterErrors = {};
+      result.error.issues.forEach((issue: z.ZodIssue) => {
+        if (issue.path[0]) errors[issue.path[0] as keyof RegisterErrors] = issue.message;
+      });
+      setFormErrors(errors);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await register({ name, username, email, role: 'CUSTOMER', referralCode: referralCode || undefined });
@@ -32,7 +52,6 @@ export default function RegisterPage() {
       setIsSubmitting(false);
     }
   };
-
 
   return (
     <div className="page">
@@ -82,11 +101,14 @@ export default function RegisterPage() {
                     id="name"
                     type="text"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    style={{ width: '100%', borderRadius: '14px', border: '1px solid var(--line)', padding: '14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      if (formErrors.name) setFormErrors(prev => ({ ...prev, name: '' }));
+                    }}
+                    style={{ width: '100%', borderRadius: '14px', border: formErrors.name ? '1px solid #dc2626' : '1px solid var(--line)', padding: '14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
                     placeholder="Masukkan nama lengkap"
-                    required
                   />
+                  {formErrors.name && <span style={{ color: '#dc2626', fontSize: '0.8rem' }}>{formErrors.name}</span>}
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -95,25 +117,30 @@ export default function RegisterPage() {
                     id="username"
                     type="text"
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    style={{ width: '100%', borderRadius: '14px', border: '1px solid var(--line)', padding: '14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
-                    placeholder="Minimal 3 karakter"
-                    required
-                    minLength={3}
+                    onChange={(e) => {
+                      setUsername(e.target.value);
+                      if (formErrors.username) setFormErrors(prev => ({ ...prev, username: '' }));
+                    }}
+                    style={{ width: '100%', borderRadius: '14px', border: formErrors.username ? '1px solid #dc2626' : '1px solid var(--line)', padding: '14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
+                    placeholder="Minimal 3 karakter, tanpa spasi"
                   />
+                  {formErrors.username && <span style={{ color: '#dc2626', fontSize: '0.8rem' }}>{formErrors.username}</span>}
                 </div>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <label htmlFor="email" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--ink)' }}>Email</label>
                   <input
                     id="email"
-                    type="email"
+                    type="text"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    style={{ width: '100%', borderRadius: '14px', border: '1px solid var(--line)', padding: '14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (formErrors.email) setFormErrors(prev => ({ ...prev, email: '' }));
+                    }}
+                    style={{ width: '100%', borderRadius: '14px', border: formErrors.email ? '1px solid #dc2626' : '1px solid var(--line)', padding: '14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
                     placeholder="Masukkan alamat email"
-                    required
                   />
+                  {formErrors.email && <span style={{ color: '#dc2626', fontSize: '0.8rem' }}>{formErrors.email}</span>}
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

@@ -2,7 +2,7 @@ import { TicketPercent, CheckCircle2 } from 'lucide-react'
 import type { CartItem } from '../../types/cart'
 import type { CheckoutVoucher } from '../../types/order'
 import { formatCurrency, formatDateTime } from '../../utils/format'
-import { getVoucherDiscountPreview, voucherSourceLabel } from './checkoutVoucher'
+import { getVoucherDiscountPreview } from './checkoutVoucher'
 
 type CheckoutVoucherPanelProps = {
   vouchers: CheckoutVoucher[]

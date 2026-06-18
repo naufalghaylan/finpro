@@ -3,7 +3,17 @@ import { useAddressStore } from '../../store/addressStore'
 import { searchDestinations } from '../../api/rajaongkir'
 import type { KomerceDestination } from '../../api/rajaongkir'
 import { MapPin, X, Target, Loader2, Search } from 'lucide-react'
+import { z } from 'zod'
 import type { UserAddress, CreateUserAddressDTO } from '../../types/address'
+
+const addressSchema = z.object({
+  recipientName: z.string().min(3, "Nama penerima minimal 3 karakter"),
+  phone: z.string().min(10, "Nomor telepon minimal 10 angka").max(15, "Nomor telepon maksimal 15 angka").regex(/^[0-9]+$/, "Nomor telepon hanya boleh berisi angka"),
+  cityId: z.string().min(1, "Kecamatan / Kota harus dipilih dari opsi pencarian"),
+  address: z.string().min(10, "Detail alamat minimal 10 karakter"),
+  latitude: z.number({ error: "Titik pin pengiriman (lokasi) wajib ditentukan" }),
+  longitude: z.number({ error: "Titik pin pengiriman (lokasi) wajib ditentukan" }),
+})
 
 interface AddressFormModalProps {
   isOpen: boolean
@@ -35,6 +45,7 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [loadingLocation, setLoadingLocation] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -76,6 +87,7 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
       setDestinations([])
       setShowSuggestions(false)
       setErrorMsg('')
+      setFormErrors({})
     }
   }, [isOpen, editData])
 
@@ -108,13 +120,14 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
     setSearchQuery(dest.label)
     setFormData(prev => ({
       ...prev,
-      cityId: dest.id.toString(), // destination_id
+      cityId: dest.id.toString(),
       city: dest.city_name,
       province: dest.province_name,
       district: dest.subdistrict_name || dest.district_name,
       postalCode: dest.zip_code
     }))
     setShowSuggestions(false)
+    setFormErrors(prev => ({...prev, cityId: ''}))
   }
 
   const handleGetLocation = () => {
@@ -131,6 +144,7 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
           latitude: position.coords.latitude,
           longitude: position.coords.longitude
         }))
+        setFormErrors(prev => ({...prev, latitude: '', longitude: ''}))
         setLoadingLocation(false)
       },
       (err) => {
@@ -145,9 +159,17 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrorMsg('')
+    setFormErrors({})
     
-    if (!formData.latitude || !formData.longitude) {
-      setErrorMsg('Mohon dapatkan koordinat lokasi untuk pengiriman akurat')
+    const result = addressSchema.safeParse(formData)
+    if (!result.success) {
+      const errors: Record<string, string> = {}
+      result.error.issues.forEach((issue: z.ZodIssue) => {
+        if (issue.path[0]) {
+          errors[issue.path[0].toString()] = issue.message
+        }
+      })
+      setFormErrors(errors)
       return
     }
 
@@ -159,7 +181,6 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
       }
       onClose()
     } catch (err: any) {
-      // Check for backend Zod validation errors
       const backendMessage = err.response?.data?.message;
       const validationErrors = err.response?.data?.errors;
       
@@ -228,26 +249,34 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
             <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <label style={{ fontSize: '0.9rem', fontWeight: 500 }}>Nama Penerima *</label>
               <input 
-                type="text" required
+                type="text"
                 value={formData.recipientName}
-                onChange={e => setFormData({...formData, recipientName: e.target.value})}
+                onChange={e => {
+                  setFormData({...formData, recipientName: e.target.value})
+                  if (formErrors.recipientName) setFormErrors({...formErrors, recipientName: ''})
+                }}
                 style={{
-                  padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--line)',
+                  padding: '12px 16px', borderRadius: '8px', border: formErrors.recipientName ? '1px solid #dc2626' : '1px solid var(--line)',
                   backgroundColor: 'transparent', width: '100%', outline: 'none'
                 }}
               />
+              {formErrors.recipientName && <span style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '-4px' }}>{formErrors.recipientName}</span>}
             </div>
             <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <label style={{ fontSize: '0.9rem', fontWeight: 500 }}>Nomor Telepon *</label>
               <input 
-                type="tel" required
+                type="tel"
                 value={formData.phone}
-                onChange={e => setFormData({...formData, phone: e.target.value})}
+                onChange={e => {
+                  setFormData({...formData, phone: e.target.value})
+                  if (formErrors.phone) setFormErrors({...formErrors, phone: ''})
+                }}
                 style={{
-                  padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--line)',
+                  padding: '12px 16px', borderRadius: '8px', border: formErrors.phone ? '1px solid #dc2626' : '1px solid var(--line)',
                   backgroundColor: 'transparent', width: '100%', outline: 'none'
                 }}
               />
+              {formErrors.phone && <span style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '-4px' }}>{formErrors.phone}</span>}
             </div>
           </div>
 
@@ -257,14 +286,13 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
               <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-soft)' }} />
               <input 
                 type="text" 
-                required
                 value={searchQuery}
                 onChange={handleSearchChange}
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 placeholder="Ketik minimal 3 huruf..."
                 style={{
-                  padding: '12px 16px 12px 42px', borderRadius: '8px', border: '1px solid var(--line)',
+                  padding: '12px 16px 12px 42px', borderRadius: '8px', border: formErrors.cityId ? '1px solid #dc2626' : '1px solid var(--line)',
                   backgroundColor: 'transparent', width: '100%', outline: 'none'
                 }}
               />
@@ -301,6 +329,7 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
                 Pilih lokasi dari daftar yang muncul.
               </div>
             )}
+            {formErrors.cityId && <div style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '4px' }}>{formErrors.cityId}</div>}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
@@ -333,15 +362,19 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
           <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
             <label style={{ fontSize: '0.9rem', fontWeight: 500 }}>Detail Alamat *</label>
             <textarea 
-              required rows={3}
+              rows={3}
               value={formData.address}
-              onChange={e => setFormData({...formData, address: e.target.value})}
+              onChange={e => {
+                setFormData({...formData, address: e.target.value})
+                if (formErrors.address) setFormErrors({...formErrors, address: ''})
+              }}
               placeholder="Nama jalan, gedung, no. rumah..."
               style={{
-                padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--line)',
+                padding: '12px 16px', borderRadius: '8px', border: formErrors.address ? '1px solid #dc2626' : '1px solid var(--line)',
                 backgroundColor: 'transparent', width: '100%', outline: 'none', resize: 'vertical'
               }}
             />
+            {formErrors.address && <span style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '-4px' }}>{formErrors.address}</span>}
           </div>
 
           <div style={{ 
@@ -382,6 +415,11 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
             ) : (
               <div style={{ fontSize: '0.85rem', color: 'var(--accent-strong)' }}>
                 Belum ada titik koordinat yang dipilih.
+              </div>
+            )}
+            {formErrors.latitude && (
+              <div style={{ fontSize: '0.85rem', color: '#dc2626', marginTop: '8px' }}>
+                {formErrors.latitude}
               </div>
             )}
           </div>

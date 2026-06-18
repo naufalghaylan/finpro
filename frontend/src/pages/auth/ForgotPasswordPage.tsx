@@ -1,17 +1,31 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../api/axios';
+import { z } from 'zod';
+
+const forgotPasswordSchema = z.object({
+  email: z.string().min(1, 'Email tidak boleh kosong').email('Format email tidak valid'),
+});
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [success, setSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setEmailError('');
     setSuccess('');
+
+    const result = forgotPasswordSchema.safeParse({ email });
+    if (!result.success) {
+      setEmailError(result.error.issues[0]?.message || 'Email tidak valid');
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
@@ -58,13 +72,16 @@ export default function ForgotPasswordPage() {
                 <label htmlFor="email" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--ink)' }}>Alamat Email</label>
                 <input
                   id="email"
-                  type="email"
+                  type="text"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  style={{ width: '100%', borderRadius: '14px', border: '1px solid var(--line)', padding: '14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (emailError) setEmailError('');
+                  }}
+                  style={{ width: '100%', borderRadius: '14px', border: emailError ? '1px solid #dc2626' : '1px solid var(--line)', padding: '14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
                   placeholder="Masukkan alamat email Anda"
-                  required
                 />
+                {emailError && <span style={{ color: '#dc2626', fontSize: '0.8rem' }}>{emailError}</span>}
               </div>
               
               <button 
