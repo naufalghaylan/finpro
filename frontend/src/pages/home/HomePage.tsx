@@ -23,7 +23,7 @@ import { useAuthStore } from '../../store/authStore'
 import { useAddressStore } from '../../store/addressStore'
 import {
   ShoppingBag, Tag, MapPin, HelpCircle,
-  Carrot, Apple, Beef, Milk, Flame, ChefHat, LayoutGrid
+  Carrot, Apple, Beef, Milk, Flame, ChefHat, LayoutGrid, Loader2
 } from 'lucide-react'
 import type { HomepageStore, HomepageBanner, HomepageCategory, HomepageFooterSocial } from '../../types/home/homepage'
 import type { NavLink } from '../../types/home/home'
@@ -170,8 +170,9 @@ export default function HomePage() {
       />
       <main className="page-main">
         {loading ? (
-          <div className="shell" style={{ padding: '4rem 0', textAlign: 'center' }}>
-            <p>Memuat halaman utama...</p>
+          <div className="shell" style={{ padding: '8rem 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+            <Loader2 size={40} className="animate-spin" style={{ color: 'var(--accent)' }} />
+            <p style={{ color: 'var(--ink-soft)' }}>Memuat halaman utama...</p>
           </div>
         ) : (
           <>

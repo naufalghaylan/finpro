@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import { useProfileStore } from '../../store/profileStore'
+import { z } from 'zod'
+
+const emailSchema = z.object({
+  email: z.string().min(1, 'Email tidak boleh kosong').email('Format email tidak valid'),
+})
 
 export const EmailForm = () => {
   const { profile, updateEmail, reverifyEmail, isUpdating } = useProfileStore()
   const [email, setEmail] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
   const [localError, setLocalError] = useState('')
+  const [emailError, setEmailError] = useState('')
 
   useEffect(() => {
     if (profile) {
@@ -17,6 +23,13 @@ export const EmailForm = () => {
     e.preventDefault()
     setSuccessMsg('')
     setLocalError('')
+    setEmailError('')
+
+    const result = emailSchema.safeParse({ email })
+    if (!result.success) {
+      setEmailError(result.error.issues[0]?.message || 'Email tidak valid')
+      return
+    }
 
     if (email === profile?.email) {
       setLocalError('Email masih sama dengan email saat ini.')
@@ -83,12 +96,15 @@ export const EmailForm = () => {
         <div className="input-group">
           <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>Email</label>
           <input 
-            type="email" 
+            type="text" 
             value={email} 
-            onChange={(e) => setEmail(e.target.value)} 
-            style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--surface)' }} 
-            required 
+            onChange={(e) => {
+              setEmail(e.target.value)
+              if (emailError) setEmailError('')
+            }} 
+            style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: emailError ? '1px solid #dc2626' : '1px solid var(--line)', background: 'var(--surface)' }} 
           />
+          {emailError && <span style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>{emailError}</span>}
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>

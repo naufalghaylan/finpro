@@ -27,8 +27,28 @@ export default function ProfilePage() {
           </div>
 
           {isLoading ? (
-            <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--ink-soft)' }}>
-              Memuat profil...
+            <div className="profile-grid">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div className="animate-pulse" style={{ padding: '24px', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '18px' }}>
+                  <div style={{ height: '24px', background: 'var(--line)', borderRadius: '6px', width: '30%', marginBottom: '24px' }} />
+                  <div style={{ height: '40px', background: 'var(--surface-muted)', borderRadius: '8px', width: '100%', marginBottom: '16px' }} />
+                  <div style={{ height: '40px', background: 'var(--surface-muted)', borderRadius: '8px', width: '100%' }} />
+                </div>
+                <div className="animate-pulse" style={{ padding: '24px', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '18px' }}>
+                  <div style={{ height: '24px', background: 'var(--line)', borderRadius: '6px', width: '40%', marginBottom: '16px' }} />
+                  <div style={{ height: '80px', background: 'var(--surface-muted)', borderRadius: '8px', width: '100%' }} />
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div className="animate-pulse" style={{ padding: '24px', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '18px' }}>
+                  <div style={{ height: '24px', background: 'var(--line)', borderRadius: '6px', width: '35%', marginBottom: '24px' }} />
+                  <div style={{ height: '40px', background: 'var(--surface-muted)', borderRadius: '8px', width: '100%' }} />
+                </div>
+                <div className="animate-pulse" style={{ padding: '24px', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '18px' }}>
+                  <div style={{ height: '24px', background: 'var(--line)', borderRadius: '6px', width: '35%', marginBottom: '24px' }} />
+                  <div style={{ height: '120px', background: 'var(--surface-muted)', borderRadius: '8px', width: '100%' }} />
+                </div>
+              </div>
             </div>
           ) : (
             <div className="profile-grid">

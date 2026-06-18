@@ -4,6 +4,14 @@ import { useAuthStore } from '../../store/authStore';
 import GoogleLoginButton from '../../components/auth/GoogleLoginButton';
 import { Eye, EyeOff, ChevronLeft } from 'lucide-react';
 import { useToast } from '../../components/common/Toast';
+import { z } from 'zod';
+
+const loginSchema = z.object({
+  identifier: z.string().min(1, 'Email atau username tidak boleh kosong'),
+  password: z.string().min(1, 'Password tidak boleh kosong'),
+});
+
+type LoginErrors = Partial<Record<keyof z.infer<typeof loginSchema>, string>>;
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
@@ -11,6 +19,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
+  const [formErrors, setFormErrors] = useState<LoginErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuthStore();
   const navigate = useNavigate();
@@ -22,6 +31,18 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setFormErrors({});
+
+    const result = loginSchema.safeParse({ identifier, password });
+    if (!result.success) {
+      const errors: LoginErrors = {};
+      result.error.issues.forEach((issue: z.ZodIssue) => {
+        if (issue.path[0]) errors[issue.path[0] as keyof LoginErrors] = issue.message;
+      });
+      setFormErrors(errors);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await login({ emailOrUsername: identifier, password, rememberMe });
@@ -32,7 +53,7 @@ export default function LoginPage() {
         showToast('Akun belum diverifikasi. Silakan verifikasi ulang.', 'warning');
         navigate('/verify', { state: { email: identifier } });
       } else {
-        setError(error.response?.data?.message || 'Login failed. Please check your credentials.');
+        setError(error.response?.data?.message || 'Login gagal. Periksa kembali email/username dan password Anda.');
       }
     } finally {
       setIsSubmitting(false);
@@ -71,11 +92,14 @@ export default function LoginPage() {
                   id="identifier"
                   type="text"
                   value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  style={{ width: '100%', borderRadius: '14px', border: '1px solid var(--line)', padding: '14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
+                  onChange={(e) => {
+                    setIdentifier(e.target.value);
+                    if (formErrors.identifier) setFormErrors(prev => ({ ...prev, identifier: '' }));
+                  }}
+                  style={{ width: '100%', borderRadius: '14px', border: formErrors.identifier ? '1px solid #dc2626' : '1px solid var(--line)', padding: '14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
                   placeholder="Masukkan email atau username"
-                  required
                 />
+                {formErrors.identifier && <span style={{ color: '#dc2626', fontSize: '0.8rem' }}>{formErrors.identifier}</span>}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <label htmlFor="password" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--ink)' }}>Password</label>
@@ -84,10 +108,12 @@ export default function LoginPage() {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    style={{ width: '100%', borderRadius: '14px', border: '1px solid var(--line)', padding: '14px 48px 14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (formErrors.password) setFormErrors(prev => ({ ...prev, password: '' }));
+                    }}
+                    style={{ width: '100%', borderRadius: '14px', border: formErrors.password ? '1px solid #dc2626' : '1px solid var(--line)', padding: '14px 48px 14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
                     placeholder="Masukkan password"
-                    required
                   />
                   <button
                     type="button"
@@ -98,6 +124,7 @@ export default function LoginPage() {
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
+                {formErrors.password && <span style={{ color: '#dc2626', fontSize: '0.8rem' }}>{formErrors.password}</span>}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--ink)' }}>
                     <input 
