@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { Loader2 } from 'lucide-react'
 import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import { ToastProvider } from './components/common/Toast'
@@ -47,8 +48,9 @@ function App() {
 
   if (isLoading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100svh' }}>
-        <p>Loading...</p>
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100svh', gap: '16px' }}>
+        <Loader2 size={48} className="animate-spin" style={{ color: 'var(--accent)' }} />
+        <p style={{ color: 'var(--ink-soft)', fontWeight: 500 }}>Loading...</p>
       </div>
     )
   }
