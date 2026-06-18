@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useAddressStore } from '../../store/addressStore'
 import { searchDestinations } from '../../api/rajaongkir'
 import type { KomerceDestination } from '../../api/rajaongkir'
-import { MapPin, X, Target, Loader2, Search } from 'lucide-react'
+import { MapPin, X, LocateFixed, Loader2, Search } from 'lucide-react'
 import { z } from 'zod'
 import type { UserAddress, CreateUserAddressDTO } from '../../types/address'
 
@@ -388,22 +388,22 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
                   Titik Pin Pengiriman *
                 </h4>
                 <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--ink-soft)' }}>
-                  Diperlukan untuk memvalidasi jarak ke toko terdekat.
+                  Klik tombol disamping. Diperlukan untuk memvalidasi jarak ke toko terdekat.
                 </p>
               </div>
               <button 
                 type="button" 
                 onClick={handleGetLocation}
                 disabled={loadingLocation}
+                title="Gunakan Lokasi Saat Ini"
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '8px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                   backgroundColor: 'white', border: '1px solid var(--line)',
-                  padding: '8px 16px', borderRadius: '20px', cursor: 'pointer',
-                  fontSize: '0.9rem', fontWeight: 500, color: 'var(--ink)'
+                  width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer',
+                  color: 'var(--ink)', flexShrink: 0
                 }}
               >
-                {loadingLocation ? <Loader2 size={16} className="animate-spin" /> : <Target size={16} />}
-                Gunakan Lokasi Saat Ini
+                {loadingLocation ? <Loader2 size={18} className="animate-spin" /> : <LocateFixed size={18} />}
               </button>
             </div>
             
