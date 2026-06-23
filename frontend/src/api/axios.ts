@@ -51,8 +51,13 @@ api.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
         
+        // Prevent aggressive redirect to login if the request was merely checking auth status on page load
+        if (originalRequest.url?.includes('/auth/me')) {
+          return Promise.reject(refreshError);
+        }
+        
         // Log out user if refresh fails and they are not already on a public page
-        const publicPaths = ['/', '/home', '/catalog', '/search', '/login', '/register', '/forgot-password', '/reset-password'];
+        const publicPaths = ['/', '/home', '/catalog', '/search', '/login', '/register', '/forgot-password', '/reset-password', '/error'];
         const isPublicPath = publicPaths.includes(window.location.pathname) || window.location.pathname.startsWith('/verify') || window.location.pathname.startsWith('/products');
         
         if (!isPublicPath) {

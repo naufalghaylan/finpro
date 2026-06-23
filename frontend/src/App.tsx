@@ -28,6 +28,7 @@ import AdminStoreAdminList from './pages/admin/AdminStoreAdminList'
 import AdminStockList from './pages/admin/AdminStockList'
 import AdminStoreDetailPage from './pages/admin/AdminStoreDetailPage'
 import AdminOrderList from './pages/admin/AdminOrderList'
+import NotFoundPage from './pages/error/NotFoundPage'
 import './App.css'
 
 function OrderPaymentRedirect() {
@@ -93,6 +94,9 @@ function App() {
           <Route path="orders" element={<AdminOrderList />} />
           <Route path=":id" element={<AdminStoreDetailPage />} />
         </Route>
+
+        {/* Catch All Route for 404 */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </ToastProvider>
   )
