@@ -1,4 +1,5 @@
 
+
 import { HeroCarousel } from '../../components/home/HeroCarousel'
 import { HomeFooter } from '../../components/home/HomeFooter'
 import { Navbar } from '../../components/common/Navbar'
@@ -211,6 +212,7 @@ export default function HomePage() {
           stores={activeStores}
           activeStoreId={activeStore.id}
           onSelectStore={setSelectedStoreId}
+          error={apiError}
         />
         <section className="section help-section" id="help">
           <div className="shell help-card">
