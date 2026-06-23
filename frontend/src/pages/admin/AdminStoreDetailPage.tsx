@@ -185,7 +185,7 @@ export default function AdminStoreDetailPage() {
             <h3 className="m-0 truncate text-2xl font-bold text-admin-ink">{store.name}</h3>
             <p className="m-0 mt-2 flex max-w-3xl items-start gap-2 text-sm leading-6 text-admin-ink-muted">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-admin-accent-strong" />
-              <span className="break-words">{store.address}, {store.city}, {store.province}</span>
+              <span className="wrap-break-word">{store.address}, {store.city}, {store.province}</span>
             </p>
           </div>
 
