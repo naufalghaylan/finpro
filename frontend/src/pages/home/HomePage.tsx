@@ -164,27 +164,27 @@ export default function HomePage() {
 
 
   return (
-    <div className="page">
+    <div className="min-h-[100svh] flex flex-col relative overflow-clip before:content-[''] before:fixed before:inset-0 before:bg-[radial-gradient(circle_at_12%_18%,rgba(241,184,132,0.22),transparent_45%),radial-gradient(circle_at_80%_8%,rgba(95,149,123,0.18),transparent_48%),radial-gradient(circle_at_92%_75%,rgba(232,107,79,0.18),transparent_48%)] before:pointer-events-none before:-z-10 bg-[var(--bg)]">
       <Navbar
         brandName={BRAND.name}
         links={activeNavLinks}
       />
-      <main className="page-main">
+      <main className="flex flex-col gap-3 flex-1">
         {loading ? (
-          <div className="shell" style={{ padding: '8rem 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-            <Loader2 size={40} className="animate-spin" style={{ color: 'var(--accent)' }} />
-            <p style={{ color: 'var(--ink-soft)', fontWeight: 500 }}>Loading...</p>
+          <div className="w-full max-w-[1200px] mx-auto px-[clamp(16px,4vw,48px)] py-32 flex flex-col items-center gap-4">
+            <Loader2 size={40} className="animate-spin text-[var(--accent)]" />
+            <p className="text-[var(--ink-soft)] font-medium">Loading...</p>
           </div>
         ) : (
           <>
             <HeroCarousel slides={activeBanners} storeName={activeStore.name} />
-            <section className="category-strip">
-              <div className="shell">
-                <div className="category-row">
+            <section className="pb-[18px]">
+              <div className="w-full max-w-[1200px] mx-auto px-[clamp(16px,4vw,48px)]">
+                <div className="flex flex-wrap gap-2.5">
                   {activeNavLinks.map((link: NavLink) => (
-                    <span key={link.id} className="category-chip" style={{ display: 'flex', alignItems: 'center' }}>
+                    <span key={link.id} className="flex items-center px-[14px] py-[8px] rounded-full border border-[var(--line)] bg-[var(--surface)] font-medium text-sm transition-colors hover:bg-[var(--surface-muted)] cursor-pointer">
                       {link.icon ? (
-                        <img src={link.icon} alt="" style={{width: 18, height: 18, marginRight: 8, borderRadius: '50%'}} />
+                        <img src={link.icon} alt="" className="w-[18px] h-[18px] mr-2 rounded-full" />
                       ) : (
                         getCategoryIcon(link.label)
                       )}
@@ -214,23 +214,23 @@ export default function HomePage() {
           onSelectStore={setSelectedStoreId}
           error={apiError}
         />
-        <section className="section help-section" id="help">
-          <div className="shell help-card">
-            <div className="help-copy">
-              <p className="section-kicker">Butuh bantuan</p>
-              <h2 className="section-title">
+        <section className="py-7" id="help">
+          <div className="w-full max-w-[1200px] mx-auto px-[clamp(16px,4vw,48px)] flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-7 rounded-[22px] bg-[var(--accent-cool)] text-white shadow-[var(--shadow-soft)]">
+            <div className="flex flex-col gap-2">
+              <p className="m-0 text-white uppercase tracking-[0.12em] text-xs font-semibold">Butuh bantuan</p>
+              <h2 className="m-0 font-[family-name:var(--font-display)] text-[clamp(1.6rem,2.4vw,2.2rem)] text-white leading-tight">
                 Tim customer care siap bantu pilihan belanja kamu.
               </h2>
-              <p className="section-body">
+              <p className="m-0 text-white max-w-[520px]">
                 Dapatkan saran menu harian, info stok, dan rekomendasi store
                 alternatif dengan cepat.
               </p>
             </div>
-            <div className="help-actions">
-              <button type="button" className="button primary">
+            <div className="flex gap-3 flex-wrap">
+              <button type="button" className="inline-flex items-center justify-center gap-2 rounded-full border border-transparent px-[18px] py-2.5 font-semibold cursor-pointer bg-white text-[var(--ink)] shadow-[var(--shadow-soft)] hover:-translate-y-[1px] hover:shadow-[var(--shadow-strong)] transition-all">
                 Hubungi kami
               </button>
-              <button type="button" className="button ghost">
+              <button type="button" className="inline-flex items-center justify-center gap-2 rounded-full border border-white/40 bg-transparent px-[18px] py-2.5 font-semibold cursor-pointer text-white transition-all hover:-translate-y-[1px] hover:shadow-[var(--shadow-strong)] hover:border-transparent">
                 Lihat pusat bantuan
               </button>
             </div>

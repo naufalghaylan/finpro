@@ -13,88 +13,52 @@ export const AddressSelectorModal = ({ isOpen, onClose, onSelectAddress }: Addre
   if (!isOpen) return null
 
   return (
-    <div className="modal-overlay" style={{
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: 'rgba(31, 42, 34, 0.4)',
-      backdropFilter: 'blur(4px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      zIndex: 1000, padding: '20px'
-    }}>
-      <div className="modal-content" style={{
-        backgroundColor: 'var(--surface)',
-        borderRadius: '24px',
-        width: '100%',
-        maxWidth: '500px',
-        maxHeight: '90vh',
-        display: 'flex', flexDirection: 'column',
-        boxShadow: 'var(--shadow-strong)',
-        animation: 'fadeUp 0.3s ease-out forwards'
-      }}>
-        <div style={{
-          padding: '24px 32px',
-          borderBottom: '1px solid var(--line)',
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        }}>
-          <h2 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--ink)' }}>
+    <div className="fixed inset-0 bg-[#1f2a22]/40 backdrop-blur-sm flex items-center justify-center z-[1000] p-5">
+      <div className="bg-[var(--surface)] rounded-3xl w-full max-w-[500px] max-h-[90vh] flex flex-col shadow-[var(--shadow-strong)] animate-[fadeUp_0.3s_ease-out_forwards]">
+        <div className="px-8 py-6 border-b border-[var(--line)] flex justify-between items-center">
+          <h2 className="m-0 text-xl text-[var(--ink)]">
             Pilih Lokasi Pengiriman
           </h2>
-          <button onClick={onClose} style={{ 
-            background: 'none', border: 'none', cursor: 'pointer', 
-            color: 'var(--ink-soft)', padding: '8px', borderRadius: '50%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}
-          onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-muted)'}
-          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+          <button 
+            onClick={onClose} 
+            className="bg-transparent border-none cursor-pointer text-[var(--ink-soft)] p-2 rounded-full flex items-center justify-center hover:bg-[var(--surface-muted)] transition-colors"
           >
             <X size={20} />
           </button>
         </div>
 
-        <div style={{ padding: '24px 32px', overflowY: 'auto' }}>
+        <div className="px-8 py-6 overflow-y-auto">
           <div 
             onClick={() => {
               onSelectAddress(null)
               onClose()
             }}
-            style={{
-              padding: '16px', borderRadius: '12px', border: '1px solid var(--line)',
-              backgroundColor: selectedAddressId === null ? 'var(--accent-soft)' : 'transparent',
-              borderColor: selectedAddressId === null ? 'var(--accent-strong)' : 'var(--line)',
-              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px',
-              marginBottom: '24px', transition: 'all 0.2s ease'
-            }}
-            onMouseOver={(e) => {
-              if (selectedAddressId !== null) e.currentTarget.style.backgroundColor = 'var(--surface-muted)'
-            }}
-            onMouseOut={(e) => {
-              if (selectedAddressId !== null) e.currentTarget.style.backgroundColor = 'transparent'
-            }}
+            className={`p-4 rounded-xl border cursor-pointer flex items-center gap-4 mb-6 transition-all ${
+              selectedAddressId === null 
+                ? 'bg-[var(--accent-soft)] border-[var(--accent-strong)]' 
+                : 'bg-transparent border-[var(--line)] hover:bg-[var(--surface-muted)]'
+            }`}
           >
-            <div style={{ 
-              width: '40px', height: '40px', borderRadius: '50%', 
-              backgroundColor: 'var(--surface-muted)', display: 'flex', 
-              alignItems: 'center', justifyContent: 'center' 
-            }}>
+            <div className="w-10 h-10 rounded-full bg-[var(--surface-muted)] flex items-center justify-center">
               <Search size={20} color="var(--ink)" />
             </div>
-            <div style={{ flex: 1 }}>
-              <h4 style={{ margin: '0 0 4px', fontSize: '1rem', color: 'var(--ink)' }}>Gunakan Lokasi Saat Ini</h4>
-              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--ink-soft)' }}>Deteksi lokasi dari perangkat Anda</p>
+            <div className="flex-1">
+              <h4 className="m-0 mb-1 text-base text-[var(--ink)]">Gunakan Lokasi Saat Ini</h4>
+              <p className="m-0 text-[0.85rem] text-[var(--ink-soft)]">Deteksi lokasi dari perangkat Anda</p>
             </div>
             {selectedAddressId === null && <Check size={20} color="var(--accent-strong)" />}
           </div>
 
-          <h3 style={{ fontSize: '1.05rem', margin: '0 0 16px', color: 'var(--ink)' }}>Alamat Tersimpan</h3>
+          <h3 className="text-[1.05rem] m-0 mb-4 text-[var(--ink)]">Alamat Tersimpan</h3>
           
           {addresses.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--ink-soft)', fontSize: '0.9rem' }}>
+            <div className="text-center py-8 text-[var(--ink-soft)] text-[0.9rem]">
               Anda belum menyimpan alamat. <br/> Tambahkan alamat di halaman Profil.
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="flex flex-col gap-3">
               {addresses.map(address => {
                 const isSelected = selectedAddressId === address.id
-                // Fallback to auto select primary if nothing selected but we actually store null for "current location" so if user wants to use saved address they must select it.
                 return (
                   <div 
                     key={address.id}
@@ -102,43 +66,28 @@ export const AddressSelectorModal = ({ isOpen, onClose, onSelectAddress }: Addre
                       onSelectAddress(address.id)
                       onClose()
                     }}
-                    style={{
-                      padding: '16px', borderRadius: '12px',
-                      border: isSelected ? '1px solid var(--accent-strong)' : '1px solid var(--line)',
-                      backgroundColor: isSelected ? 'var(--accent-soft)' : 'transparent',
-                      cursor: 'pointer', display: 'flex', alignItems: 'flex-start', gap: '16px',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseOver={(e) => {
-                      if (!isSelected) e.currentTarget.style.backgroundColor = 'var(--surface-muted)'
-                    }}
-                    onMouseOut={(e) => {
-                      if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent'
-                    }}
+                    className={`p-4 rounded-xl border cursor-pointer flex items-start gap-4 transition-all ${
+                      isSelected 
+                        ? 'bg-[var(--accent-soft)] border-[var(--accent-strong)]' 
+                        : 'bg-transparent border-[var(--line)] hover:bg-[var(--surface-muted)]'
+                    }`}
                   >
-                    <div style={{ 
-                      width: '40px', height: '40px', borderRadius: '50%', flexShrink: 0,
-                      backgroundColor: 'var(--surface)', display: 'flex', 
-                      alignItems: 'center', justifyContent: 'center', border: '1px solid var(--line)'
-                    }}>
+                    <div className="w-10 h-10 rounded-full shrink-0 bg-[var(--surface)] flex items-center justify-center border border-[var(--line)]">
                       <MapPin size={20} color={isSelected ? "var(--accent-strong)" : "var(--ink-soft)"} />
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                        <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--ink)' }}>{address.recipientName}</h4>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="m-0 text-base text-[var(--ink)]">{address.recipientName}</h4>
                         {address.isPrimary && (
-                          <span style={{ 
-                            fontSize: '0.7rem', padding: '2px 6px', borderRadius: '4px', 
-                            backgroundColor: 'var(--ink)', color: 'white', fontWeight: 600 
-                          }}>Utama</span>
+                          <span className="text-[0.7rem] px-1.5 py-0.5 rounded bg-[var(--ink)] text-white font-semibold">Utama</span>
                         )}
                       </div>
-                      <p style={{ margin: '0 0 4px', fontSize: '0.85rem', color: 'var(--ink)' }}>{address.phone}</p>
-                      <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--ink-soft)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      <p className="m-0 mb-1 text-[0.85rem] text-[var(--ink)]">{address.phone}</p>
+                      <p className="m-0 text-[0.85rem] text-[var(--ink-soft)] line-clamp-2">
                         {address.address}, {address.city}, {address.province}
                       </p>
                     </div>
-                    {isSelected && <Check size={20} color="var(--accent-strong)" style={{ flexShrink: 0, marginTop: '10px' }} />}
+                    {isSelected && <Check size={20} color="var(--accent-strong)" className="shrink-0 mt-2.5" />}
                   </div>
                 )
               })}

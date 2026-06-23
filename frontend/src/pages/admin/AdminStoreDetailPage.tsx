@@ -138,7 +138,7 @@ export default function AdminStoreDetailPage() {
       </div>
 
       {/* Pill Tabs */}
-      <div className="flex gap-2 p-1.5 mb-8 rounded-2xl bg-admin-surface-2/70 w-fit">
+      <div className="flex flex-wrap gap-2 p-1.5 mb-8 rounded-2xl bg-admin-surface-2/70 w-full md:w-fit">
         {tabs.map(tab => {
           const isActive = activeTab === tab.key;
           const Icon = tab.icon;

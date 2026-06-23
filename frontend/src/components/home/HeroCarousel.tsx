@@ -25,65 +25,70 @@ export const HeroCarousel = ({ slides, storeName }: HeroCarouselProps) => {
   const activeSlide = slides[activeIndex] ?? slides[0]
 
   return (
-    <section className="hero" aria-label="Promo mingguan">
-      <div className="shell hero-grid">
-        <div className="hero-copy">
+    <section className="pt-10 md:pt-16 pb-6" aria-label="Promo mingguan">
+      <div className="w-full max-w-[1200px] mx-auto px-[clamp(16px,4vw,48px)] grid grid-cols-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-12 items-center">
+        <div className="flex flex-col gap-4">
           <span className="pill fade-in delay-1" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
             <Tag size={14} />
             {activeSlide.kicker}
           </span>
-          <h1 className="hero-title fade-in delay-2">{activeSlide.title}</h1>
-          <p className="hero-body fade-in delay-3">{activeSlide.description}</p>
-          <div className="hero-actions fade-in delay-4">
-            <button type="button" className="button primary">
+          <h1 className="m-0 font-[family-name:var(--font-display)] text-[clamp(2.6rem,4.4vw,4.4rem)] leading-[1.04] text-[var(--ink)] fade-in delay-2">{activeSlide.title}</h1>
+          <p className="m-0 text-[1.05rem] text-[var(--ink-soft)] max-w-[560px] fade-in delay-3">{activeSlide.description}</p>
+          <div className="flex flex-wrap gap-3 fade-in delay-4">
+            <button type="button" className="inline-flex items-center justify-center gap-2 rounded-full border border-transparent px-4.5 py-2.5 font-semibold cursor-pointer bg-[var(--accent)] text-white shadow-[var(--shadow-soft)] hover:-translate-y-[1px] hover:shadow-[var(--shadow-strong)] transition-all">
               {activeSlide.ctaLabel}
             </button>
-            <button type="button" className="button ghost">
+            <button type="button" className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-transparent px-4.5 py-2.5 font-semibold cursor-pointer text-[var(--ink)] transition-all hover:-translate-y-[1px] hover:shadow-[var(--shadow-strong)] hover:border-transparent">
               Lihat katalog
             </button>
           </div>
-          <div className="hero-note fade-in delay-5">
-            <span className="dot"></span>
+          <div className="flex items-center gap-2.5 text-[0.95rem] text-[var(--ink-soft)] fade-in delay-5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent)]"></span>
             <span>{activeSlide.note}</span>
           </div>
-          <div className="hero-highlight fade-in delay-6">
+          <div className="w-fit px-4 py-2.5 rounded-2xl border border-dashed border-[var(--line)] bg-[var(--surface)] font-semibold text-[0.88rem] text-[var(--accent-strong)] tracking-wide uppercase fade-in delay-6">
             {activeSlide.highlight}
           </div>
-          <div className="hero-dots" aria-label="Slide promo">
+          <div className="flex items-center gap-2 mt-2" aria-label="Slide promo">
             {slides.map((slide, index) => (
               <button
                 key={slide.id}
                 type="button"
-                className={`hero-dot ${index === activeIndex ? 'active' : ''}`}
+                className={`h-2.5 rounded-full border-none cursor-pointer transition-all duration-300 ease-in-out hover:bg-[var(--ink-soft)] ${index === activeIndex ? 'w-7 bg-[var(--accent)]' : 'w-2.5 bg-[var(--line)]'}`}
                 onClick={() => setActiveIndex(index)}
                 aria-label={`Slide ${index + 1}`}
               />
             ))}
           </div>
         </div>
-          <div className="hero-visual">
-          <div className="hero-orb orb-1"></div>
-          <div className="hero-orb orb-2"></div>
-          <div className="hero-badge" style={{ top: '1rem', right: '1rem', left: 'auto', backgroundColor: '#ef4444', color: 'white', display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <div className="relative order-first md:order-last justify-self-center md:justify-self-end w-full max-w-[420px] flex flex-col items-center md:items-end gap-5">
+          <div className="absolute -top-5 right-0 w-[140px] h-[140px] rounded-full bg-[rgba(95,149,123,0.25)] opacity-65 animate-[float_6s_ease-in-out_infinite] z-0 pointer-events-none"></div>
+          <div className="absolute bottom-[30px] -left-2.5 w-[110px] h-[110px] rounded-full bg-[rgba(232,107,79,0.25)] opacity-65 animate-[float_6s_ease-in-out_infinite] [animation-delay:1.4s] z-0 pointer-events-none"></div>
+          
+          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full font-bold text-[0.8rem] uppercase tracking-wider bg-[#ef4444] text-white shadow-[var(--shadow-soft)] w-fit z-10 self-end">
             <Tag size={16} />
             Promo
           </div>
-          <div className="hero-badge">Kirim dari {storeName}</div>
-          <div className="hero-stack">
-            <div className="hero-card top">
-              <p className="hero-card-title">Paket sayur pagi</p>
-              <p className="hero-card-sub">Siap 15 menit</p>
-              <span className="hero-card-chip">Diskon 15%</span>
+          
+          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full font-bold text-[0.8rem] uppercase tracking-wider text-[var(--ink)] bg-[var(--surface)] border border-[var(--line)] shadow-[var(--shadow-soft)] w-fit z-10 self-start md:self-center">
+            Kirim dari {storeName}
+          </div>
+          
+          <div className="grid gap-3.5 relative z-10 w-full mt-2">
+            <div className="p-[18px] rounded-[20px] border border-[var(--line)] bg-white/90 shadow-[var(--shadow-soft)] backdrop-blur-[10px] grid gap-1.5 -rotate-2 -translate-y-1.5 z-30 transition-transform hover:-translate-y-2">
+              <p className="m-0 font-semibold text-[var(--ink)]">Paket sayur pagi</p>
+              <p className="m-0 text-[var(--ink-soft)] text-[0.95rem]">Siap 15 menit</p>
+              <span className="w-fit px-2.5 py-1 mt-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent-strong)] font-bold text-[0.72rem] tracking-wider uppercase block">Diskon 15%</span>
             </div>
-            <div className="hero-card middle">
-              <p className="hero-card-title">Buah premium</p>
-              <p className="hero-card-sub">Manis dan renyah</p>
-              <span className="hero-card-chip">Stok segar</span>
+            <div className="p-[18px] rounded-[20px] border border-[var(--line)] bg-white/90 shadow-[var(--shadow-soft)] backdrop-blur-[10px] grid gap-1.5 rotate-2 z-20 transition-transform hover:-translate-y-1">
+              <p className="m-0 font-semibold text-[var(--ink)]">Buah premium</p>
+              <p className="m-0 text-[var(--ink-soft)] text-[0.95rem]">Manis dan renyah</p>
+              <span className="w-fit px-2.5 py-1 mt-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent-strong)] font-bold text-[0.72rem] tracking-wider uppercase block">Stok segar</span>
             </div>
-            <div className="hero-card bottom">
-              <p className="hero-card-title">Protein siap masak</p>
-              <p className="hero-card-sub">Dinginkan optimal</p>
-              <span className="hero-card-chip">Kurasi harian</span>
+            <div className="p-[18px] rounded-[20px] border border-[var(--line)] bg-white/90 shadow-[var(--shadow-soft)] backdrop-blur-[10px] grid gap-1.5 -rotate-1 translate-y-1.5 z-10 transition-transform hover:translate-y-0">
+              <p className="m-0 font-semibold text-[var(--ink)]">Protein siap masak</p>
+              <p className="m-0 text-[var(--ink-soft)] text-[0.95rem]">Dinginkan optimal</p>
+              <span className="w-fit px-2.5 py-1 mt-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent-strong)] font-bold text-[0.72rem] tracking-wider uppercase block">Kurasi harian</span>
             </div>
           </div>
         </div>
