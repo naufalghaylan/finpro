@@ -61,34 +61,36 @@ export const HeroCarousel = ({ slides, storeName }: HeroCarouselProps) => {
             ))}
           </div>
         </div>
-        <div className="relative order-first md:order-last justify-self-center md:justify-self-end w-full max-w-[420px] flex flex-col items-center md:items-end gap-5">
+        <div className="relative grid gap-[18px] order-first md:order-last w-full">
           <div className="absolute -top-5 right-0 w-[140px] h-[140px] rounded-full bg-[rgba(95,149,123,0.25)] opacity-65 animate-[float_6s_ease-in-out_infinite] z-0 pointer-events-none"></div>
           <div className="absolute bottom-[30px] -left-2.5 w-[110px] h-[110px] rounded-full bg-[rgba(232,107,79,0.25)] opacity-65 animate-[float_6s_ease-in-out_infinite] [animation-delay:1.4s] z-0 pointer-events-none"></div>
           
-          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full font-bold text-[0.8rem] uppercase tracking-wider bg-[#ef4444] text-white shadow-[var(--shadow-soft)] w-fit z-10 self-end">
+          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full font-bold text-[0.8rem] uppercase tracking-wider bg-[#ef4444] text-white shadow-[var(--shadow-soft)] w-fit relative z-10">
             <Tag size={16} />
             Promo
           </div>
           
-          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full font-bold text-[0.8rem] uppercase tracking-wider text-[var(--ink)] bg-[var(--surface)] border border-[var(--line)] shadow-[var(--shadow-soft)] w-fit z-10 self-start md:self-center">
+          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full font-bold text-[0.8rem] uppercase tracking-wider text-[var(--ink)] bg-[var(--surface)] border border-[var(--line)] shadow-[var(--shadow-soft)] w-fit relative z-10">
             Kirim dari {storeName}
           </div>
           
-          <div className="grid gap-3.5 relative z-10 w-full mt-2">
-            <div className="p-[18px] rounded-[20px] border border-[var(--line)] bg-white/90 shadow-[var(--shadow-soft)] backdrop-blur-[10px] grid gap-1.5 -rotate-2 -translate-y-1.5 z-30 transition-transform hover:-translate-y-2">
+          <div className="grid gap-[14px] relative z-10 w-full">
+            <div className="p-[18px] rounded-[20px] border border-[var(--line)] bg-white/85 shadow-[var(--shadow-soft)] backdrop-blur-[10px] grid gap-1.5 -rotate-2 -translate-y-[6px]">
               <p className="m-0 font-semibold text-[var(--ink)]">Paket sayur pagi</p>
               <p className="m-0 text-[var(--ink-soft)] text-[0.95rem]">Siap 15 menit</p>
-              <span className="w-fit px-2.5 py-1 mt-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent-strong)] font-bold text-[0.72rem] tracking-wider uppercase block">Diskon 15%</span>
+              <span className="w-fit px-2.5 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent-strong)] font-bold text-[0.75rem] tracking-[0.08em] uppercase block">Diskon 15%</span>
             </div>
-            <div className="p-[18px] rounded-[20px] border border-[var(--line)] bg-white/90 shadow-[var(--shadow-soft)] backdrop-blur-[10px] grid gap-1.5 rotate-2 z-20 transition-transform hover:-translate-y-1">
+            
+            <div className="p-[18px] rounded-[20px] border border-[var(--line)] bg-white/85 shadow-[var(--shadow-soft)] backdrop-blur-[10px] grid gap-1.5 rotate-2">
               <p className="m-0 font-semibold text-[var(--ink)]">Buah premium</p>
               <p className="m-0 text-[var(--ink-soft)] text-[0.95rem]">Manis dan renyah</p>
-              <span className="w-fit px-2.5 py-1 mt-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent-strong)] font-bold text-[0.72rem] tracking-wider uppercase block">Stok segar</span>
+              <span className="w-fit px-2.5 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent-strong)] font-bold text-[0.75rem] tracking-[0.08em] uppercase block">Stok segar</span>
             </div>
-            <div className="p-[18px] rounded-[20px] border border-[var(--line)] bg-white/90 shadow-[var(--shadow-soft)] backdrop-blur-[10px] grid gap-1.5 -rotate-1 translate-y-1.5 z-10 transition-transform hover:translate-y-0">
+            
+            <div className="p-[18px] rounded-[20px] border border-[var(--line)] bg-white/85 shadow-[var(--shadow-soft)] backdrop-blur-[10px] grid gap-1.5 -rotate-1 translate-y-[6px]">
               <p className="m-0 font-semibold text-[var(--ink)]">Protein siap masak</p>
               <p className="m-0 text-[var(--ink-soft)] text-[0.95rem]">Dinginkan optimal</p>
-              <span className="w-fit px-2.5 py-1 mt-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent-strong)] font-bold text-[0.72rem] tracking-wider uppercase block">Kurasi harian</span>
+              <span className="w-fit px-2.5 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent-strong)] font-bold text-[0.75rem] tracking-[0.08em] uppercase block">Kurasi harian</span>
             </div>
           </div>
         </div>
