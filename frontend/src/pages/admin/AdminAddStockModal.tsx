@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { X, Search, Loader2 } from 'lucide-react';
+import { AdminModal } from '../../components/admin/AdminModal';
 import { getAllProducts } from '../../api/product.api';
 import type { Product } from '../../types/product';
 import type { Stock } from '../../api/stock.api';
@@ -21,6 +21,7 @@ export default function AdminAddStockModal({ existingStocks, onClose, onSubmit }
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
   const [quantity, setQuantity] = useState<number>(0);
   const [submitting, setSubmitting] = useState(false);
+  const [shouldClose, setShouldClose] = useState(false);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -44,6 +45,9 @@ export default function AdminAddStockModal({ existingStocks, onClose, onSubmit }
     try {
       setSubmitting(true);
       await onSubmit({ productId: selectedProductId, quantity });
+      setShouldClose(true);
+    } catch {
+      // The parent owns the user-facing error message.
     } finally {
       setSubmitting(false);
     }
@@ -53,17 +57,23 @@ export default function AdminAddStockModal({ existingStocks, onClose, onSubmit }
   const availableProducts = products.filter(p => !existingProductIds.has(p.id));
   const filteredProducts = availableProducts.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
 
-  const modalContent = (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-admin-ink/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-admin-surface rounded-2xl w-full max-w-lg shadow-xl border border-admin-line-soft flex flex-col max-h-[90vh]">
+  return (
+    <AdminModal
+      onClose={onClose}
+      busy={submitting}
+      requestClose={shouldClose}
+      labelledBy="admin-add-stock-title"
+    >
+      {(closeModal) => (
+        <>
         
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-admin-line-soft">
-          <h2 className="text-xl font-bold text-admin-ink m-0 font-[family-name:var(--font-admin)]">
+          <h2 id="admin-add-stock-title" className="text-xl font-bold text-admin-ink m-0 font-[family-name:var(--font-admin)]">
             Tambah Produk ke Toko
           </h2>
           <button
-            onClick={onClose}
+            onClick={closeModal}
             className="p-2 -mr-2 text-admin-ink-muted hover:text-admin-red hover:bg-admin-red-soft rounded-xl transition-colors cursor-pointer border-none bg-transparent"
           >
             <X className="w-5 h-5" />
@@ -71,7 +81,7 @@ export default function AdminAddStockModal({ existingStocks, onClose, onSubmit }
         </div>
 
         {/* Form Body */}
-        <div className="p-6 overflow-y-auto font-[family-name:var(--font-admin)] flex-1">
+        <div className="min-h-0 p-6 overflow-y-auto overscroll-contain font-[family-name:var(--font-admin)] flex-1">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
               <Loader2 className="w-8 h-8 text-admin-accent admin-spin" />
@@ -154,7 +164,7 @@ export default function AdminAddStockModal({ existingStocks, onClose, onSubmit }
         <div className="p-6 border-t border-admin-line-soft bg-admin-surface-2/30 flex justify-end gap-3 font-[family-name:var(--font-admin)] rounded-b-2xl">
           <button
             type="button"
-            onClick={onClose}
+            onClick={closeModal}
             className="px-5 py-2.5 rounded-xl text-sm font-medium text-admin-ink-soft bg-admin-surface border border-admin-line hover:bg-admin-line-soft hover:text-admin-ink transition-all cursor-pointer"
           >
             Batal
@@ -171,9 +181,8 @@ export default function AdminAddStockModal({ existingStocks, onClose, onSubmit }
             Tambah Produk
           </button>
         </div>
-      </div>
-    </div>
+        </>
+      )}
+    </AdminModal>
   );
-
-  return createPortal(modalContent, document.body);
 }

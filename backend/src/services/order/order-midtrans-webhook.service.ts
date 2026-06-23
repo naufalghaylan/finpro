@@ -36,6 +36,7 @@ export const processMidtransTransactionStatus = async (
           select: {
             stockId: true,
             quantityChange: true,
+            type: true,
           },
         },
       },

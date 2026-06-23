@@ -46,7 +46,7 @@ export function OrderCard({ order }: OrderCardProps) {
         <div className="order-card-meta">
           <span>
             <Store aria-hidden="true" />
-            {order.store.name}
+            Cabang {order.store.name}
           </span>
           <span>
             <ReceiptText aria-hidden="true" />
@@ -61,7 +61,7 @@ export function OrderCard({ order }: OrderCardProps) {
         <em>
           {order.paymentMethod === 'MANUAL_TRANSFER'
             ? 'Transfer Manual'
-            : 'Payment Gateway'}
+            : 'Pembayaran Online'}
         </em>
         <Link to={`/orders/${order.id}`} className="button ghost order-detail-link">
           Lihat Detail

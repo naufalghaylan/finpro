@@ -3,6 +3,7 @@ import prisma from '../../lib/prisma'
 import { ORDER_ERRORS, OrderServiceError } from '../order.errors'
 import { orderStatusGroups } from './order.constants'
 import { adminOrderSelect, orderSelect } from './order.select'
+import { getOrdersStockFulfillment } from './order-fulfillment-state.service'
 import type { ListAdminOrdersParams, ListOrdersParams } from './order.types'
 
 const getStartOfDate = (date: string) => new Date(`${date}T00:00:00.000`)
@@ -37,6 +38,14 @@ const applyOrderListFilters = (
                 mode: 'insensitive',
               },
             },
+          },
+        },
+      },
+      {
+        store: {
+          name: {
+            contains: search,
+            mode: 'insensitive',
           },
         },
       },
@@ -178,10 +187,14 @@ export const listAdminOrders = async ({
     }),
     prisma.order.count({ where }),
   ])
+  const fulfillmentStates = await getOrdersStockFulfillment(orders.map((order) => order.id))
   const totalPages = Math.ceil(total / limit)
 
   return {
-    data: orders,
+    data: orders.map((order) => ({
+      ...order,
+      stockFulfillment: fulfillmentStates.get(order.id),
+    })),
     meta: {
       page,
       limit,

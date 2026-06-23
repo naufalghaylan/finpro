@@ -1,4 +1,5 @@
 import { AlertTriangle, Loader2, Send, X } from 'lucide-react'
+import { AdminModal } from '../AdminModal'
 import type { AdminOrder } from '../../../types/order'
 import { formatCurrency } from '../../../utils/format'
 
@@ -8,6 +9,7 @@ interface AdminShipOrderModalProps {
   onClose: () => void
   onConfirm: () => void
   hasActiveFulfillment: boolean
+  requestClose?: boolean
 }
 
 export function AdminShipOrderModal({
@@ -16,23 +18,30 @@ export function AdminShipOrderModal({
   onClose,
   onConfirm,
   hasActiveFulfillment,
+  requestClose = false,
 }: AdminShipOrderModalProps) {
   return (
-    <div className="fixed left-0 right-0 bottom-0 top-[72px] z-50 flex items-center justify-center bg-black/40 px-4 py-6">
-      <div className="w-full max-w-lg rounded-2xl border border-admin-line-soft bg-admin-surface shadow-2xl">
+    <AdminModal
+      onClose={onClose}
+      busy={isShippingOrder}
+      requestClose={requestClose}
+      labelledBy="admin-ship-order-title"
+    >
+      {(closeModal) => (
+        <>
         <div className="flex items-start justify-between gap-4 px-6 py-5 border-b border-admin-line-soft">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-admin-green m-0">
               Kirim Pesanan
             </p>
-            <h3 className="text-lg font-bold text-admin-ink m-0 mt-1">{order.orderNumber}</h3>
+            <h3 id="admin-ship-order-title" className="text-lg font-bold text-admin-ink m-0 mt-1">{order.orderNumber}</h3>
             <p className="text-sm text-admin-ink-muted m-0 mt-1">
               Pastikan semua barang siap sebelum status diubah menjadi Dikirim.
             </p>
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={closeModal}
             disabled={isShippingOrder}
             className="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-admin-line-soft bg-admin-surface text-admin-ink-soft
                        hover:bg-admin-surface-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
@@ -42,7 +51,7 @@ export function AdminShipOrderModal({
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6">
           <div className="rounded-xl border border-admin-amber/30 bg-admin-amber-soft p-4">
             <div className="flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-admin-amber shrink-0 mt-0.5" />
@@ -58,7 +67,7 @@ export function AdminShipOrderModal({
 
           <div className="grid grid-cols-2 gap-3 my-5 text-sm">
             <div className="rounded-xl border border-admin-line-soft bg-admin-surface-2/30 p-3">
-              <span className="block text-admin-ink-muted">Customer</span>
+              <span className="block text-admin-ink-muted">Pelanggan</span>
               <strong className="text-admin-ink">{order.user.name}</strong>
             </div>
             <div className="rounded-xl border border-admin-line-soft bg-admin-surface-2/30 p-3">
@@ -70,7 +79,7 @@ export function AdminShipOrderModal({
           {hasActiveFulfillment && (
             <div className="rounded-xl border border-admin-red/20 bg-admin-red-soft p-4 mb-5">
               <p className="text-xs text-admin-red leading-relaxed m-0">
-                Masih ada fulfillment yang pending atau dalam pengiriman. Selesaikan receive dulu sebelum pesanan dikirim.
+                Masih ada mutasi stok yang menunggu atau dalam perjalanan. Pastikan barang diterima sebelum pesanan dikirim.
               </p>
             </div>
           )}
@@ -78,7 +87,7 @@ export function AdminShipOrderModal({
           <div className="flex justify-end gap-2 mt-5">
             <button
               type="button"
-              onClick={onClose}
+              onClick={closeModal}
               disabled={isShippingOrder}
               className="px-4 py-2.5 rounded-xl text-sm font-semibold text-admin-ink-soft bg-admin-surface border border-admin-line-soft
                          cursor-pointer hover:bg-admin-surface-2 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
@@ -97,7 +106,8 @@ export function AdminShipOrderModal({
             </button>
           </div>
         </div>
-      </div>
-    </div>
+        </>
+      )}
+    </AdminModal>
   )
 }

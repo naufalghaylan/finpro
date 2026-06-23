@@ -1,4 +1,4 @@
-import { AlertCircle, Loader2, Truck, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react'
+import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp, Loader2, Truck } from 'lucide-react'
 import type { ShippingCostResult } from '../../api/rajaongkir'
 import { formatCurrency } from '../../utils/format'
 
@@ -7,7 +7,7 @@ const formatEtdText = (etd: string | undefined | null) => {
   if (!cleaned || cleaned === '-' || cleaned === '0' || cleaned === '0 hari' || cleaned.includes('0 day')) {
     return 'Tiba hari ini'
   }
-  
+
   let formatted = etd!.replace(/days?/ig, 'hari').trim()
   if (!formatted.toLowerCase().includes('hari')) {
     formatted = `${formatted} hari`
@@ -49,7 +49,7 @@ export function CheckoutShippingPanel({
   onShippingServiceChange,
 }: CheckoutShippingPanelProps) {
   const visibleCouriers = AVAILABLE_COURIERS.filter(
-    (courier) => courierServices[courier.code] !== undefined && courierServices[courier.code].length > 0
+    (courier) => courierServices[courier.code] !== undefined && courierServices[courier.code].length > 0,
   )
 
   return (
@@ -70,7 +70,7 @@ export function CheckoutShippingPanel({
       ) : !hasNearestStore ? (
         <div className="checkout-inline-alert">
           <AlertCircle aria-hidden="true" />
-          Store terdekat belum tersedia.
+          Cabang PanenMart belum tersedia untuk alamat ini.
         </div>
       ) : (
         <div className="checkout-shipping-container">
@@ -80,61 +80,50 @@ export function CheckoutShippingPanel({
               Memuat kurir yang tersedia...
             </div>
           ) : visibleCouriers.length > 0 ? (
-            <div className="flex flex-col gap-3">
+            <div className="checkout-courier-list">
               {visibleCouriers.map((courier) => {
-                const isExpanded = selectedCourier === courier.code;
-                const shippingCosts = courierServices[courier.code] || [];
-                
-                // Cek apakah ada layanan yang terpilih di dalam kurir ini
+                const isExpanded = selectedCourier === courier.code
+                const shippingCosts = courierServices[courier.code] || []
                 const selectedServiceInThisCourier = shippingCosts.find(
-                  s => selectedShippingService?.service === s.service
-                );
-
-                const itemBorderClass = isExpanded 
-                  ? 'border-[var(--accent)] shadow-[0_14px_28px_rgba(232,107,79,0.14)]' 
-                  : selectedServiceInThisCourier 
-                    ? 'border-[rgba(74,124,91,0.45)]' 
-                    : 'border-[var(--line)]';
+                  (service) => selectedShippingService?.service === service.service,
+                )
 
                 return (
-                  <div 
-                    key={courier.code} 
-                    className={`border rounded-[18px] bg-[#fffaf2] overflow-hidden transition-all duration-200 ease-out hover:border-[rgba(232,107,79,0.45)] ${itemBorderClass}`}
+                  <div
+                    key={courier.code}
+                    className={`checkout-courier-option ${isExpanded ? 'expanded' : ''} ${selectedServiceInThisCourier ? 'has-selection' : ''}`}
                   >
-                    <div 
-                      className="flex items-center justify-between p-4 cursor-pointer select-none"
+                    <button
+                      type="button"
+                      className="checkout-courier-trigger"
                       onClick={() => onCourierChange(isExpanded ? '' : courier.code)}
+                      aria-expanded={isExpanded}
                     >
-                      <div className="flex items-center gap-2.5 flex-wrap">
-                        <Truck size={20} color={isExpanded || selectedServiceInThisCourier ? 'var(--accent-strong)' : 'var(--ink-soft)'} aria-hidden="true" />
-                        <strong style={{ color: isExpanded || selectedServiceInThisCourier ? 'var(--accent-strong)' : 'var(--ink)' }}>
-                          {courier.label}
-                        </strong>
+                      <div className="checkout-courier-main">
+                        <Truck className="checkout-courier-icon" aria-hidden="true" />
+                        <strong>{courier.label}</strong>
                         {selectedServiceInThisCourier && !isExpanded && (
-                          <span className="bg-[rgba(74,124,91,0.1)] text-[var(--green)] px-2.5 py-1 rounded-full text-xs font-bold ml-2">
+                          <span className="checkout-courier-selected-badge">
                             {selectedServiceInThisCourier.service} - {formatCurrency(selectedServiceInThisCourier.cost)}
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-3">
-                        {selectedServiceInThisCourier && <CheckCircle2 size={18} color="var(--green)" />}
-                        {isExpanded ? <ChevronUp size={20} color="var(--ink-soft)" /> : <ChevronDown size={20} color="var(--ink-soft)" />}
+                      <div className="checkout-courier-actions">
+                        {selectedServiceInThisCourier && <CheckCircle2 className="checkout-courier-check" aria-hidden="true" />}
+                        {isExpanded ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}
                       </div>
-                    </div>
+                    </button>
 
                     {isExpanded && (
-                      <div className="px-4 pb-4 border-t border-dashed border-[var(--line)] mt-1 pt-4">
+                      <div className="checkout-courier-services">
                         {shippingCosts.length > 0 ? (
                           <div className="checkout-shipping-service-grid">
-                            {shippingCosts.map((service, idx) => {
-                              const isSelected = selectedShippingService?.service === service.service;
+                            {shippingCosts.map((service, index) => {
+                              const isSelected = selectedShippingService?.service === service.service
                               return (
                                 <label
-                                  key={idx}
+                                  key={`${service.service}-${index}`}
                                   className={`checkout-shipping-service-card ${isSelected ? 'selected' : ''}`}
-                                  style={{
-                                    background: isSelected ? 'rgba(232, 107, 79, 0.04)' : undefined,
-                                  }}
                                 >
                                   <input
                                     type="radio"
@@ -142,29 +131,27 @@ export function CheckoutShippingPanel({
                                     checked={isSelected}
                                     onChange={() => onShippingServiceChange(service)}
                                   />
-                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', height: '100%' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                        <strong style={{ fontSize: '1.1rem', color: isSelected ? 'var(--accent-strong)' : 'var(--ink)' }}>{service.service}</strong>
-                                        <span style={{ color: 'var(--ink-soft)', fontSize: '0.85rem', marginTop: '2px' }}>{service.description}</span>
+                                  <div className="checkout-shipping-service-content">
+                                    <div className="checkout-shipping-service-top">
+                                      <div className="checkout-shipping-service-info">
+                                        <strong>{service.service}</strong>
+                                        <span>{service.description || 'Layanan pengiriman'}</span>
                                       </div>
-                                      {isSelected && <CheckCircle2 size={20} color="var(--accent-strong)" style={{ flexShrink: 0, marginTop: '2px' }} />}
+                                      {isSelected && <CheckCircle2 className="checkout-shipping-selected-icon" aria-hidden="true" />}
                                     </div>
-                                    
-                                    <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: '12px', borderTop: '1px dashed var(--line)' }}>
-                                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                        <span style={{ fontSize: '0.75rem', color: 'var(--ink-soft)' }}>Estimasi Tiba</span>
-                                        <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--ink)' }}>
-                                          {formatEtdText(service.etd)}
-                                        </span>
+
+                                    <div className="checkout-shipping-service-bottom">
+                                      <div className="checkout-shipping-service-etd">
+                                        <span>Estimasi Tiba</span>
+                                        <strong>{formatEtdText(service.etd)}</strong>
                                       </div>
-                                      <strong style={{ color: 'var(--accent-strong)', fontSize: '1.15rem' }}>
+                                      <strong className="checkout-shipping-service-cost">
                                         {formatCurrency(service.cost)}
                                       </strong>
                                     </div>
                                   </div>
                                 </label>
-                              );
+                              )
                             })}
                           </div>
                         ) : (
@@ -176,13 +163,13 @@ export function CheckoutShippingPanel({
                       </div>
                     )}
                   </div>
-                );
+                )
               })}
             </div>
           ) : (
             <div className="checkout-inline-alert">
               <AlertCircle aria-hidden="true" />
-              Pilih alamat tujuan untuk melihat tarif pengiriman.
+              Pilih alamat tujuan untuk melihat tarif pengiriman dari cabang terdekat.
             </div>
           )}
         </div>

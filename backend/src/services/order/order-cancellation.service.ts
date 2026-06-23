@@ -1,4 +1,4 @@
-import { OrderStatus, PaymentMethod, StockJournalType } from '../../generated/prisma/client'
+import { MutationStatus, OrderStatus, PaymentMethod, StockJournalType } from '../../generated/prisma/client'
 import prisma from '../../lib/prisma'
 import { assertAdminCanAccessStore } from '../order-admin-access.service'
 import { ORDER_ERRORS, OrderServiceError } from '../order.errors'
@@ -25,13 +25,28 @@ export const cancelOrder = async ({
         voucherId: true,
         stockJournals: {
           where: {
-            type: StockJournalType.ORDER,
-            quantityChange: { lt: 0 },
+            type: {
+              in: [
+                StockJournalType.ORDER,
+                StockJournalType.MUTATION_OUT,
+                StockJournalType.CANCEL_RETURN,
+              ],
+            },
           },
           select: {
             id: true,
             stockId: true,
             quantityChange: true,
+            type: true,
+          },
+        },
+        stockMutations: {
+          where: {
+            status: { in: [MutationStatus.PENDING, MutationStatus.IN_TRANSIT, MutationStatus.COMPLETED] },
+          },
+          select: {
+            id: true,
+            status: true,
           },
         },
       },
@@ -73,11 +88,34 @@ export const cancelOrder = async ({
       )
     }
 
+    if (order.stockMutations.some((mutation) => (
+      mutation.status === MutationStatus.IN_TRANSIT || mutation.status === MutationStatus.COMPLETED
+    ))) {
+      throw new OrderServiceError(
+        ORDER_ERRORS.ORDER_NOT_CANCELLABLE,
+        'Pesanan tidak dapat dibatalkan setelah barang mutasi dikirim',
+        400,
+      )
+    }
+
     await restoreReservedOrderStock({
       db: tx,
       order,
       actorUserId: userId,
       notes: reason || 'Order cancelled, reserved stock restored',
+    })
+
+    await tx.stockMutation.updateMany({
+      where: {
+        orderId: order.id,
+        status: MutationStatus.PENDING,
+      },
+      data: {
+        status: MutationStatus.REJECTED,
+        rejectedBy: userId,
+        rejectedAt: new Date(),
+        notes: reason || 'Permintaan ditutup karena pesanan dibatalkan',
+      },
     })
 
     if (order.voucherId) {
@@ -137,12 +175,18 @@ export const autoCancelExpiredManualTransferOrders = async () => {
           voucherId: true,
           stockJournals: {
             where: {
-              type: StockJournalType.ORDER,
-              quantityChange: { lt: 0 },
+              type: {
+                in: [
+                  StockJournalType.ORDER,
+                  StockJournalType.MUTATION_OUT,
+                  StockJournalType.CANCEL_RETURN,
+                ],
+              },
             },
             select: {
               stockId: true,
               quantityChange: true,
+              type: true,
             },
           },
         },

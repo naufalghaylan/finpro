@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Loader2, StickyNote } from 'lucide-react'
+import { ArrowLeft, CreditCard, Loader2, MapPin, StickyNote, Truck } from 'lucide-react'
 import { Navbar } from '../../components/common/Navbar'
 import { HomeFooter } from '../../components/home/HomeFooter'
 import { BRAND, footerSections, navLinks } from '../../data/home/homeData'
@@ -17,7 +17,6 @@ import { CheckoutVoucherPanel } from '../../components/checkout/CheckoutVoucherP
 
 function CheckoutPage() {
   const {
-
     preview,
     selectedAddressId,
     selectedAddress,
@@ -48,14 +47,14 @@ function CheckoutPage() {
   } = useCheckout()
 
   return (
-    <div>
+    <div className="page checkout-flow-page">
       <Navbar brandName={BRAND.name} links={navLinks} />
 
-      <main className="checkout-page">
+      <main className="page-main checkout-page">
         <section className="shell checkout-shell">
           <Link to="/cart" className="button ghost checkout-back-link">
             <ArrowLeft className="button-icon" aria-hidden="true" />
-            Kembali ke Cart
+            Kembali ke Keranjang
           </Link>
 
           {isLoading ? (
@@ -69,19 +68,35 @@ function CheckoutPage() {
               <div className="checkout-header">
                 <div>
                   <p className="eyebrow">Checkout</p>
-                  <h1>Selesaikan pesananmu</h1>
+                  <h1>Finalisasi pesananmu</h1>
                   <p>
-                    Pilih alamat, pengiriman, dan metode pembayaran. Sistem akan menentukan store terdekat dari
-                    koordinat alamatmu.
+                    Lengkapi alamat, pengiriman, voucher, dan pembayaran. Cabang PanenMart akan dipilih dari lokasi yang paling sesuai dengan alamatmu.
                   </p>
                 </div>
                 {isRefreshingPreview && (
                   <span className="checkout-refresh-status">
                     <Loader2 className="button-icon spin" aria-hidden="true" />
-                    Memperbarui store
+                    Memperbarui cabang
                   </span>
                 )}
               </div>
+
+              {!isCartEmpty && (
+                <div className="checkout-flow-steps" aria-label="Urutan checkout">
+                  <span>
+                    <MapPin aria-hidden="true" />
+                    Alamat
+                  </span>
+                  <span>
+                    <Truck aria-hidden="true" />
+                    Pengiriman
+                  </span>
+                  <span>
+                    <CreditCard aria-hidden="true" />
+                    Pembayaran
+                  </span>
+                </div>
+              )}
 
               {isCartEmpty ? (
                 <CheckoutEmptyState />
@@ -153,6 +168,7 @@ function CheckoutPage() {
                     totalPayment={paymentSummary.totalPayment}
                     hasSelectedAddressCoordinates={hasSelectedAddressCoordinates}
                     hasSelectedAddress={Boolean(selectedAddress)}
+                    hasNearestBranch={Boolean(preview.nearestStore)}
                     canCreateOrder={canCreateOrder}
                     isSubmitting={isSubmitting}
                     onCreateOrder={handleCreateOrder}

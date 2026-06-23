@@ -12,6 +12,7 @@ interface CheckoutSummaryPanelProps {
   totalPayment: number
   hasSelectedAddressCoordinates: boolean
   hasSelectedAddress: boolean
+  hasNearestBranch: boolean
   canCreateOrder: boolean
   isSubmitting: boolean
   onCreateOrder: () => void
@@ -27,22 +28,43 @@ export function CheckoutSummaryPanel({
   totalPayment,
   hasSelectedAddressCoordinates,
   hasSelectedAddress,
+  hasNearestBranch,
   canCreateOrder,
   isSubmitting,
   onCreateOrder,
 }: CheckoutSummaryPanelProps) {
   const otherDiscountAmount = Math.max(0, discountAmount - storeDiscountAmount - voucherReferralAmount)
+  const hasReadyAddress = hasSelectedAddress && hasSelectedAddressCoordinates
+  const hasShipping = Boolean(selectedShippingService)
+  const readinessItems = [
+    { label: 'Alamat berkoordinat', ready: hasReadyAddress },
+    { label: 'Cabang pemrosesan tersedia', ready: hasNearestBranch },
+    { label: 'Layanan pengiriman dipilih', ready: hasShipping },
+  ]
 
   return (
     <aside className="checkout-summary-panel">
-      <h2>Rincian Pembayaran</h2>
+      <div className="checkout-summary-heading">
+        <h2>Rincian Pembayaran</h2>
+        <span>{totalQuantity} item</span>
+      </div>
+
+      <div className="checkout-summary-readiness" aria-label="Kelengkapan checkout">
+        {readinessItems.map((item) => (
+          <div key={item.label} className={item.ready ? 'ready' : ''}>
+            {item.ready ? <CheckCircle2 aria-hidden="true" /> : <AlertCircle aria-hidden="true" />}
+            <span>{item.label}</span>
+          </div>
+        ))}
+      </div>
+
       <div className="cart-summary-row">
         <span>Total Harga ({totalQuantity} item)</span>
         <strong>{formatCurrency(subtotal)}</strong>
       </div>
       {storeDiscountAmount > 0 && (
         <div className="cart-summary-row">
-          <span>Diskon Toko</span>
+          <span>Diskon PanenMart</span>
           <strong>-{formatCurrency(storeDiscountAmount)}</strong>
         </div>
       )}
@@ -60,7 +82,7 @@ export function CheckoutSummaryPanel({
       )}
       <div className="cart-summary-row">
         <span>Ongkir</span>
-        <strong>{selectedShippingService ? formatCurrency(selectedShippingService.cost) : 'Rp -'}</strong>
+        <strong>{selectedShippingService ? formatCurrency(selectedShippingService.cost) : 'Pilih pengiriman'}</strong>
       </div>
       <div className="cart-summary-row checkout-summary-total">
         <span>Total Bayar</span>

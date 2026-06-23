@@ -41,16 +41,16 @@ function OrdersPage() {
             <div className="orders-header">
               <div>
                 <p className="section-kicker">Pesanan Saya</p>
-                <h1 className="section-title">Pantau pesananmu</h1>
+                <h1 className="section-title">Riwayat pesanan</h1>
                 <p>
-                  Lihat pesanan yang masih berjalan, selesai, atau dibatalkan. Filter berdasarkan tanggal, nomor
-                  order, atau produk untuk menemukan transaksi lebih cepat.
+                  Pantau status, cek pembayaran, dan temukan transaksi berdasarkan nomor pesanan, produk,
+                  atau cabang PanenMart.
                 </p>
               </div>
               <div className="orders-header-stat">
                 <ClipboardList aria-hidden="true" />
                 <div>
-                  <span>Total hasil</span>
+                  <span>Total pesanan</span>
                   <strong>{isLoading ? '...' : totalOrders}</strong>
                 </div>
               </div>
@@ -88,7 +88,7 @@ function OrdersPage() {
                   : `${totalOrders} pesanan ditemukan`}
               </p>
               {!isLoading && orders.length > 0 && (
-                <span>{totalInCurrentPage} item produk di halaman ini</span>
+                <span>{totalInCurrentPage} item di halaman ini</span>
               )}
             </div>
 

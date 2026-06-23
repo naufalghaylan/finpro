@@ -20,6 +20,7 @@ export type StockAvailabilityItem = {
 export type ReservedStockJournal = {
   stockId: number
   quantityChange: number
+  type: StockJournalType
 }
 
 export type ReservedStockOrder = {
@@ -163,10 +164,19 @@ export const restoreReservedOrderStock = async ({
   actorUserId: number
   notes: string
 }) => {
+  const outstandingByStock = new Map<number, number>()
+
   for (const journal of order.stockJournals) {
-    const restoreQuantity = Math.abs(journal.quantityChange)
+    const currentQuantity = outstandingByStock.get(journal.stockId) ?? 0
+    outstandingByStock.set(journal.stockId, currentQuantity - journal.quantityChange)
+  }
+
+  for (const [stockId, rawRestoreQuantity] of outstandingByStock) {
+    const restoreQuantity = Math.max(0, rawRestoreQuantity)
+    if (restoreQuantity === 0) continue
+
     const stock = await db.stock.findUnique({
-      where: { id: journal.stockId },
+      where: { id: stockId },
       select: stockJournalSnapshotSelect,
     })
 

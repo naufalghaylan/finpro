@@ -1,148 +1,217 @@
-import { useState, useEffect, type FormEvent } from 'react';
-import { AxiosError } from 'axios';
-import type { Store } from '../../types/store';
-import { useParams, useNavigate } from 'react-router-dom';
-import { getStoreById, updateStore } from '../../api/store';
+import { useEffect, useState, type FormEvent } from 'react'
+import { AxiosError } from 'axios'
+import { useNavigate, useParams } from 'react-router-dom'
+import {
+  CircleCheck,
+  CircleX,
+  ClipboardList,
+  Info,
+  Loader2,
+  MapPin,
+  Package,
+  Phone,
+  Radar,
+  Repeat2,
+  Tag,
+  Users,
+} from 'lucide-react'
+import { getStoreById, updateStore } from '../../api/store'
+import { AdminStoreDetailsForm, type StoreDetailFormData } from '../../components/admin/AdminStoreDetailsForm'
+import { useToast } from '../../components/common/Toast'
+import type { Store } from '../../types/store'
+import AdminDiscountList from './AdminDiscountList'
+import AdminOrderList from './AdminOrderList'
+import AdminStockList from './AdminStockList'
+import AdminStoreFulfillmentPage from './AdminStoreFulfillmentPage'
 
-import { useToast } from '../../components/common/Toast';
-import AdminStockList from './AdminStockList';
-import AdminDiscountList from './AdminDiscountList';
-import AdminOrderList from './AdminOrderList';
-import { Info, Package, Tag, Loader2, ClipboardList } from 'lucide-react';
-import { AdminStoreDetailsForm, type StoreDetailFormData } from '../../components/admin/AdminStoreDetailsForm';
+type StoreDetailTabKey = 'details' | 'stocks' | 'discounts' | 'orders' | 'fulfillment'
+
+const fallbackPosition: [number, number] = [-6.2088, 106.8456]
 
 export default function AdminStoreDetailPage() {
-  const { id } = useParams();
-  const navigate = useNavigate();
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const { showToast } = useToast()
 
-  const { showToast } = useToast();
-  
-  const [activeTab, setActiveTab] = useState<'details' | 'stocks' | 'discounts' | 'orders'>('details');
-  const [store, setStore] = useState<Store | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<StoreDetailTabKey>('details')
+  const [store, setStore] = useState<Store | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState<StoreDetailFormData>({
     name: '',
     address: '',
     phone: '',
     description: '',
-    latitude: -6.2088,
-    longitude: 106.8456,
+    latitude: fallbackPosition[0],
+    longitude: fallbackPosition[1],
     serviceRadius: 50,
-  });
-  
-  const [position, setPosition] = useState<[number, number]>([-6.2088, 106.8456]);
+  })
+  const [position, setPosition] = useState<[number, number]>(fallbackPosition)
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setFormData(f => ({ ...f, latitude: position[0], longitude: position[1] }));
-  }, [position]);
+    setFormData((currentFormData) => ({
+      ...currentFormData,
+      latitude: position[0],
+      longitude: position[1],
+    }))
+  }, [position])
 
   const fetchStore = async () => {
     try {
-      setLoading(true);
-      const res = await getStoreById(Number(id));
-      setStore(res.data);
+      setLoading(true)
+      const response = await getStoreById(Number(id))
+      const storeData = response.data
+      const nextPosition: [number, number] = [
+        storeData.latitude || fallbackPosition[0],
+        storeData.longitude || fallbackPosition[1],
+      ]
+
+      setStore(storeData)
       setFormData({
-        name: res.data.name,
-        address: res.data.address,
-        phone: res.data.phone || '',
-        description: res.data.description || '',
-        latitude: res.data.latitude || -6.2088,
-        longitude: res.data.longitude || 106.8456,
-        serviceRadius: res.data.serviceRadius || 50,
-      });
-      setPosition([res.data.latitude || -6.2088, res.data.longitude || 106.8456]);
+        name: storeData.name,
+        address: storeData.address,
+        phone: storeData.phone || '',
+        description: storeData.description || '',
+        latitude: nextPosition[0],
+        longitude: nextPosition[1],
+        serviceRadius: storeData.serviceRadius || 50,
+      })
+      setPosition(nextPosition)
     } catch (e) {
-      const error = e as AxiosError<{ message?: string }>;
-      showToast(error.response?.data?.message || 'Gagal mengambil data toko', 'error');
-      if (error.response?.status === 403) navigate('/admin/stores');
+      const error = e as AxiosError<{ message?: string }>
+      showToast(error.response?.data?.message || 'Gagal mengambil data toko', 'error')
+      if (error.response?.status === 403) navigate('/admin/stores')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    if (id) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      void fetchStore();
-    }
+    if (!id) return
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchStore()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id])
 
-  const handleUpdateStore = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleUpdateStore = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
     try {
-      setSaving(true);
-      await updateStore(Number(id), formData);
-      showToast('Detail toko berhasil diperbarui', 'success');
-      fetchStore();
+      setSaving(true)
+      await updateStore(Number(id), formData)
+      showToast('Detail toko berhasil diperbarui', 'success')
+      await fetchStore()
     } catch (e) {
-      const error = e as AxiosError<{ message?: string }>;
-      showToast(error.response?.data?.message || 'Gagal memperbarui toko', 'error');
+      const error = e as AxiosError<{ message?: string }>
+      showToast(error.response?.data?.message || 'Gagal memperbarui toko', 'error')
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
-  };
+  }
 
-  const tabs = [
-    { key: 'details' as const, label: 'Detail Toko', icon: Info },
-    { key: 'stocks' as const, label: 'Manajemen Stok', icon: Package },
-    { key: 'discounts' as const, label: 'Manajemen Diskon', icon: Tag },
-    { key: 'orders' as const, label: 'Pesanan Toko', icon: ClipboardList },
-  ];
+  const tabs: { key: StoreDetailTabKey; label: string; icon: typeof Info }[] = [
+    { key: 'details', label: 'Detail Toko', icon: Info },
+    { key: 'stocks', label: 'Manajemen Stok', icon: Package },
+    { key: 'discounts', label: 'Manajemen Diskon', icon: Tag },
+    { key: 'orders', label: 'Pesanan Toko', icon: ClipboardList },
+    { key: 'fulfillment', label: 'Mutasi Stok', icon: Repeat2 },
+  ]
 
   if (loading) {
     return (
-      <div className="font-admin flex flex-col items-center justify-center py-20 gap-3">
-        <Loader2 className="w-8 h-8 text-admin-accent admin-spin" />
-        <p className="text-sm text-admin-ink-muted m-0">Memuat data toko...</p>
+      <div className="font-admin flex flex-col items-center justify-center gap-3 py-20">
+        <Loader2 className="h-8 w-8 text-admin-accent admin-spin" />
+        <p className="m-0 text-sm text-admin-ink-muted">Memuat data toko...</p>
       </div>
-    );
+    )
   }
 
   if (!store) {
     return (
-      <div className="font-admin text-center py-20">
+      <div className="font-admin py-20 text-center">
         <p className="text-admin-ink-muted">Toko tidak ditemukan</p>
       </div>
-    );
+    )
   }
+
+  const storeMetrics = [
+    {
+      label: 'Radius Layanan',
+      value: `${store.serviceRadius} km`,
+      Icon: Radar,
+    },
+    {
+      label: 'Admin Cabang',
+      value: `${store._count?.admins ?? store.admins?.length ?? 0} admin`,
+      Icon: Users,
+    },
+    {
+      label: 'Kontak',
+      value: store.phone || 'Belum diisi',
+      Icon: Phone,
+    },
+  ]
 
   return (
     <div className="font-admin">
-      {/* Store Name Header */}
-      <div className="mb-6">
-        <h3 className="text-xl font-bold text-admin-ink m-0">{store.name}</h3>
-        <p className="text-sm text-admin-ink-muted mt-0.5 m-0">{store.city}, {store.province}</p>
+      <section className="mb-5 rounded-3xl border border-admin-line-soft bg-admin-surface p-5 shadow-sm md:p-6">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0">
+            <span className={`mb-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${store.status ? 'bg-admin-green-soft text-admin-green' : 'bg-admin-red-soft text-admin-red'}`}>
+              {store.status ? <CircleCheck className="h-3.5 w-3.5" /> : <CircleX className="h-3.5 w-3.5" />}
+              {store.status ? 'Aktif' : 'Nonaktif'}
+            </span>
+            <h3 className="m-0 truncate text-2xl font-bold text-admin-ink">{store.name}</h3>
+            <p className="m-0 mt-2 flex max-w-3xl items-start gap-2 text-sm leading-6 text-admin-ink-muted">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-admin-accent-strong" />
+              <span className="break-words">{store.address}, {store.city}, {store.province}</span>
+            </p>
+          </div>
+
+          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3 xl:w-[560px]">
+            {storeMetrics.map((metric) => {
+              const Icon = metric.Icon
+
+              return (
+                <div key={metric.label} className="min-w-0 rounded-2xl border border-admin-line-soft bg-admin-surface-2/35 p-4">
+                  <div className="mb-2 flex items-center gap-2 text-admin-ink-muted">
+                    <Icon className="h-4 w-4 text-admin-accent-strong" />
+                    <span className="text-[11px] font-semibold uppercase tracking-wider">{metric.label}</span>
+                  </div>
+                  <strong className="block truncate text-sm text-admin-ink">{metric.value}</strong>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      <div className="admin-table-wrap mb-6 max-w-full overflow-x-auto pb-1">
+        <div className="flex w-max min-w-full gap-2 rounded-2xl border border-admin-line-soft bg-admin-surface p-1.5 shadow-sm">
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.key
+            const Icon = tab.icon
+
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex min-w-max cursor-pointer items-center gap-2 rounded-xl border-none px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                  isActive
+                    ? 'bg-admin-accent text-white shadow-sm'
+                    : 'bg-transparent text-admin-ink-soft hover:bg-admin-surface-2 hover:text-admin-ink'
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {tab.label}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
-      {/* Pill Tabs */}
-      <div className="flex gap-2 p-1.5 mb-8 rounded-2xl bg-admin-surface-2/70 w-fit">
-        {tabs.map(tab => {
-          const isActive = activeTab === tab.key;
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`
-                flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold
-                border-none cursor-pointer transition-all duration-200
-                ${isActive
-                  ? 'bg-admin-surface text-admin-ink shadow-sm'
-                  : 'bg-transparent text-admin-ink-soft hover:text-admin-ink hover:bg-admin-surface/50'
-                }
-              `}
-            >
-              <Icon className="w-4 h-4" />
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Tab Content */}
       <div className="admin-fade-in" key={activeTab}>
         {activeTab === 'details' && (
           <AdminStoreDetailsForm
@@ -158,7 +227,10 @@ export default function AdminStoreDetailPage() {
         {activeTab === 'stocks' && <AdminStockList storeId={Number(id)} />}
         {activeTab === 'discounts' && <AdminDiscountList storeId={Number(id)} />}
         {activeTab === 'orders' && <AdminOrderList storeId={Number(id)} />}
+        {activeTab === 'fulfillment' && (
+          <AdminStoreFulfillmentPage storeId={Number(id)} onOpenOrders={() => setActiveTab('orders')} />
+        )}
       </div>
     </div>
-  );
+  )
 }

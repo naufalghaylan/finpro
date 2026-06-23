@@ -23,14 +23,14 @@ export function CheckoutAddressList({
         <MapPin aria-hidden="true" />
         <div>
           <h2>Alamat Pengiriman</h2>
-          <p>Pilih alamat yang punya koordinat agar store terdekat bisa dihitung.</p>
+          <p>Pilih alamat berkoordinat agar cabang PanenMart terdekat bisa dihitung.</p>
         </div>
       </div>
 
       {addresses.length === 0 ? (
         <div className="checkout-inline-alert">
           <AlertCircle aria-hidden="true" />
-          Belum ada alamat tersimpan. Tambahkan alamat terlebih dahulu di fitur profil/alamat.
+          Belum ada alamat tersimpan. Tambahkan alamat terlebih dahulu di profil.
         </div>
       ) : (
         <div className="checkout-address-grid">

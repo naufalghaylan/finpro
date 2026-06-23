@@ -1,9 +1,10 @@
-import { MutationStatus, OrderStatus } from '../../generated/prisma/client'
+import { OrderStatus } from '../../generated/prisma/client'
 import prisma from '../../lib/prisma'
 import { assertAdminCanAccessStore } from '../order-admin-access.service'
 import { ORDER_ERRORS, OrderServiceError } from '../order.errors'
 import { SHIPPED_AUTO_CONFIRM_IN_MS } from './order.constants'
 import { adminOrderSelect, orderSelect } from './order.select'
+import { getOrderStockFulfillment } from './order-fulfillment-state.service'
 import type { OrderPaymentParams } from './order.types'
 
 export const shipOrder = async ({ userId, orderId }: OrderPaymentParams) => {
@@ -14,17 +15,6 @@ export const shipOrder = async ({ userId, orderId }: OrderPaymentParams) => {
         id: true,
         storeId: true,
         status: true,
-        stockMutations: {
-          where: {
-            status: {
-              in: [MutationStatus.PENDING, MutationStatus.IN_TRANSIT],
-            },
-          },
-          select: {
-            id: true,
-            status: true,
-          },
-        },
       },
     })
 
@@ -42,10 +32,11 @@ export const shipOrder = async ({ userId, orderId }: OrderPaymentParams) => {
       )
     }
 
-    if (order.stockMutations.length > 0) {
+    const stockFulfillment = await getOrderStockFulfillment(order.id, tx)
+    if (!stockFulfillment.canShip) {
       throw new OrderServiceError(
         ORDER_ERRORS.ORDER_NOT_SHIPPABLE,
-        'Complete pending fulfillment requests before sending this order',
+        'Selesaikan seluruh kebutuhan mutasi stok sebelum mengirim pesanan',
         400,
       )
     }

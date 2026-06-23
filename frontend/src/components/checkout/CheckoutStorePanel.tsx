@@ -1,4 +1,4 @@
-import { AlertCircle, Store } from 'lucide-react'
+import { AlertCircle, MapPin, PackageCheck } from 'lucide-react'
 import type { CheckoutStore } from '../../types/order'
 
 interface CheckoutStorePanelProps {
@@ -7,22 +7,25 @@ interface CheckoutStorePanelProps {
 
 export function CheckoutStorePanel({ nearestStore }: CheckoutStorePanelProps) {
   return (
-    <section className="checkout-panel">
+    <section className="checkout-panel checkout-branch-panel">
       <div className="checkout-section-title">
-        <Store aria-hidden="true" />
+        <PackageCheck aria-hidden="true" />
         <div>
-          <h2>Store Terdekat</h2>
-          <p>Order akan diarahkan ke gudang/store paling dekat dari alamat yang dipilih.</p>
+          <h2>Cabang Pemrosesan</h2>
+          <p>Pesanan diproses dari cabang PanenMart yang paling sesuai dengan alamat pengiriman.</p>
         </div>
       </div>
 
       {nearestStore ? (
         <div className="checkout-store-card">
           <div>
-            <span className="store-chip">Store Terpilih</span>
+            <span className="store-chip">Cabang Terdekat</span>
             <h3>{nearestStore.name}</h3>
             <p>{nearestStore.address}</p>
-            <p>{nearestStore.city}, {nearestStore.province}</p>
+            <p className="checkout-branch-location">
+              <MapPin aria-hidden="true" />
+              {nearestStore.city}, {nearestStore.province}
+            </p>
           </div>
           <div
             className={`checkout-distance-badge ${
@@ -36,7 +39,7 @@ export function CheckoutStorePanel({ nearestStore }: CheckoutStorePanelProps) {
       ) : (
         <div className="checkout-inline-alert">
           <AlertCircle aria-hidden="true" />
-          Pilih alamat dengan koordinat untuk menghitung store terdekat.
+          Pilih alamat dengan koordinat untuk menentukan cabang PanenMart terdekat.
         </div>
       )}
     </section>

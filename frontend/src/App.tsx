@@ -50,7 +50,7 @@ function App() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100svh', gap: '16px' }}>
         <Loader2 size={48} className="animate-spin" style={{ color: 'var(--accent)' }} />
-        <p style={{ color: 'var(--ink-soft)', fontWeight: 500 }}>Loading...</p>
+        <p style={{ color: 'var(--ink-soft)', fontWeight: 500 }}>Memuat...</p>
       </div>
     )
   }
