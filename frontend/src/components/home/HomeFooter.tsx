@@ -16,7 +16,7 @@ export const HomeFooter = ({ brandName, sections }: HomeFooterProps) => {
           </div>
           <p>
             Belanja kebutuhan segar, stok terbaru, dan rekomendasi menu harian dari
-            store terdekat.
+            toko terdekat.
           </p>
           <div className="footer-input">
             <label className="sr-only" htmlFor="footer-email">

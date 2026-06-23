@@ -172,7 +172,7 @@ export default function HomePage() {
         {loading ? (
           <div className="shell" style={{ padding: '8rem 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
             <Loader2 size={40} className="animate-spin" style={{ color: 'var(--accent)' }} />
-            <p style={{ color: 'var(--ink-soft)', fontWeight: 500 }}>Loading...</p>
+            <p style={{ color: 'var(--ink-soft)', fontWeight: 500 }}>Memuat...</p>
           </div>
         ) : (
           <>

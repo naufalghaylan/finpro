@@ -66,8 +66,8 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
 
   return (
     <>
-      <div ref={mobileMenuRef} style={{ position: 'sticky', top: 0, zIndex: 20 }}>
-      <header className={`nav ${isScrolled ? 'scrolled' : ''}`} style={{ position: 'static' }}>
+      <div ref={mobileMenuRef} style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50 }}>
+      <header className={`nav ${isScrolled ? 'scrolled' : ''}`} style={{ position: 'static', paddingRight: 'var(--scrollbar-width, 0px)' }}>
         <div className="shell nav-inner">
           {/* Logo */}
           <div className="logo">
@@ -332,6 +332,8 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
         </div>
       </header>
       </div>
+      {/* Spacer to prevent layout shift since navbar is fixed */}
+      <div style={{ height: '72px' }}></div>
 
       {/* Backdrop overlay */}
       {isMobileMenuOpen && (
