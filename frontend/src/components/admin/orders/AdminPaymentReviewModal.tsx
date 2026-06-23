@@ -1,4 +1,5 @@
 import { AlertTriangle, CheckCircle2, ExternalLink, Loader2, X, XCircle } from 'lucide-react'
+import { AdminModal } from '../AdminModal'
 import { getUploadUrl } from '../../../components/orders/orderDisplay'
 import type { AdminOrder } from '../../../types/order'
 import { formatCurrency, formatDateTime } from '../../../utils/format'
@@ -12,6 +13,7 @@ interface AdminPaymentReviewModalProps {
   onClose: () => void
   onSetPendingAction: (action: PaymentConfirmationAction | null) => void
   onConfirm: () => void
+  requestClose?: boolean
 }
 
 export function AdminPaymentReviewModal({
@@ -21,25 +23,33 @@ export function AdminPaymentReviewModal({
   onClose,
   onSetPendingAction,
   onConfirm,
+  requestClose = false,
 }: AdminPaymentReviewModalProps) {
   const selectedPaymentProofUrl = getUploadUrl(order.paymentProof)
 
   return (
-    <div className="fixed left-0 right-0 bottom-0 top-[72px] z-50 flex items-center justify-center bg-black/40 px-4 py-6">
-      <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border border-admin-line-soft bg-admin-surface shadow-2xl">
+    <AdminModal
+      onClose={onClose}
+      busy={isConfirmingPayment}
+      requestClose={requestClose}
+      labelledBy="admin-payment-review-title"
+      maxWidthClassName="max-w-3xl"
+    >
+      {(closeModal) => (
+        <>
         <div className="flex items-start justify-between gap-4 px-6 py-5 border-b border-admin-line-soft">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-admin-accent-strong m-0">
-              Review Pembayaran Manual
+              Tinjau Pembayaran Manual
             </p>
-            <h3 className="text-lg font-bold text-admin-ink m-0 mt-1">{order.orderNumber}</h3>
+            <h3 id="admin-payment-review-title" className="text-lg font-bold text-admin-ink m-0 mt-1">{order.orderNumber}</h3>
             <p className="text-sm text-admin-ink-muted m-0 mt-1">
               Periksa bukti bayar sebelum menerima atau menolak pembayaran.
             </p>
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={closeModal}
             disabled={isConfirmingPayment}
             className="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-admin-line-soft bg-admin-surface text-admin-ink-soft
                        hover:bg-admin-surface-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
@@ -49,7 +59,7 @@ export function AdminPaymentReviewModal({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 p-6">
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-6 overflow-y-auto overscroll-contain p-6 lg:grid-cols-[1fr_280px]">
           <div>
             <div className="rounded-xl border border-admin-line-soft bg-admin-surface-2/30 overflow-hidden">
               {selectedPaymentProofUrl ? (
@@ -83,7 +93,7 @@ export function AdminPaymentReviewModal({
               <p className="text-xs font-semibold uppercase tracking-wider text-admin-ink-muted m-0 mb-3">Ringkasan</p>
               <div className="space-y-3 text-sm">
                 <div>
-                  <span className="block text-admin-ink-muted">Customer</span>
+                  <span className="block text-admin-ink-muted">Pelanggan</span>
                   <strong className="text-admin-ink">{order.user.name}</strong>
                 </div>
                 <div>
@@ -169,7 +179,8 @@ export function AdminPaymentReviewModal({
             )}
           </div>
         </div>
-      </div>
-    </div>
+        </>
+      )}
+    </AdminModal>
   )
 }

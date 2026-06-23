@@ -23,6 +23,34 @@ type ManualPaymentSectionProps = {
   onToggleProofExpanded: () => void
 }
 
+const getManualPaymentCopy = (order: CheckoutOrder, hasUploadedProof: boolean) => {
+  if (order.status === 'PENDING_PAYMENT' && !hasUploadedProof) {
+    return {
+      title: 'Unggah Bukti Transfer',
+      description: 'Pilih rekening tujuan, lakukan transfer, lalu unggah foto bukti bayar sebelum batas waktu berakhir.',
+    }
+  }
+
+  if (hasUploadedProof) {
+    return {
+      title: 'Bukti Transfer',
+      description: 'Bukti bayar sudah tersimpan pada pesanan ini. Status verifikasi mengikuti posisi pesanan saat ini.',
+    }
+  }
+
+  if (order.status === 'CANCELLED') {
+    return {
+      title: 'Transfer Manual',
+      description: 'Pesanan sudah dibatalkan, sehingga pembayaran dan unggah bukti tidak perlu dilanjutkan.',
+    }
+  }
+
+  return {
+    title: 'Transfer Manual',
+    description: 'Pembayaran transfer manual tidak memerlukan tindakan tambahan pada status pesanan saat ini.',
+  }
+}
+
 export function ManualPaymentSection({
   order,
   selectedChannelCode,
@@ -39,38 +67,44 @@ export function ManualPaymentSection({
   onUploadProof,
   onToggleProofExpanded,
 }: ManualPaymentSectionProps) {
-  const selectedChannel =
-    MANUAL_PAYMENT_CHANNELS.find((channel) => channel.code === selectedChannelCode) ?? null
   const hasUploadedProof = Boolean(order.paymentProof)
   const isPendingPayment = order.status === 'PENDING_PAYMENT'
-  const canChangeMethod = isPendingPayment && !hasUploadedProof
+  const shouldShowPaymentSetup = isPendingPayment && !hasUploadedProof
+  const selectedChannel = shouldShowPaymentSetup
+    ? MANUAL_PAYMENT_CHANNELS.find((channel) => channel.code === selectedChannelCode) ?? null
+    : null
+  const canChangeMethod = shouldShowPaymentSetup
   const isPaymentExpired = isPendingPayment && remainingSeconds <= 0
-  const canUploadProof =
-    isPendingPayment &&
+  const canUploadProof = (
+    shouldShowPaymentSetup &&
     Boolean(selectedChannel) &&
     !isPaymentExpired &&
     Boolean(selectedFile) &&
     !isUploading
+  )
+  const copy = getManualPaymentCopy(order, hasUploadedProof)
 
   return (
     <section className="checkout-panel payment-manual-panel">
       <div className="checkout-section-title">
         <WalletCards aria-hidden="true" />
         <div>
-          <h2>Upload Bukti Transfer</h2>
-          <p>Upload foto bukti bayar untuk melanjutkan proses pesanan manual transfer.</p>
+          <h2>{copy.title}</h2>
+          <p>{copy.description}</p>
         </div>
       </div>
 
-      <BankAccountList
-        selectedChannelCode={selectedChannelCode}
-        selectedChannel={selectedChannel}
-        isPendingPayment={isPendingPayment}
-        canChangeMethod={canChangeMethod}
-        onChannelChange={onChannelChange}
-      />
+      {shouldShowPaymentSetup && (
+        <BankAccountList
+          selectedChannelCode={selectedChannelCode}
+          selectedChannel={selectedChannel}
+          isPendingPayment={isPendingPayment}
+          canChangeMethod={canChangeMethod}
+          onChannelChange={onChannelChange}
+        />
+      )}
 
-      {selectedChannel && (
+      {shouldShowPaymentSetup && selectedChannel && (
         <BankDestinationInfo
           selectedChannel={selectedChannel}
           hasCopiedDestination={hasCopiedDestination}

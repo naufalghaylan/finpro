@@ -13,6 +13,13 @@ export type OrderStatus =
   | 'CANCELLED'
 export type OrderStatusGroup = 'ongoing' | 'completed' | 'cancelled'
 export type MutationStatus = 'PENDING' | 'APPROVED' | 'IN_TRANSIT' | 'COMPLETED' | 'REJECTED'
+export type StockFulfillmentStatus =
+  | 'NOT_REQUIRED'
+  | 'REQUIRED'
+  | 'PENDING'
+  | 'IN_TRANSIT'
+  | 'COMPLETED'
+  | 'REJECTED'
 
 export type CheckoutAddress = {
   id: number
@@ -179,6 +186,34 @@ export type AdminOrder = CheckoutOrder & {
     phone: string | null
   }
   stockMutations: OrderFulfillmentMutation[]
+  stockFulfillment: OrderStockFulfillment
+}
+
+export type FulfillmentSourceRecommendation = {
+  storeId: number
+  storeName: string
+  city: string
+  distanceKm: number
+  availableQuantity: number
+  reservedQuantity: number
+}
+
+export type FulfillmentRequirement = {
+  productId: number
+  productName: string
+  requiredQuantity: number
+  completedQuantity: number
+  activeQuantity: number
+  remainingQuantity: number
+  status: StockFulfillmentStatus
+  sources: FulfillmentSourceRecommendation[]
+}
+
+export type OrderStockFulfillment = {
+  status: StockFulfillmentStatus
+  required: boolean
+  canShip: boolean
+  requirements: FulfillmentRequirement[]
 }
 
 export type OrderFulfillmentMutation = {
@@ -209,6 +244,27 @@ export type OrderFulfillmentMutation = {
     name: string
     slug: string
   }
+  order?: {
+    id: number
+    orderNumber: string
+    status: OrderStatus
+  } | null
+}
+
+export type FulfillmentDirection = 'all' | 'incoming' | 'outgoing'
+
+export type StoreFulfillmentListQuery = {
+  storeId: number
+  page?: number
+  limit?: number
+  direction?: FulfillmentDirection
+  status?: MutationStatus
+  search?: string
+}
+
+export type StoreFulfillmentListResponse = {
+  fulfillments: OrderFulfillmentMutation[]
+  meta: OrderListMeta
 }
 
 export type AdminOrderListResponse = {

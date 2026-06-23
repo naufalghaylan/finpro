@@ -21,8 +21,7 @@ const statusOptions: { value: OrderStatus | ''; label: string }[] = [
   { value: 'CANCELLED', label: 'Dibatalkan' },
 ]
 
-const hasActiveFulfillment = (order: AdminOrder) =>
-  order.stockMutations.some((mutation) => ['PENDING', 'IN_TRANSIT'].includes(mutation.status))
+const hasBlockingFulfillment = (order: AdminOrder) => !order.stockFulfillment.canShip
 
 export default function AdminOrderList({ storeId }: { storeId?: number }) {
   const [detailOrder, setDetailOrder] = useState<AdminOrder | null>(null)
@@ -42,6 +41,7 @@ export default function AdminOrderList({ storeId }: { storeId?: number }) {
     selectedOrder,
     pendingAction,
     isConfirmingPayment,
+    paymentReviewShouldClose,
     setSelectedOrder,
     setPendingAction,
     handleConfirmManualPayment,
@@ -49,6 +49,7 @@ export default function AdminOrderList({ storeId }: { storeId?: number }) {
     cancelOrderTarget,
     cancelReason,
     isCancellingOrder,
+    cancelDialogShouldClose,
     setCancelOrderTarget,
     setCancelReason,
     handleAdminCancelOrder,
@@ -57,6 +58,7 @@ export default function AdminOrderList({ storeId }: { storeId?: number }) {
     setFulfillmentOrder,
     shipOrderTarget,
     isShippingOrder,
+    shipDialogShouldClose,
     setShipOrderTarget,
     handleShipOrder,
     closeShipDialog,
@@ -113,17 +115,17 @@ export default function AdminOrderList({ storeId }: { storeId?: number }) {
             }}
           />
 
-          <div className="rounded-2xl border border-admin-line-soft bg-admin-surface shadow-sm overflow-hidden">
+          <div className="overflow-hidden rounded-3xl border border-admin-line-soft bg-admin-surface shadow-sm">
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <div className="flex flex-col items-center justify-center gap-3 bg-admin-surface-2/20 px-6 py-20 text-center">
                 <Loader2 className="w-8 h-8 text-admin-accent admin-spin" />
                 <p className="text-sm text-admin-ink-muted m-0">Memuat pesanan...</p>
               </div>
             ) : orders.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-3 border border-admin-line-soft rounded-2xl bg-admin-surface-2/30">
+              <div className="m-4 flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-admin-line bg-admin-surface-2/35 px-6 py-16 text-center">
                 <ClipboardList className="w-10 h-10 text-admin-line" />
                 <p className="text-sm text-admin-ink-muted m-0">
-                  {storeId ? 'Belum ada pesanan di toko ini.' : 'Belum ada pesanan yang sesuai filter.'}
+                  {storeId ? 'Belum ada pesanan di cabang ini.' : 'Tidak ada pesanan yang cocok dengan filter saat ini.'}
                 </p>
               </div>
             ) : (
@@ -142,6 +144,7 @@ export default function AdminOrderList({ storeId }: { storeId?: number }) {
           order={selectedOrder}
           pendingAction={pendingAction}
           isConfirmingPayment={isConfirmingPayment}
+          requestClose={paymentReviewShouldClose}
           onClose={closePaymentReview}
           onSetPendingAction={setPendingAction}
           onConfirm={handleConfirmManualPayment}
@@ -153,6 +156,7 @@ export default function AdminOrderList({ storeId }: { storeId?: number }) {
           order={cancelOrderTarget}
           cancelReason={cancelReason}
           isCancellingOrder={isCancellingOrder}
+          requestClose={cancelDialogShouldClose}
           onClose={closeCancelDialog}
           onCancelReasonChange={setCancelReason}
           onConfirm={handleAdminCancelOrder}
@@ -163,7 +167,8 @@ export default function AdminOrderList({ storeId }: { storeId?: number }) {
         <AdminShipOrderModal
           order={shipOrderTarget}
           isShippingOrder={isShippingOrder}
-          hasActiveFulfillment={hasActiveFulfillment(shipOrderTarget)}
+          requestClose={shipDialogShouldClose}
+          hasActiveFulfillment={hasBlockingFulfillment(shipOrderTarget)}
           onClose={closeShipDialog}
           onConfirm={handleShipOrder}
         />

@@ -5,9 +5,14 @@ import {
 } from '../controllers/order-checkout.controller'
 import {
   approveFulfillment,
+  approveFulfillments,
+  listStoreFulfillments,
   receiveFulfillment,
+  receiveFulfillments,
   rejectFulfillment,
+  rejectFulfillments,
   requestOrderFulfillment,
+  requestOrderFulfillments,
 } from '../controllers/order-fulfillment.controller'
 import {
   adminCancelOrder,
@@ -36,6 +41,11 @@ orderRouter.get('/', listOrders)
 orderRouter.get('/checkout', getCheckoutPreview)
 orderRouter.post('/checkout', createCheckoutOrder)
 orderRouter.get('/admin', authorize('SUPER_ADMIN', 'STORE_ADMIN'), listAdminOrders)
+orderRouter.get(
+  '/admin/fulfillments',
+  authorize('SUPER_ADMIN', 'STORE_ADMIN'),
+  listStoreFulfillments,
+)
 orderRouter.get('/:id', getOrderPaymentDetails)
 orderRouter.get('/:id/payment', getOrderPaymentDetails)
 orderRouter.post('/:id/payment-gateway', createMidtransPayment)
@@ -59,9 +69,29 @@ orderRouter.post(
   adminCancelOrder,
 )
 orderRouter.post(
+  '/admin/:id/fulfillments/batch',
+  authorize('SUPER_ADMIN', 'STORE_ADMIN'),
+  requestOrderFulfillments,
+)
+orderRouter.post(
   '/admin/:id/fulfillments',
   authorize('SUPER_ADMIN', 'STORE_ADMIN'),
   requestOrderFulfillment,
+)
+orderRouter.post(
+  '/admin/fulfillments/batch/approve',
+  authorize('SUPER_ADMIN', 'STORE_ADMIN'),
+  approveFulfillments,
+)
+orderRouter.post(
+  '/admin/fulfillments/batch/receive',
+  authorize('SUPER_ADMIN', 'STORE_ADMIN'),
+  receiveFulfillments,
+)
+orderRouter.post(
+  '/admin/fulfillments/batch/reject',
+  authorize('SUPER_ADMIN', 'STORE_ADMIN'),
+  rejectFulfillments,
 )
 orderRouter.post(
   '/admin/fulfillments/:mutationId/approve',

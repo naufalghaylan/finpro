@@ -107,7 +107,7 @@ export function useManualPayment({ order, orderId, setOrder }: UseManualPaymentP
         URL.revokeObjectURL(previewUrl)
         setPreviewUrl(null)
       }
-      showToast('Bukti pembayaran berhasil diupload', 'success')
+      showToast('Bukti pembayaran berhasil diunggah', 'success')
     } catch (uploadError) {
       showToast(getPaymentErrorMessage(uploadError), 'error')
     } finally {

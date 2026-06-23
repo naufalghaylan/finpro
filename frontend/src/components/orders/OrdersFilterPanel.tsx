@@ -27,12 +27,12 @@ export function OrdersFilterPanel({
   return (
     <form className="orders-filter-panel" onSubmit={onSubmit}>
       <label className="orders-filter-field">
-        <span>No Order / Produk</span>
+        <span>Nomor Pesanan / Produk / Cabang</span>
         <div className="orders-input-shell">
           <Search aria-hidden="true" />
           <input
             type="search"
-            placeholder="Masukkan nomor order atau nama produk"
+            placeholder="Cari nomor pesanan, produk, atau cabang PanenMart"
             value={searchDraft}
             onChange={(event) => onSearchChange(event.target.value)}
           />

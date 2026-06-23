@@ -37,15 +37,18 @@ export function useAdminOrderList(storeId?: number) {
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null)
   const [pendingAction, setPendingAction] = useState<PaymentConfirmationAction | null>(null)
   const [isConfirmingPayment, setIsConfirmingPayment] = useState(false)
+  const [paymentReviewShouldClose, setPaymentReviewShouldClose] = useState(false)
   
   const [cancelOrderTarget, setCancelOrderTarget] = useState<AdminOrder | null>(null)
   const [cancelReason, setCancelReason] = useState('')
   const [isCancellingOrder, setIsCancellingOrder] = useState(false)
+  const [cancelDialogShouldClose, setCancelDialogShouldClose] = useState(false)
   
   const [fulfillmentOrder, setFulfillmentOrder] = useState<AdminOrder | null>(null)
   
   const [shipOrderTarget, setShipOrderTarget] = useState<AdminOrder | null>(null)
   const [isShippingOrder, setIsShippingOrder] = useState(false)
+  const [shipDialogShouldClose, setShipDialogShouldClose] = useState(false)
 
   const showStoreFilter = !storeId && user?.role === 'SUPER_ADMIN'
 
@@ -59,7 +62,7 @@ export function useAdminOrderList(storeId?: number) {
         page,
         limit: PAGE_LIMIT,
         storeId: activeStoreId,
-        orderNumber: search.trim() || undefined,
+        search: search.trim() || undefined,
         status: statusFilter || undefined,
       })
 
@@ -73,7 +76,8 @@ export function useAdminOrderList(storeId?: number) {
   }, [page, search, selectedFilterStoreId, statusFilter, storeId, showToast])
 
   useEffect(() => {
-    void fetchOrders()
+    const timeoutId = window.setTimeout(() => void fetchOrders(), 0)
+    return () => window.clearTimeout(timeoutId)
   }, [fetchOrders])
 
   useEffect(() => {
@@ -89,12 +93,7 @@ export function useAdminOrderList(storeId?: number) {
 
     try {
       setIsConfirmingPayment(true)
-      const updatedOrder = await confirmManualPayment(selectedOrder.id, pendingAction)
-
-      setOrders((currentOrders) =>
-        currentOrders.map((order) => order.id === updatedOrder.id ? updatedOrder : order),
-      )
-      setSelectedOrder(updatedOrder)
+      await confirmManualPayment(selectedOrder.id, pendingAction)
       setPendingAction(null)
       showToast(
         pendingAction === 'approve'
@@ -102,7 +101,8 @@ export function useAdminOrderList(storeId?: number) {
           : 'Bukti bayar ditolak. User bisa upload ulang bukti pembayaran.',
         'success',
       )
-      setSelectedOrder(null)
+      await fetchOrders()
+      setPaymentReviewShouldClose(true)
     } catch (e) {
       showToast(getApiErrorMessage(e, 'Gagal memproses konfirmasi pembayaran'), 'error')
     } finally {
@@ -114,6 +114,7 @@ export function useAdminOrderList(storeId?: number) {
     if (isConfirmingPayment) return
     setSelectedOrder(null)
     setPendingAction(null)
+    setPaymentReviewShouldClose(false)
   }
 
   const handleAdminCancelOrder = async () => {
@@ -123,9 +124,9 @@ export function useAdminOrderList(storeId?: number) {
       setIsCancellingOrder(true)
       await adminCancelOrder(cancelOrderTarget.id, cancelReason)
       showToast('Pesanan berhasil dibatalkan dan stok dikembalikan', 'success')
-      setCancelOrderTarget(null)
       setCancelReason('')
       await fetchOrders()
+      setCancelDialogShouldClose(true)
     } catch (e) {
       showToast(getApiErrorMessage(e, 'Gagal membatalkan pesanan'), 'error')
     } finally {
@@ -137,6 +138,7 @@ export function useAdminOrderList(storeId?: number) {
     if (isCancellingOrder) return
     setCancelOrderTarget(null)
     setCancelReason('')
+    setCancelDialogShouldClose(false)
   }
 
   const handleShipOrder = async () => {
@@ -146,8 +148,8 @@ export function useAdminOrderList(storeId?: number) {
       setIsShippingOrder(true)
       await shipAdminOrder(shipOrderTarget.id)
       showToast('Pesanan berhasil ditandai sedang dikirim', 'success')
-      setShipOrderTarget(null)
       await fetchOrders()
+      setShipDialogShouldClose(true)
     } catch (e) {
       showToast(getApiErrorMessage(e, 'Gagal mengirim pesanan'), 'error')
     } finally {
@@ -158,6 +160,7 @@ export function useAdminOrderList(storeId?: number) {
   const closeShipDialog = () => {
     if (isShippingOrder) return
     setShipOrderTarget(null)
+    setShipDialogShouldClose(false)
   }
 
   return {
@@ -177,6 +180,7 @@ export function useAdminOrderList(storeId?: number) {
     selectedOrder,
     pendingAction,
     isConfirmingPayment,
+    paymentReviewShouldClose,
     setSelectedOrder,
     setPendingAction,
     handleConfirmManualPayment,
@@ -184,6 +188,7 @@ export function useAdminOrderList(storeId?: number) {
     cancelOrderTarget,
     cancelReason,
     isCancellingOrder,
+    cancelDialogShouldClose,
     setCancelOrderTarget,
     setCancelReason,
     handleAdminCancelOrder,
@@ -192,6 +197,7 @@ export function useAdminOrderList(storeId?: number) {
     setFulfillmentOrder,
     shipOrderTarget,
     isShippingOrder,
+    shipDialogShouldClose,
     setShipOrderTarget,
     handleShipOrder,
     closeShipDialog,

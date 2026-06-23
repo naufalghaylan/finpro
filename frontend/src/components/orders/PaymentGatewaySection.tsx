@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, CreditCard, Loader2, RefreshCw } from 'lucide-react'
+import { AlertCircle, CheckCircle2, CreditCard, Loader2, RefreshCw, XCircle } from 'lucide-react'
 import type { CheckoutOrder } from '../../types/order'
 
 type PaymentGatewaySectionProps = {
@@ -10,6 +10,51 @@ type PaymentGatewaySectionProps = {
   onRetry: () => void
 }
 
+const getResolvedGatewayCopy = (order: CheckoutOrder) => {
+  if (order.status === 'CANCELLED') {
+    return {
+      title: 'Pembayaran tidak berhasil',
+      description: 'Transaksi online gagal atau kedaluwarsa, sehingga pesanan dibatalkan.',
+      Icon: XCircle,
+      className: 'payment-gateway-status-card--error',
+    }
+  }
+
+  if (order.status === 'PROCESSING') {
+    return {
+      title: 'Pembayaran berhasil',
+      description: 'Pembayaran online sudah diterima. Pesanan sedang disiapkan oleh cabang PanenMart.',
+      Icon: CheckCircle2,
+      className: '',
+    }
+  }
+
+  if (order.status === 'SHIPPED') {
+    return {
+      title: 'Pembayaran selesai, pesanan dikirim',
+      description: 'Pembayaran online sudah selesai dan pesanan sedang dalam pengiriman.',
+      Icon: CheckCircle2,
+      className: '',
+    }
+  }
+
+  if (order.status === 'CONFIRMED') {
+    return {
+      title: 'Pembayaran dan pesanan selesai',
+      description: 'Pembayaran online sudah selesai dan pesanan sudah dikonfirmasi diterima.',
+      Icon: CheckCircle2,
+      className: '',
+    }
+  }
+
+  return {
+    title: 'Status pembayaran diperbarui',
+    description: 'Pembayaran online sudah tidak berada di status menunggu pembayaran.',
+    Icon: CheckCircle2,
+    className: '',
+  }
+}
+
 export function PaymentGatewaySection({
   order,
   embedContainerId,
@@ -18,13 +63,16 @@ export function PaymentGatewaySection({
   errorMessage,
   onRetry,
 }: PaymentGatewaySectionProps) {
+  const resolvedCopy = getResolvedGatewayCopy(order)
+  const ResolvedIcon = resolvedCopy.Icon
+
   return (
     <section className="checkout-panel">
       <div className="checkout-section-title">
         <CreditCard aria-hidden="true" />
         <div>
-          <h2>Payment Gateway Midtrans</h2>
-          <p>Bayar pesanan melalui Midtrans Sandbox. Status pesanan akan disinkronkan otomatis setelah pembayaran.</p>
+          <h2>Pembayaran Online</h2>
+          <p>Bayar pesanan melalui Midtrans. Status pesanan akan disinkronkan otomatis setelah pembayaran.</p>
         </div>
       </div>
       {order.status === 'PENDING_PAYMENT' ? (
@@ -32,9 +80,9 @@ export function PaymentGatewaySection({
           <div className="payment-gateway-intro">
             <CreditCard aria-hidden="true" />
             <div>
-              <h3>Midtrans Sandbox</h3>
+              <h3>Midtrans</h3>
               <p>
-                Pilih metode pembayaran Midtrans langsung dari halaman ini. Setelah simulasi pembayaran selesai,
+                Pilih metode pembayaran Midtrans langsung dari halaman ini. Setelah pembayaran selesai,
                 status pesanan akan diperbarui otomatis.
               </p>
             </div>
@@ -75,7 +123,7 @@ export function PaymentGatewaySection({
               <div>
                 <h3>Menunggu pembayaran Midtrans</h3>
                 <p>
-                  Selesaikan simulasi pembayaran pada panel Midtrans di atas. Jangan refresh halaman sebelum proses
+                  Selesaikan pembayaran pada panel Midtrans di atas. Jangan refresh halaman sebelum proses
                   selesai.
                 </p>
               </div>
@@ -83,23 +131,11 @@ export function PaymentGatewaySection({
           )}
         </div>
       ) : (
-        <div className="payment-gateway-status-card">
-          <CheckCircle2 aria-hidden="true" />
+        <div className={`payment-gateway-status-card ${resolvedCopy.className}`}>
+          <ResolvedIcon aria-hidden="true" />
           <div>
-            <h3>
-              {order.status === 'PROCESSING'
-                ? 'Pembayaran berhasil'
-                : order.status === 'CANCELLED'
-                  ? 'Pembayaran tidak berhasil'
-                  : 'Status pembayaran diperbarui'}
-            </h3>
-            <p>
-              {order.status === 'PROCESSING'
-                ? 'Pesanan sudah masuk proses dan tidak memerlukan pembayaran ulang.'
-                : order.status === 'CANCELLED'
-                  ? 'Transaksi gateway gagal atau kedaluwarsa, sehingga pesanan dibatalkan.'
-                  : 'Pembayaran gateway sudah tidak berada di status menunggu pembayaran.'}
-            </p>
+            <h3>{resolvedCopy.title}</h3>
+            <p>{resolvedCopy.description}</p>
           </div>
         </div>
       )}

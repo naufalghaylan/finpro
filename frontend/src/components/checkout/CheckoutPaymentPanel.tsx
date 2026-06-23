@@ -13,6 +13,17 @@ interface CheckoutPaymentPanelProps {
   onPaymentMethodChange: (method: PaymentMethod) => void
 }
 
+const paymentMethodDisplay: Record<PaymentMethod, { label: string; description: string }> = {
+  MANUAL_TRANSFER: {
+    label: 'Transfer Manual',
+    description: 'Unggah bukti bayar setelah pesanan dibuat.',
+  },
+  PAYMENT_GATEWAY: {
+    label: 'Pembayaran Online',
+    description: 'Bayar online dan status pesanan diperbarui otomatis.',
+  },
+}
+
 const getPaymentIcon = (paymentMethod: PaymentMethod) =>
   paymentMethod === 'PAYMENT_GATEWAY' ? CreditCard : WalletCards
 
@@ -27,13 +38,14 @@ export function CheckoutPaymentPanel({
         <CreditCard aria-hidden="true" />
         <div>
           <h2>Metode Pembayaran</h2>
-          <p>Transfer manual menunggu upload bukti bayar, payment gateway langsung masuk proses.</p>
+          <p>Pilih cara bayar yang paling nyaman untuk menyelesaikan pesanan.</p>
         </div>
       </div>
 
       <div className="checkout-payment-grid">
         {paymentMethods.map((method) => {
           const Icon = getPaymentIcon(method.value)
+          const display = paymentMethodDisplay[method.value]
 
           return (
             <label
@@ -47,8 +59,8 @@ export function CheckoutPaymentPanel({
                 onChange={() => onPaymentMethodChange(method.value)}
               />
               <Icon aria-hidden="true" />
-              <strong>{method.label}</strong>
-              <span>{method.description}</span>
+              <strong>{display.label}</strong>
+              <span>{display.description}</span>
             </label>
           )
         })}

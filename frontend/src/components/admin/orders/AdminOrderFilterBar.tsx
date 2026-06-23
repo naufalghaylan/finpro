@@ -31,66 +31,87 @@ export function AdminOrderFilterBar({
   onSearchChange,
 }: AdminOrderFilterBarProps) {
   return (
-    <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-      <div>
-        <h3 className="text-lg font-bold text-admin-ink m-0">
-          {storeId ? 'Daftar Pesanan Toko' : 'Daftar Pesanan Global'}
-        </h3>
-        <p className="text-sm text-admin-ink-muted mt-0.5 m-0">
-          {loading ? 'Memuat...' : `${totalOrders} pesanan ditemukan`}
-        </p>
+    <section className="mb-5 rounded-2xl border border-admin-line-soft bg-admin-surface p-4 shadow-sm md:p-5">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="m-0 text-xs font-bold uppercase tracking-[0.16em] text-admin-accent-strong">
+            Pesanan Admin
+          </p>
+          <h3 className="m-0 mt-1 text-lg font-bold text-admin-ink">
+            {storeId ? 'Daftar Pesanan Toko' : 'Daftar Pesanan Global'}
+          </h3>
+        </div>
+        <div className="rounded-xl border border-admin-line-soft bg-admin-surface-2/45 px-3.5 py-2 text-right">
+          <span className="block text-[11px] font-semibold uppercase tracking-wider text-admin-ink-muted">
+            Total hasil
+          </span>
+          <strong className="text-base text-admin-ink">
+            {loading ? 'Memuat...' : `${totalOrders} pesanan`}
+          </strong>
+        </div>
       </div>
 
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(220px,0.9fr)_minmax(190px,0.7fr)_minmax(280px,1.4fr)]">
         {showStoreFilter && (
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-admin-ink-soft">
+              Cabang
+            </span>
+            <div className="relative">
+              <StoreIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-admin-ink-muted" />
+              <select
+                value={selectedFilterStoreId}
+                onChange={(event) => onStoreChange(event.target.value === '' ? '' : Number(event.target.value))}
+                className="w-full cursor-pointer appearance-none rounded-xl border border-admin-line bg-admin-surface px-10 py-2.5 text-sm text-admin-ink transition-all focus:border-admin-accent focus:outline-none focus:ring-2 focus:ring-admin-accent/30"
+              >
+                <option value="">Semua Cabang</option>
+                {stores.map((store) => (
+                  <option key={store.id} value={store.id}>
+                    {store.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronRight className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-admin-ink-muted" />
+            </div>
+          </label>
+        )}
+
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-admin-ink-soft">
+            Status
+          </span>
           <div className="relative">
-            <StoreIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-admin-ink-muted pointer-events-none" />
             <select
-              value={selectedFilterStoreId}
-              onChange={(event) => onStoreChange(event.target.value === '' ? '' : Number(event.target.value))}
-              className="pl-10 pr-8 py-2.5 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink
-                         focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all appearance-none cursor-pointer"
+              value={statusFilter}
+              onChange={(event) => onStatusChange(event.target.value as OrderStatus | '')}
+              className="w-full cursor-pointer appearance-none rounded-xl border border-admin-line bg-admin-surface px-4 py-2.5 pr-9 text-sm text-admin-ink transition-all focus:border-admin-accent focus:outline-none focus:ring-2 focus:ring-admin-accent/30"
             >
-              <option value="">Semua Toko</option>
-              {stores.map((store) => (
-                <option key={store.id} value={store.id}>
-                  {store.name}
+              {statusOptions.map((option) => (
+                <option key={option.value || 'all'} value={option.value}>
+                  {option.label}
                 </option>
               ))}
             </select>
-            <ChevronRight className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-admin-ink-muted pointer-events-none rotate-90" />
+            <ChevronRight className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-admin-ink-muted" />
           </div>
-        )}
+        </label>
 
-        <div className="relative">
-          <select
-            value={statusFilter}
-            onChange={(event) => onStatusChange(event.target.value as OrderStatus | '')}
-            className="px-4 pr-8 py-2.5 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink
-                       focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all appearance-none cursor-pointer"
-          >
-            {statusOptions.map((option) => (
-              <option key={option.value || 'all'} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <ChevronRight className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-admin-ink-muted pointer-events-none rotate-90" />
-        </div>
-
-        <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-admin-ink-muted pointer-events-none" />
-          <input
-            type="text"
-            placeholder="Cari nomor order..."
-            value={search}
-            onChange={(event) => onSearchChange(event.target.value)}
-            className="pl-10 pr-4 py-2.5 w-64 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink
-                       placeholder:text-admin-ink-muted
-                       focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all"
-          />
-        </div>
+        <label className={`block ${showStoreFilter ? '' : 'lg:col-span-2'}`}>
+          <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-admin-ink-soft">
+            Pencarian
+          </span>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-admin-ink-muted" />
+            <input
+              type="text"
+              placeholder="Cari nomor pesanan, produk, atau cabang"
+              value={search}
+              onChange={(event) => onSearchChange(event.target.value)}
+              className="w-full rounded-xl border border-admin-line bg-admin-surface py-2.5 pl-10 pr-4 text-sm text-admin-ink transition-all placeholder:text-admin-ink-muted focus:border-admin-accent focus:outline-none focus:ring-2 focus:ring-admin-accent/30"
+            />
+          </div>
+        </label>
       </div>
-    </div>
+    </section>
   )
 }

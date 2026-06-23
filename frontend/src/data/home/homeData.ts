@@ -38,7 +38,7 @@ export const heroSlides: PromoSlide[] = [
     kicker: 'Panen Minggu Ini',
     title: 'Sayur segar tiba pagi ini.',
     description:
-      'Pilih paket siap masak dari mitra lokal. Semua dikurasi dan dikirim dari store terdekat.',
+      'Pilih paket siap masak dari mitra lokal. Semua dikurasi dan dikirim dari toko terdekat.',
     ctaLabel: 'Mulai belanja',
     note: 'Gratis kirim untuk pesanan di atas Rp 150.000',
     highlight: 'Dipilih tim quality control',
@@ -60,7 +60,7 @@ export const heroSlides: PromoSlide[] = [
     description:
       'Kurasi daging dan ikan dengan kualitas konsisten. Cocok untuk menu cepat harian.',
     ctaLabel: 'Pilih protein',
-    note: 'Stok dari store terdekat setiap pagi',
+    note: 'Stok dari toko terdekat setiap pagi',
     highlight: 'Tersedia potongan hemat',
   },
 ]
@@ -79,7 +79,7 @@ export const valueProps: ValueProp[] = [
   {
     id: 'value-3',
     title: 'Transparansi stok per store',
-    description: 'Stok tampil sesuai store terdekatmu secara real-time.',
+    description: 'Stok tampil sesuai toko terdekatmu secara real-time.',
   },
 ]
 

@@ -1,12 +1,17 @@
 export { ORDER_ERRORS, OrderServiceError } from './order.errors'
 export {
   approveFulfillment,
+  approveFulfillments,
   receiveFulfillment,
+  receiveFulfillments,
   rejectFulfillment,
+  rejectFulfillments,
 } from './order/order-fulfillment-action.service'
 export {
   requestOrderFulfillment,
+  requestOrderFulfillments,
 } from './order/order-fulfillment-request.service'
+export { listStoreFulfillments } from './order/order-fulfillment-query.service'
 export { createCheckoutOrder, getCheckoutPreview } from './order/order-checkout.service'
 export { autoCancelExpiredManualTransferOrders, cancelOrder } from './order/order-cancellation.service'
 export { autoConfirmShippedOrders, confirmOrderReceived, shipOrder } from './order/order-completion.service'
