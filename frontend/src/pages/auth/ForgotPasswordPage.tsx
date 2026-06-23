@@ -46,8 +46,8 @@ export default function ForgotPasswordPage() {
           <div className="hero-card" style={{ width: '100%', maxWidth: '420px', padding: 'clamp(24px, 5vw, 40px) clamp(16px, 5vw, 32px)' }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <Link to="/" style={{ textDecoration: 'none', display: 'inline-block' }}>
-                <div className="logo" style={{ justifyContent: 'center', marginBottom: '20px' }}>
-                  <span className="logo-mark"></span>
+                <div className="logo" style={{ justifyContent: 'center', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <img src="/PanenMartLogo.svg" alt="PanenMart Logo" style={{ width: '32px', height: '32px' }} />
                   <span style={{ fontSize: '1.4rem' }}>PanenMart</span>
                 </div>
               </Link>

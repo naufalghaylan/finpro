@@ -3,6 +3,7 @@ import { AxiosError } from 'axios';
 import type { Store } from '../../types/store';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getStoreById, updateStore } from '../../api/store';
+import ErrorPage from '../error/ErrorPage';
 
 import { useToast } from '../../components/common/Toast';
 import AdminStockList from './AdminStockList';
@@ -21,6 +22,7 @@ export default function AdminStoreDetailPage() {
   const [store, setStore] = useState<Store | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [fetchError, setFetchError] = useState<{message: string, code: number} | null>(null);
   const [formData, setFormData] = useState<StoreDetailFormData>({
     name: '',
     address: '',
@@ -41,6 +43,7 @@ export default function AdminStoreDetailPage() {
   const fetchStore = async () => {
     try {
       setLoading(true);
+      setFetchError(null);
       const res = await getStoreById(Number(id));
       setStore(res.data);
       setFormData({
@@ -55,7 +58,12 @@ export default function AdminStoreDetailPage() {
       setPosition([res.data.latitude || -6.2088, res.data.longitude || 106.8456]);
     } catch (e) {
       const error = e as AxiosError<{ message?: string }>;
+      setFetchError({
+        message: error.response?.data?.message || 'Gagal mengambil data toko',
+        code: error.response?.status || 500
+      });
       showToast(error.response?.data?.message || 'Gagal mengambil data toko', 'error');
+      // Only redirect if unauthorized for the entire stores section, otherwise show error
       if (error.response?.status === 403) navigate('/admin/stores');
     } finally {
       setLoading(false);
@@ -97,6 +105,18 @@ export default function AdminStoreDetailPage() {
       <div className="font-admin flex flex-col items-center justify-center py-20 gap-3">
         <Loader2 className="w-8 h-8 text-admin-accent admin-spin" />
         <p className="text-sm text-admin-ink-muted m-0">Memuat data toko...</p>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="py-10">
+        <ErrorPage 
+          title="Toko Tidak Ditemukan" 
+          message={fetchError.message} 
+          code={fetchError.code} 
+        />
       </div>
     );
   }

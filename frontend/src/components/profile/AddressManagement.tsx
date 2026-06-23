@@ -3,15 +3,17 @@ import { useAddressStore } from '../../store/addressStore'
 import { MapPin, Plus, Star, Edit2, Trash2 } from 'lucide-react'
 import { AddressFormModal } from './AddressFormModal'
 import type { UserAddress } from '../../types/address'
+import ErrorPage from '../../pages/error/ErrorPage'
 
 export const AddressManagement = () => {
-  const { addresses, fetchAddresses, deleteAddress, setPrimaryAddress, isLoading } = useAddressStore()
+  const { addresses, fetchAddresses, deleteAddress, setPrimaryAddress, isLoading, error} = useAddressStore()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingAddress, setEditingAddress] = useState<UserAddress | null>(null)
 
+  
   useEffect(() => {
     fetchAddresses()
-  }, [fetchAddresses])
+  }, [fetchAddresses]) 
 
   const handleEdit = (address: UserAddress) => {
     setEditingAddress(address)
@@ -27,6 +29,10 @@ export const AddressManagement = () => {
     if (confirm('Apakah Anda yakin ingin menghapus alamat ini?')) {
       await deleteAddress(id)
     }
+  }
+  
+  if (error) {
+    return <ErrorPage />
   }
 
   return (

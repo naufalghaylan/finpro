@@ -76,8 +76,8 @@ export default function VerifyAccountPage() {
                 <ChevronLeft size={24} />
               </button>
               <Link to="/" style={{ textDecoration: 'none', display: 'inline-block' }}>
-                <div className="logo" style={{ justifyContent: 'center', marginBottom: '20px' }}>
-                  <span className="logo-mark"></span>
+                <div className="logo" style={{ justifyContent: 'center', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <img src="/PanenMartLogo.svg" alt="PanenMart Logo" style={{ width: '32px', height: '32px' }} />
                   <span style={{ fontSize: '1.4rem' }}>PanenMart</span>
                 </div>
               </Link>
