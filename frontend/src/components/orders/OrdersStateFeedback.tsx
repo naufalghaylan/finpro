@@ -48,7 +48,7 @@ export function OrdersEmptyState({ hasActiveFilters, onClearFilters }: OrdersEmp
       <h2>Belum ada pesanan ditemukan</h2>
       <p>
         {hasActiveFilters
-          ? 'Coba ubah nomor order, nama produk, rentang tanggal, atau status pesanan.'
+          ? 'Coba ubah nomor pesanan, nama produk, cabang PanenMart, rentang tanggal, atau status pesanan.'
           : 'Setelah checkout berhasil, pesananmu akan tampil di sini.'}
       </p>
       {hasActiveFilters ? (

@@ -1,18 +1,32 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import {
   approveOrderFulfillment,
   receiveOrderFulfillment,
   rejectOrderFulfillment,
-  requestOrderFulfillment,
+  requestOrderFulfillments,
 } from '../../api/order.api'
-import { getPublicStores } from '../../api/store'
 import { useToast } from '../../components/common/Toast'
 import { useAuthStore } from '../../store/authStore'
-import type { AdminOrder, OrderFulfillmentMutation } from '../../types/order'
-import type { Store } from '../../types/store'
+import type {
+  AdminOrder,
+  FulfillmentRequirement,
+} from '../../types/order'
 import { getApiErrorMessage } from '../../utils/apiError'
 
-const getErrorMessage = (error: unknown, fallback: string) => getApiErrorMessage(error, fallback)
+type FulfillmentDraft = {
+  sourceStoreId: number | ''
+  quantity: number
+  notes: string
+}
+
+export type FulfillmentConfirmation = {
+  type: 'approve' | 'receive'
+  mutationId: number
+  title: string
+  message: string
+  confirmLabel: string
+  tone: 'success' | 'info'
+}
 
 type UseAdminOrderFulfillmentParams = {
   order: AdminOrder
@@ -20,49 +34,81 @@ type UseAdminOrderFulfillmentParams = {
   onUpdated: () => Promise<void> | void
 }
 
+const createRequestDrafts = (requirements: FulfillmentRequirement[]) => Object.fromEntries(
+  requirements
+    .filter((requirement) => requirement.remainingQuantity > 0)
+    .map((requirement) => [
+      requirement.productId,
+      {
+        sourceStoreId: '' as const,
+        quantity: requirement.remainingQuantity,
+        notes: '',
+      },
+    ]),
+) as Record<number, FulfillmentDraft>
+
 export function useAdminOrderFulfillment({ order, onClose, onUpdated }: UseAdminOrderFulfillmentParams) {
   const { showToast } = useToast()
   const { user } = useAuthStore()
-  const firstOrderItem = order.items[0]
-
-  const [stores, setStores] = useState<Store[]>([])
-  const [selectedProductId, setSelectedProductId] = useState(firstOrderItem?.product.id ?? 0)
-  
-  const selectedOrderItem = useMemo(
-    () => order.items.find((item) => item.product.id === selectedProductId) ?? firstOrderItem,
-    [firstOrderItem, order.items, selectedProductId],
+  const requestRequirements = order.stockFulfillment.requirements.filter(
+    (requirement) => requirement.remainingQuantity > 0,
   )
-  
-  const [sourceStoreId, setSourceStoreId] = useState<number | ''>('')
-  const [quantity, setQuantity] = useState(selectedOrderItem?.quantity ?? 1)
-  const [notes, setNotes] = useState('')
+  const [requestDrafts, setRequestDrafts] = useState<Record<number, FulfillmentDraft>>(
+    () => createRequestDrafts(requestRequirements),
+  )
   const [actionNotes, setActionNotes] = useState('')
-  const [isLoadingStores, setIsLoadingStores] = useState(true)
   const [submittingKey, setSubmittingKey] = useState<string | null>(null)
   const [isClosingDisabled, setIsClosingDisabled] = useState(false)
+  const [pendingConfirmation, setPendingConfirmation] = useState<FulfillmentConfirmation | null>(null)
 
-  const sourceStoreOptions = stores.filter((store) => store.id !== order.store.id)
-  const canActForStore = (storeId: number) => user?.role === 'SUPER_ADMIN' || user?.storeId === storeId
+  const canActForStore = (storeId: number) => (
+    user?.role === 'SUPER_ADMIN' || user?.storeId === storeId
+  )
 
-  useEffect(() => {
-    let timeoutId = window.setTimeout(() => { setIsLoadingStores(true) }, 0)
-    getPublicStores(1, 100)
-      .then((response) => setStores(response.data))
-      .catch(() => setStores([]))
-      .finally(() => setIsLoadingStores(false))
-      
-    return () => clearTimeout(timeoutId)
-  }, [])
+  const updateDraft = (productId: number, changes: Partial<FulfillmentDraft>) => {
+    setRequestDrafts((currentDrafts) => ({
+      ...currentDrafts,
+      [productId]: {
+        ...currentDrafts[productId],
+        ...changes,
+      },
+    }))
+  }
 
-  useEffect(() => {
-    if (!selectedOrderItem) return
-    let timeoutId = window.setTimeout(() => { setQuantity(selectedOrderItem.quantity) }, 0)
-    return () => clearTimeout(timeoutId)
-  }, [selectedOrderItem])
+  const handleSourceStoreChange = (requirement: FulfillmentRequirement, storeId: number | '') => {
+    const source = requirement.sources.find((option) => option.storeId === storeId)
+    updateDraft(requirement.productId, {
+      sourceStoreId: storeId,
+      quantity: source
+        ? Math.min(requirement.remainingQuantity, source.availableQuantity)
+        : requirement.remainingQuantity,
+    })
+  }
+
+  const isDraftValid = (requirement: FulfillmentRequirement) => {
+    const draft = requestDrafts[requirement.productId]
+    if (!draft || !draft.sourceStoreId || draft.quantity < 1) return false
+
+    const source = requirement.sources.find((option) => option.storeId === draft.sourceStoreId)
+    return Boolean(
+      source &&
+      draft.quantity <= requirement.remainingQuantity &&
+      draft.quantity <= source.availableQuantity,
+    )
+  }
+
+  const canSubmitRequests = (
+    requestRequirements.length > 0 &&
+    requestRequirements.every(isDraftValid)
+  )
+  const totalRequestQuantity = requestRequirements.reduce(
+    (total, requirement) => total + (requestDrafts[requirement.productId]?.quantity ?? 0),
+    0,
+  )
 
   const runAction = async (
     actionKey: string,
-    action: () => Promise<OrderFulfillmentMutation>,
+    action: () => Promise<unknown>,
     successMessage: string,
   ) => {
     try {
@@ -73,55 +119,95 @@ export function useAdminOrderFulfillment({ order, onClose, onUpdated }: UseAdmin
       await onUpdated()
       onClose()
     } catch (error) {
-      showToast(getErrorMessage(error, 'Gagal memproses fulfillment'), 'error')
+      showToast(getApiErrorMessage(error, 'Gagal memproses mutasi stok'), 'error')
     } finally {
       setSubmittingKey(null)
       setIsClosingDisabled(false)
+      setPendingConfirmation(null)
     }
   }
 
-  const handleRequestFulfillment = async () => {
-    if (!selectedOrderItem || !sourceStoreId) {
-      showToast('Pilih produk dan source store terlebih dahulu', 'error')
+  const handleRequestFulfillments = async () => {
+    if (!canSubmitRequests) {
+      showToast('Lengkapi toko sumber dan jumlah untuk seluruh produk', 'error')
       return
     }
 
-    const normalizedQuantity = Math.max(1, Math.floor(quantity))
+    const requests = requestRequirements.map((requirement) => {
+      const draft = requestDrafts[requirement.productId]
+      return {
+        sourceStoreId: Number(draft.sourceStoreId),
+        productId: requirement.productId,
+        quantity: Math.floor(draft.quantity),
+        notes: draft.notes.trim() || undefined,
+      }
+    })
 
     await runAction(
-      'request',
-      () => requestOrderFulfillment(order.id, {
-        sourceStoreId: Number(sourceStoreId),
-        productId: selectedOrderItem.product.id,
-        quantity: normalizedQuantity,
-        notes: notes.trim() || undefined,
-      }),
-      'Request fulfillment berhasil dibuat',
+      'request-batch',
+      () => requestOrderFulfillments(order.id, requests),
+      `${requests.length} permintaan mutasi stok berhasil dibuat`,
     )
   }
 
   const handleApproveFulfillment = (mutationId: number) => {
-    void runAction(
-      `approve-${mutationId}`,
-      () => approveOrderFulfillment(mutationId, actionNotes),
-      'Fulfillment disetujui dan stok dikirim',
-    )
+    const mutation = order.stockMutations.find((item) => item.id === mutationId)
+    setPendingConfirmation({
+      type: 'approve',
+      mutationId,
+      title: 'Setujui mutasi stok?',
+      message: mutation
+        ? `Pastikan ${mutation.quantity} ${mutation.product.name} siap dikirim dari ${mutation.sourceStore.name} ke ${mutation.destinationStore.name}.`
+        : 'Pastikan jumlah dan kondisi stok siap dikirim ke toko tujuan.',
+      confirmLabel: 'Setujui & Kirim',
+      tone: 'success',
+    })
   }
 
   const handleRejectFulfillment = (mutationId: number) => {
     void runAction(
       `reject-${mutationId}`,
       () => rejectOrderFulfillment(mutationId, actionNotes),
-      'Fulfillment ditolak',
+      'Permintaan mutasi stok ditolak',
     )
   }
 
   const handleReceiveFulfillment = (mutationId: number) => {
+    const mutation = order.stockMutations.find((item) => item.id === mutationId)
+    setPendingConfirmation({
+      type: 'receive',
+      mutationId,
+      title: 'Barang mutasi sudah diterima?',
+      message: mutation
+        ? `Konfirmasi jika ${mutation.quantity} ${mutation.product.name} sudah tiba dan diperiksa di ${mutation.destinationStore.name}.`
+        : 'Konfirmasi hanya jika barang sudah benar-benar tiba dan diperiksa di gudang tujuan.',
+      confirmLabel: 'Terima Barang',
+      tone: 'info',
+    })
+  }
+
+  const handleConfirmFulfillmentAction = () => {
+    if (!pendingConfirmation) return
+
+    if (pendingConfirmation.type === 'approve') {
+      void runAction(
+        `approve-${pendingConfirmation.mutationId}`,
+        () => approveOrderFulfillment(pendingConfirmation.mutationId, actionNotes, true),
+        'Mutasi stok disetujui dan barang dikirim',
+      )
+      return
+    }
+
     void runAction(
-      `receive-${mutationId}`,
-      () => receiveOrderFulfillment(mutationId, actionNotes),
-      'Fulfillment diterima di toko tujuan',
+      `receive-${pendingConfirmation.mutationId}`,
+      () => receiveOrderFulfillment(pendingConfirmation.mutationId, actionNotes, true),
+      'Barang mutasi diterima di toko tujuan',
     )
+  }
+
+  const clearPendingConfirmation = () => {
+    if (submittingKey) return
+    setPendingConfirmation(null)
   }
 
   const handleClose = () => {
@@ -130,23 +216,21 @@ export function useAdminOrderFulfillment({ order, onClose, onUpdated }: UseAdmin
   }
 
   return {
-    selectedProductId,
-    setSelectedProductId,
-    selectedOrderItem,
-    sourceStoreId,
-    setSourceStoreId,
-    quantity,
-    setQuantity,
-    notes,
-    setNotes,
+    requestRequirements,
+    requestDrafts,
+    updateDraft,
+    handleSourceStoreChange,
+    canSubmitRequests,
+    totalRequestQuantity,
     actionNotes,
     setActionNotes,
-    isLoadingStores,
     submittingKey,
     isClosingDisabled,
-    sourceStoreOptions,
+    pendingConfirmation,
+    clearPendingConfirmation,
+    handleConfirmFulfillmentAction,
     canActForStore,
-    handleRequestFulfillment,
+    handleRequestFulfillments,
     handleApproveFulfillment,
     handleRejectFulfillment,
     handleReceiveFulfillment,

@@ -33,7 +33,7 @@ export const assertAdminCanAccessStore = async (
 
   throw new OrderServiceError(
     ORDER_ERRORS.FULFILLMENT_ACCESS_DENIED,
-    'You do not have access to this store fulfillment',
+    'Anda tidak memiliki akses ke mutasi stok toko ini',
     403,
   )
 }

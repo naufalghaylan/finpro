@@ -1,6 +1,6 @@
 import { CheckCircle2, Loader2, XCircle } from 'lucide-react'
 import type { CheckoutOrder } from '../../types/order'
-import { formatCurrency, getOrderDiscountBreakdown } from './orderDisplay'
+import { formatCurrency, formatDateTime, getOrderDiscountBreakdown } from './orderDisplay'
 
 type PaymentSummaryPanelProps = {
   order: CheckoutOrder
@@ -65,17 +65,17 @@ export function PaymentSummaryPanel({
       </div>
       <div className="payment-summary-meta">
         <span>Metode</span>
-        <strong>{isManualTransfer ? 'Transfer Manual' : 'Payment Gateway'}</strong>
+        <strong>{isManualTransfer ? 'Transfer Manual' : 'Pembayaran Online'}</strong>
       </div>
       <div className="payment-summary-meta">
-        <span>Store</span>
+        <span>Cabang</span>
         <strong>{order.store.name}</strong>
       </div>
 
       {canCancel && (
         <div className="payment-cancel-panel">
           <h3>Batalkan Pesanan</h3>
-          <p>Pesanan hanya bisa dibatalkan sebelum bukti bayar diupload atau pembayaran diproses.</p>
+          <p>Pesanan hanya bisa dibatalkan sebelum bukti bayar diunggah atau pembayaran diproses.</p>
           <button
             type="button"
             className="button danger payment-cancel-button"
@@ -122,10 +122,11 @@ export function PaymentSummaryPanel({
         </div>
       )}
 
-      {order.status === 'CANCELLED' && order.cancelReason && (
+      {order.status === 'CANCELLED' && (
         <div className="payment-cancel-note">
-          <span>Alasan Pembatalan</span>
-          <strong>{order.cancelReason}</strong>
+          <span>Pesanan Dibatalkan</span>
+          <strong>{order.cancelReason || 'Tidak ada alasan pembatalan yang tercatat.'}</strong>
+          <em>{formatDateTime(order.cancelledAt)}</em>
         </div>
       )}
     </aside>

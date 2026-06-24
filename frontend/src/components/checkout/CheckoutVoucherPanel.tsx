@@ -1,4 +1,4 @@
-import { TicketPercent, CheckCircle2 } from 'lucide-react'
+import { CheckCircle2, TicketPercent } from 'lucide-react'
 import type { CartItem } from '../../types/cart'
 import type { CheckoutVoucher } from '../../types/order'
 import { formatCurrency, formatDateTime } from '../../utils/format'
@@ -32,55 +32,51 @@ export function CheckoutVoucherPanel({
       </div>
 
       {vouchers.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--ink-soft)' }}>
-          <TicketPercent size={48} style={{ opacity: 0.2, margin: '0 auto 12px' }} />
-          <h3 style={{ margin: '0 0 8px', color: 'var(--ink)', fontSize: '1.1rem' }}>Tidak ada Voucher</h3>
-          <p style={{ margin: 0, fontSize: '0.9rem' }}>Saat ini belum ada voucher aktif yang tersedia untuk Anda.</p>
+        <div className="checkout-voucher-empty">
+          <TicketPercent aria-hidden="true" />
+          <h3>Belum ada voucher</h3>
+          <p>Voucher aktif dari akunmu akan tampil di sini.</p>
         </div>
       ) : (
         <div className="checkout-payment-grid">
           {vouchers.map((voucher) => {
-          const discountPreview = getVoucherDiscountPreview(voucher, items, subtotal, shippingCost)
-          const isSelected = selectedVoucherId === voucher.id
-          const isDisabled = discountPreview <= 0
+            const discountPreview = getVoucherDiscountPreview(voucher, items, subtotal, shippingCost)
+            const isSelected = selectedVoucherId === voucher.id
+            const isDisabled = discountPreview <= 0
 
-          return (
-            <div
-              key={voucher.id}
-              className={`checkout-payment-card ${isSelected ? 'selected' : ''}`}
-              style={{
-                opacity: isDisabled ? 0.6 : 1,
-                cursor: isDisabled ? 'not-allowed' : 'pointer',
-              }}
-              onClick={() => {
-                if (isDisabled) return;
-                onVoucherChange(isSelected ? null : voucher.id);
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <TicketPercent aria-hidden="true" />
-                {isSelected && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-strong)', fontSize: '0.75rem', fontWeight: 800, backgroundColor: 'rgba(232, 107, 79, 0.1)', padding: '4px 8px', borderRadius: '99px' }}>
-                    <CheckCircle2 size={14} /> Terpasang
-                  </div>
-                )}
-              </div>
-              <strong style={{ fontSize: '1.05rem', color: isSelected ? 'var(--accent-strong)' : 'var(--ink)', marginTop: '4px' }}>{voucher.name}</strong>
-              <span style={{ color: 'var(--accent-strong)', fontWeight: 'bold', fontSize: '1.05rem', margin: '4px 0' }}>
-                {discountPreview > 0 ? `-${formatCurrency(discountPreview)}` : 'Tidak memenuhi'}
-              </span>
-              <span style={{ fontSize: '0.85rem' }}>
-                <strong>Kode:</strong> {voucher.code}
-              </span>
-              <span style={{ fontSize: '0.85rem' }}>
-                <strong>Min. Belanja:</strong> {formatCurrency(voucher.minPurchase)}
-              </span>
-              <span style={{ fontSize: '0.8rem', marginTop: 'auto', paddingTop: '8px' }}>
-                Berlaku s/d {formatDateTime(voucher.expiredAt)}
-              </span>
-            </div>
-          )
-        })}
+            return (
+              <button
+                key={voucher.id}
+                type="button"
+                className={`checkout-payment-card checkout-voucher-card ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
+                disabled={isDisabled}
+                onClick={() => onVoucherChange(isSelected ? null : voucher.id)}
+              >
+                <div className="checkout-voucher-card-top">
+                  <TicketPercent aria-hidden="true" />
+                  {isSelected && (
+                    <span className="checkout-selection-badge">
+                      <CheckCircle2 aria-hidden="true" />
+                      Terpasang
+                    </span>
+                  )}
+                </div>
+                <strong className="checkout-voucher-name">{voucher.name}</strong>
+                <span className="checkout-voucher-discount">
+                  {discountPreview > 0 ? `-${formatCurrency(discountPreview)}` : 'Tidak memenuhi'}
+                </span>
+                <span className="checkout-voucher-meta">
+                  <strong>Kode:</strong> {voucher.code}
+                </span>
+                <span className="checkout-voucher-meta">
+                  <strong>Min. Belanja:</strong> {formatCurrency(voucher.minPurchase)}
+                </span>
+                <span className="checkout-voucher-expiry">
+                  Berlaku s/d {formatDateTime(voucher.expiredAt)}
+                </span>
+              </button>
+            )
+          })}
         </div>
       )}
     </section>

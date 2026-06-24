@@ -18,8 +18,8 @@ export function CheckoutProductList({ items }: CheckoutProductListProps) {
       <div className="checkout-section-title">
         <ShoppingBasket aria-hidden="true" />
         <div>
-          <h2>Ringkasan Produk</h2>
-          <p>Item dari cart yang akan dibuat menjadi pesanan.</p>
+          <h2>Produk Dipesan</h2>
+          <p>Produk dari keranjang yang akan dibuat menjadi pesanan.</p>
         </div>
       </div>
 

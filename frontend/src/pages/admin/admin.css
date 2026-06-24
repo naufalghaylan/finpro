@@ -90,6 +90,11 @@
   }
 
   /* Scrollbar styling for table containers */
+  .admin-table-wrap {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-admin-line) transparent;
+  }
+
   .admin-table-wrap::-webkit-scrollbar {
     height: 6px;
   }

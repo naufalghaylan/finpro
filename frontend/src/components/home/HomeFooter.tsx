@@ -16,7 +16,7 @@ export const HomeFooter = ({ brandName, sections }: HomeFooterProps) => {
           </div>
           <p className="m-0 mt-3 text-[var(--ink-soft)]">
             Belanja kebutuhan segar, stok terbaru, dan rekomendasi menu harian dari
-            store terdekat.
+            toko terdekat.
           </p>
           <div className="flex flex-wrap gap-2.5 mt-4">
             <label className="sr-only" htmlFor="footer-email">

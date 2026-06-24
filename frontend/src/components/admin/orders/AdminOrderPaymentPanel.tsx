@@ -9,8 +9,8 @@ type AdminOrderPaymentPanelProps = {
 }
 
 const paymentMethodLabel: Record<AdminOrder['paymentMethod'], string> = {
-  MANUAL_TRANSFER: 'Manual Transfer',
-  PAYMENT_GATEWAY: 'Payment Gateway',
+  MANUAL_TRANSFER: 'Transfer Manual',
+  PAYMENT_GATEWAY: 'Pembayaran Online',
 }
 
 export function AdminOrderPaymentPanel({ order }: AdminOrderPaymentPanelProps) {
@@ -65,7 +65,7 @@ export function AdminOrderPaymentPanel({ order }: AdminOrderPaymentPanelProps) {
           )}
         </div>
         <div>
-          <span className="block text-admin-ink-muted">Deadline</span>
+          <span className="block text-admin-ink-muted">Batas Bayar</span>
           <strong className="text-admin-ink">{formatDateTime(order.paymentDeadline)}</strong>
         </div>
       </div>

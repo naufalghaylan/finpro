@@ -6,12 +6,15 @@ import handlebars from 'handlebars'
 
 dotenv.config()
 
+const mailUser = process.env.MAIL_USER || process.env.MAILTRAP_USER
+const mailPass = process.env.MAIL_PASS || process.env.MAILTRAP_PASS
+
 const transporter = nodemailer.createTransport({
   host: process.env.MAIL_HOST || 'sandbox.smtp.mailtrap.io',
   port: Number(process.env.MAIL_PORT) || 2525,
   auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
+    user: mailUser,
+    pass: mailPass,
   },
 })
 

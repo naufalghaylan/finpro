@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { OrderStatus, PaymentMethod } from '../generated/prisma/client'
+import { MutationStatus, OrderStatus, PaymentMethod } from '../generated/prisma/client'
 
 const positiveIntegerSchema = z.coerce
   .number()
@@ -118,8 +118,69 @@ export const requestFulfillmentSchema = z.object({
   notes: z.string().trim().max(500, 'Notes must be at most 500 characters').optional(),
 })
 
+export const requestFulfillmentBatchSchema = z.object({
+  requests: z.array(requestFulfillmentSchema)
+    .min(1, 'Minimal satu permintaan mutasi diperlukan')
+    .max(20, 'Maksimal 20 permintaan mutasi dalam satu proses'),
+}).superRefine(({ requests }, context) => {
+  const productIds = new Set<number>()
+
+  requests.forEach((request, index) => {
+    if (productIds.has(request.productId)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Produk tidak boleh diduplikasi dalam permintaan batch',
+        path: ['requests', index, 'productId'],
+      })
+    }
+    productIds.add(request.productId)
+  })
+})
+
 export const fulfillmentActionSchema = z.object({
   notes: z.string().trim().max(500, 'Notes must be at most 500 characters').optional(),
+})
+
+export const approveFulfillmentSchema = fulfillmentActionSchema.extend({
+  confirmStockReady: z.literal(true, {
+    error: 'Kesiapan stok harus dikonfirmasi sebelum barang mutasi dikirim',
+  }),
+  approvedQuantity: positiveIntegerSchema.optional(),
+})
+
+export const receiveFulfillmentSchema = fulfillmentActionSchema.extend({
+  confirmPhysicalReceipt: z.literal(true, {
+    error: 'Penerimaan fisik harus dikonfirmasi sebelum mutasi diselesaikan',
+  }),
+})
+
+const fulfillmentBatchIdsSchema = z.object({
+  mutationIds: z.array(positiveIntegerSchema)
+    .min(1, 'Minimal satu mutasi stok harus dipilih')
+    .max(20, 'Maksimal 20 mutasi stok dalam satu proses')
+    .refine((ids) => new Set(ids).size === ids.length, 'Mutasi stok tidak boleh diduplikasi'),
+})
+
+export const approveFulfillmentsSchema = fulfillmentActionSchema.extend({
+  confirmStockReady: z.literal(true, {
+    error: 'Kesiapan stok harus dikonfirmasi sebelum barang mutasi dikirim',
+  }),
+}).merge(fulfillmentBatchIdsSchema)
+export const receiveFulfillmentsSchema = receiveFulfillmentSchema.merge(fulfillmentBatchIdsSchema)
+export const rejectFulfillmentsSchema = fulfillmentActionSchema.merge(fulfillmentBatchIdsSchema)
+
+export const fulfillmentListQuerySchema = z.object({
+  storeId: positiveIntegerSchema,
+  page: positiveIntegerSchema.default(1),
+  limit: orderListLimitSchema,
+  direction: z.enum(['all', 'incoming', 'outgoing']).default('all'),
+  status: z.nativeEnum(MutationStatus).optional(),
+  search: z
+    .string()
+    .trim()
+    .max(100, 'Search must be at most 100 characters')
+    .optional()
+    .transform((value) => value || undefined),
 })
 
 export type CheckoutQuery = z.infer<typeof checkoutQuerySchema>
@@ -129,4 +190,6 @@ export type CreateCheckoutOrderInput = z.infer<typeof createCheckoutOrderSchema>
 export type CancelOrderInput = z.infer<typeof cancelOrderSchema>
 export type ConfirmManualPaymentInput = z.infer<typeof confirmManualPaymentSchema>
 export type RequestFulfillmentInput = z.infer<typeof requestFulfillmentSchema>
+export type RequestFulfillmentBatchInput = z.infer<typeof requestFulfillmentBatchSchema>
 export type FulfillmentActionInput = z.infer<typeof fulfillmentActionSchema>
+export type FulfillmentListQuery = z.infer<typeof fulfillmentListQuerySchema>

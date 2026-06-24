@@ -27,8 +27,8 @@ export function CheckoutSuccessPanel({ order }: CheckoutSuccessPanelProps) {
       <p>
         Status pesanan sekarang <strong>{order.status}</strong>.{' '}
         {order.paymentMethod === 'MANUAL_TRANSFER'
-          ? 'Upload bukti pembayaran diperlukan sebelum admin memproses pesanan.'
-          : 'Pembayaran gateway disimulasikan berhasil sehingga order langsung masuk proses.'}
+          ? 'Unggah bukti pembayaran diperlukan sebelum admin memproses pesanan.'
+          : 'Pembayaran online berhasil sehingga pesanan langsung masuk proses.'}
       </p>
 
       <div className="checkout-success-grid">
@@ -37,17 +37,17 @@ export function CheckoutSuccessPanel({ order }: CheckoutSuccessPanelProps) {
           <strong>{formatCurrency(order.totalAmount)}</strong>
         </div>
         <div>
-          <span>Store Pengiriman</span>
+          <span>Cabang Pengiriman</span>
           <strong>{order.store.name}</strong>
         </div>
         <div>
           <span>Metode Bayar</span>
           <strong>
-            {order.paymentMethod === 'MANUAL_TRANSFER' ? 'Transfer Manual' : 'Payment Gateway'}
+            {order.paymentMethod === 'MANUAL_TRANSFER' ? 'Transfer Manual' : 'Pembayaran Online'}
           </strong>
         </div>
         <div>
-          <span>Deadline Bayar</span>
+          <span>Batas Bayar</span>
           <strong>{order.paymentDeadline ? formatDateTime(order.paymentDeadline) : '-'}</strong>
         </div>
       </div>

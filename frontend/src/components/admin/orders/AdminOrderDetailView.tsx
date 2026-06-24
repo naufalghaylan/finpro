@@ -1,4 +1,13 @@
-import { ArrowLeft, StickyNote, XCircle } from 'lucide-react'
+import {
+  ArrowLeft,
+  CalendarClock,
+  CircleDollarSign,
+  MapPin,
+  Package,
+  StickyNote,
+  Store,
+  XCircle,
+} from 'lucide-react'
 import {
   getOrderDiscountBreakdown,
   getOrderItemQuantity,
@@ -33,9 +42,6 @@ const statusBadgeClass: Record<OrderStatus, string> = {
 const canAdminCancelOrder = (order: AdminOrder) =>
   !['SHIPPED', 'CONFIRMED', 'CANCELLED'].includes(order.status)
 
-const hasActiveFulfillment = (order: AdminOrder) =>
-  order.stockMutations.some((mutation) => ['PENDING', 'IN_TRANSIT'].includes(mutation.status))
-
 export function AdminOrderDetailView({
   order,
   onBack,
@@ -46,112 +52,152 @@ export function AdminOrderDetailView({
 }: AdminOrderDetailViewProps) {
   const statusMeta = orderStatusDisplay[order.status]
   const StatusIcon = statusMeta.Icon
+  const totalItemQuantity = getOrderItemQuantity(order)
   const canReviewPayment =
     order.paymentMethod === 'MANUAL_TRANSFER' &&
     order.status === 'WAITING_CONFIRMATION' &&
     Boolean(order.paymentProof)
   const canCancel = canAdminCancelOrder(order)
-  const canManageFulfillment = order.status === 'PROCESSING'
-  const fulfillmentInProgress = hasActiveFulfillment(order)
-  const canShowActions = canReviewPayment || canManageFulfillment || canCancel
+  const canShipOrder = order.status === 'PROCESSING'
+  const canManageFulfillment = canShipOrder && order.stockFulfillment.required
+  const fulfillmentInProgress = !order.stockFulfillment.canShip
+  const canShowActions = canReviewPayment || canManageFulfillment || canShipOrder || canCancel
   const {
     storeDiscountAmount,
     referralVoucherAmount,
     otherVoucherAmount,
     voucherLabel,
   } = getOrderDiscountBreakdown(order)
+  const detailMetrics = [
+    {
+      label: 'Total Bayar',
+      value: formatCurrency(order.totalAmount),
+      Icon: CircleDollarSign,
+    },
+    {
+      label: 'Total Item',
+      value: `${totalItemQuantity} item`,
+      Icon: Package,
+    },
+    {
+      label: 'Cabang Pemroses',
+      value: order.store.name,
+      Icon: Store,
+    },
+    {
+      label: 'Dibuat',
+      value: formatDateTime(order.createdAt),
+      Icon: CalendarClock,
+    },
+  ]
 
   return (
     <div className="admin-fade-in">
-      <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
-        <div>
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold
-                       text-admin-ink-soft bg-admin-surface border border-admin-line-soft cursor-pointer
-                       hover:bg-admin-surface-2 transition-all"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-admin-line-soft bg-admin-surface px-3 py-2 text-sm font-semibold text-admin-ink-soft transition-all hover:bg-admin-surface-2"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="h-4 w-4" />
             Kembali ke daftar pesanan
           </button>
-          <p className="text-xs font-semibold uppercase tracking-wider text-admin-accent-strong m-0 mt-5">
+          <p className="m-0 mt-5 text-xs font-bold uppercase tracking-[0.16em] text-admin-accent-strong">
             Detail Pesanan
           </p>
-          <div className="flex items-center gap-3 flex-wrap mt-1">
-            <h3 className="text-xl font-bold text-admin-ink m-0">{order.orderNumber}</h3>
-            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${statusBadgeClass[order.status]}`}>
-              <StatusIcon className="w-3.5 h-3.5" />
+          <div className="mt-1 flex min-w-0 flex-wrap items-center gap-3">
+            <h3 className="m-0 truncate text-2xl font-bold text-admin-ink">{order.orderNumber}</h3>
+            <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${statusBadgeClass[order.status]}`}>
+              <StatusIcon className="h-3.5 w-3.5" />
               {statusMeta.label}
             </span>
           </div>
-          <p className="text-sm text-admin-ink-muted m-0 mt-1">
-            Dibuat {formatDateTime(order.createdAt)} oleh {order.user.name}
+          <p className="m-0 mt-1 text-sm text-admin-ink-muted">
+            Dipesan oleh {order.user.name}. Gunakan panel di bawah untuk memeriksa pembayaran, stok, dan pengiriman.
           </p>
         </div>
       </div>
 
+      <section className="mb-5 grid grid-cols-1 gap-3 rounded-3xl border border-admin-line-soft bg-admin-surface p-3 shadow-sm sm:grid-cols-2 xl:grid-cols-4">
+        {detailMetrics.map((metric) => {
+          const Icon = metric.Icon
+
+          return (
+            <div key={metric.label} className="min-w-0 rounded-2xl border border-admin-line-soft bg-admin-surface-2/35 p-4">
+              <div className="mb-2 flex items-center gap-2 text-admin-ink-muted">
+                <Icon className="h-4 w-4 text-admin-accent-strong" />
+                <span className="text-xs font-semibold uppercase tracking-wider">{metric.label}</span>
+              </div>
+              <strong className="block truncate text-sm text-admin-ink">{metric.value}</strong>
+            </div>
+          )
+        })}
+      </section>
+
       {order.status === 'CANCELLED' && order.cancelReason && (
-        <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 mb-0">
-          <XCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+        <div className="mb-5 flex items-start gap-3 rounded-2xl border border-admin-red/20 bg-admin-red-soft p-4">
+          <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-admin-red" />
           <div>
-            <p className="text-sm font-bold text-red-700 m-0">Pesanan Dibatalkan</p>
-            <p className="text-sm text-red-600 m-0 mt-1">{order.cancelReason}</p>
+            <p className="m-0 text-sm font-bold text-admin-red">Pesanan Dibatalkan</p>
+            <p className="m-0 mt-1 text-sm text-admin-red">{order.cancelReason}</p>
             {order.cancelledAt && (
-              <p className="text-xs text-red-400 m-0 mt-1">Dibatalkan pada {formatDateTime(order.cancelledAt)}</p>
+              <p className="m-0 mt-1 text-xs text-admin-red/75">Dibatalkan pada {formatDateTime(order.cancelledAt)}</p>
             )}
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-6">
-        <div className="flex flex-col gap-6">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="flex min-w-0 flex-col gap-6">
           <AdminOrderItemsPanel order={order} />
           <AdminOrderCustomerPanel order={order} />
           <AdminOrderFulfillmentPanel order={order} />
         </div>
 
-        <aside className="flex flex-col gap-4">
+        <aside className="flex min-w-0 flex-col gap-4 xl:sticky xl:top-24 xl:self-start">
           <AdminOrderPaymentPanel order={order} />
 
-          <section className="rounded-2xl border border-admin-line-soft bg-admin-surface shadow-sm p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <h4 className="text-base font-bold text-admin-ink m-0">Pengiriman</h4>
+          <section className="rounded-2xl border border-admin-line-soft bg-admin-surface p-5 shadow-sm">
+            <div className="mb-4 flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-admin-accent-strong" />
+              <h4 className="m-0 text-base font-bold text-admin-ink">Pengiriman</h4>
             </div>
             <div className="space-y-3 text-sm">
-              <div>
+              <div className="rounded-xl bg-admin-surface-2/35 p-3">
                 <span className="block text-admin-ink-muted">Metode</span>
                 <strong className="text-admin-ink">{order.shippingMethod || '-'}</strong>
               </div>
-              <div>
-                <span className="block text-admin-ink-muted">Service</span>
+              <div className="rounded-xl bg-admin-surface-2/35 p-3">
+                <span className="block text-admin-ink-muted">Layanan</span>
                 <strong className="text-admin-ink">{order.shippingService || '-'}</strong>
               </div>
-              <div>
-                <span className="block text-admin-ink-muted">Toko Pemroses</span>
+              <div className="rounded-xl bg-admin-surface-2/35 p-3">
+                <span className="block text-admin-ink-muted">Cabang Pemroses</span>
                 <strong className="text-admin-ink">{order.store.name}</strong>
               </div>
             </div>
           </section>
 
           {order.notes && (
-            <section className="rounded-2xl border border-admin-line-soft bg-admin-surface shadow-sm p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <StickyNote className="w-4 h-4 text-admin-accent-strong" />
-                <h4 className="text-base font-bold text-admin-ink m-0">Catatan Pesanan</h4>
+            <section className="rounded-2xl border border-admin-line-soft bg-admin-surface p-5 shadow-sm">
+              <div className="mb-3 flex items-center gap-2">
+                <StickyNote className="h-4 w-4 text-admin-accent-strong" />
+                <h4 className="m-0 text-base font-bold text-admin-ink">Catatan Pesanan</h4>
               </div>
-              <p className="text-sm text-admin-ink-muted m-0 whitespace-pre-wrap">{order.notes}</p>
+              <p className="m-0 whitespace-pre-wrap text-sm leading-relaxed text-admin-ink-muted">{order.notes}</p>
             </section>
           )}
 
-          <section className="rounded-2xl border border-admin-line-soft bg-admin-surface shadow-sm p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <h4 className="text-base font-bold text-admin-ink m-0">Ringkasan</h4>
+          <section className="rounded-2xl border border-admin-line-soft bg-admin-surface p-5 shadow-sm">
+            <div className="mb-4 flex items-center gap-2">
+              <CircleDollarSign className="h-5 w-5 text-admin-accent-strong" />
+              <h4 className="m-0 text-base font-bold text-admin-ink">Ringkasan</h4>
             </div>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between gap-3">
                 <span className="text-admin-ink-muted">Total item</span>
-                <strong className="text-admin-ink">{getOrderItemQuantity(order)} item</strong>
+                <strong className="text-admin-ink">{totalItemQuantity} item</strong>
               </div>
               <div className="flex justify-between gap-3">
                 <span className="text-admin-ink-muted">Subtotal produk</span>
@@ -179,7 +225,7 @@ export function AdminOrderDetailView({
                   <strong className="text-admin-ink">-{formatCurrency(otherVoucherAmount)}</strong>
                 </div>
               )}
-              <div className="flex justify-between gap-3 pt-3 border-t border-admin-line-soft">
+              <div className="flex justify-between gap-3 border-t border-admin-line-soft pt-3">
                 <span className="font-semibold text-admin-ink">Total bayar</span>
                 <strong className="text-admin-ink">{formatCurrency(order.totalAmount)}</strong>
               </div>
@@ -190,6 +236,7 @@ export function AdminOrderDetailView({
             canShowActions={canShowActions}
             canReviewPayment={canReviewPayment}
             canManageFulfillment={canManageFulfillment}
+            canShipOrder={canShipOrder}
             canCancel={canCancel}
             fulfillmentInProgress={fulfillmentInProgress}
             onReviewPayment={onReviewPayment}
