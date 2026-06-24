@@ -72,66 +72,31 @@ export default function SocialOnboardingPage() {
   };
 
   return (
-    <div className="page">
-      <main className="page-main">
-        <div
-          className="shell auth-shell"
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '100svh',
-            padding: 'clamp(24px, 5vw, 40px) clamp(16px, 5vw, 40px)'
-          }}
-        >
-          <div
-            className="hero-card auth-card"
-            style={{
-              width: '100%',
-              maxWidth: '460px',
-              padding: 'clamp(28px, 5vw, 48px) clamp(20px, 5vw, 36px)',
-              position: 'relative',
-              overflow: 'hidden'
-            }}
-          >
+    <div className="min-h-[100svh] flex flex-col bg-[var(--bg)]">
+      <main className="flex-1 flex flex-col">
+        <div className="flex justify-center items-center min-h-[100svh] p-[clamp(16px,5vw,40px)] w-full">
+          <div className="w-full max-w-[460px] bg-white rounded-[24px] p-[clamp(24px,5vw,40px)_clamp(16px,5vw,32px)] shadow-[var(--shadow-soft)] border border-[var(--line)] relative overflow-hidden">
             {/* Decorative orb */}
-            <div
-              style={{
-                position: 'absolute',
-                top: '-40px',
-                right: '-40px',
-                width: '180px',
-                height: '180px',
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(232, 107, 79, 0.15), transparent 70%)',
-                pointerEvents: 'none'
-              }}
-            />
+            <div className="absolute -top-10 -right-10 w-[180px] h-[180px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(232, 107, 79, 0.15), transparent 70%)' }} />
 
             {/* Logo */}
-            <div className="auth-header" style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <button className="mobile-back-btn" onClick={() => navigate(-1)} type="button" aria-label="Go back">
+            <div className="text-center mb-[32px] relative z-10">
+              <button className="absolute top-[0px] left-[0px] w-[40px] h-[40px] rounded-full bg-white border border-[var(--line)] flex items-center justify-center cursor-pointer text-[var(--ink)] shadow-[0_2px_8px_rgba(0,0,0,0.02)] md:hidden" onClick={() => navigate(-1)} type="button" aria-label="Go back">
                 <ChevronLeft size={24} />
               </button>
-              <Link to="/" style={{ textDecoration: 'none', display: 'inline-block' }}>
-                <div className="logo" style={{ justifyContent: 'center', marginBottom: '16px' }}>
-                  <span className="logo-mark" />
-                  <span style={{ fontSize: '1.4rem' }}>PanenMart</span>
+              <Link to="/" className="inline-block no-underline">
+                <div className="flex justify-center items-center gap-[8px] mb-[20px]">
+                  <img src="/PanenMartLogo.svg" alt="PanenMart Logo" className="w-[32px] h-[32px]" />
+                  <span className="text-[1.4rem] font-[family-name:var(--font-display)] font-semibold text-[var(--ink)] tracking-[-0.02em]">PanenMart</span>
                 </div>
               </Link>
 
               {/* Step indicators */}
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '24px' }}>
+              <div className="flex justify-center gap-[8px] mb-[24px]">
                 {[0, 1].map((i) => (
                   <div
                     key={i}
-                    style={{
-                      height: '4px',
-                      borderRadius: '999px',
-                      background: i === (step === 'referral-input' ? 0 : 1) ? 'var(--accent)' : 'var(--line)',
-                      transition: 'all 0.4s ease',
-                      width: i === (step === 'referral-input' ? 0 : 1) ? '32px' : '16px'
-                    }}
+                    className={`h-[4px] rounded-full transition-all duration-400 ${i === (step === 'referral-input' ? 0 : 1) ? 'bg-[var(--accent)] w-[32px]' : 'bg-[var(--line)] w-[16px]'}`}
                   />
                 ))}
               </div>
@@ -139,76 +104,44 @@ export default function SocialOnboardingPage() {
 
             {/* STEP 1: Referral Input */}
             {step === 'referral-input' && (
-              <div style={{ animation: 'fadeUp 0.5s ease forwards' }}>
-                <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-                  <div
-                    style={{
-                      fontSize: '3rem',
-                      marginBottom: '12px',
-                      display: 'inline-block',
-                      animation: 'float 3s ease-in-out infinite'
-                    }}
-                  >
+              <div className="animate-[fadeUp_0.5s_ease_forwards]">
+                <div className="text-center mb-[28px]">
+                  <div className="text-[3rem] mb-3 inline-block animate-[float_3s_ease-in-out_infinite]">
                     🎉
                   </div>
-                  <h1
-                    className="hero-card-title"
-                    style={{ fontSize: '1.6rem', marginBottom: '8px' }}
-                  >
+                  <h1 className="m-0 text-[1.6rem] font-bold text-[#111] mb-[8px] tracking-normal">
                     Selamat Datang, {user?.name?.split(' ')[0]}!
                   </h1>
-                  <p className="hero-card-sub" style={{ lineHeight: '1.5' }}>
+                  <p className="m-0 text-[1rem] text-[var(--ink-soft)] leading-[1.5]">
                     Akun kamu sudah siap. Punya kode referral dari teman?
                     Masukkan sekarang untuk dapat voucher Rp&nbsp;20.000!
                   </p>
                 </div>
 
                 {error && (
-                  <div
-                    style={{
-                      marginBottom: '16px',
-                      textAlign: 'center',
-                      padding: '12px',
-                      background: '#ffecec',
-                      borderRadius: '12px',
-                      border: '1px solid #ffcdcd',
-                      color: '#a13a2f',
-                      fontSize: '0.9rem'
-                    }}
-                  >
+                  <div className="mb-[16px] text-center p-[12px] bg-[#ffecec] rounded-[12px] border border-[#ffcdcd] text-[#a13a2f] text-[0.9rem]">
                     {error}
                   </div>
                 )}
 
                 {/* Voucher callout */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '14px 16px',
-                    borderRadius: '14px',
-                    background: 'var(--accent-soft)',
-                    border: '1px dashed var(--accent)',
-                    marginBottom: '24px'
-                  }}
-                >
-                  <span style={{ fontSize: '1.5rem' }}>🎟️</span>
+                <div className="flex items-center gap-[12px] p-[14px_16px] rounded-[14px] bg-[var(--accent-soft)] border border-dashed border-[var(--accent)] mb-[24px]">
+                  <span className="text-[1.5rem]">🎟️</span>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--accent-strong)' }}>
+                    <div className="font-semibold text-[0.9rem] text-[var(--accent-strong)]">
                       Bonus Referral
                     </div>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--ink-soft)' }}>
+                    <div className="text-[0.85rem] text-[var(--ink-soft)]">
                       Kamu & temanmu masing-masing dapat voucher Rp 20.000
                     </div>
                   </div>
                 </div>
 
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <form onSubmit={handleSubmit} className="flex flex-col gap-[16px]">
+                  <div className="flex flex-col gap-[8px]">
                     <label
                       htmlFor="referral-code-input"
-                      style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--ink)' }}
+                      className="text-[0.95rem] font-semibold text-[var(--ink)]"
                     >
                       Kode Referral (Opsional)
                     </label>
@@ -218,34 +151,15 @@ export default function SocialOnboardingPage() {
                       value={referralInput}
                       onChange={(e) => setReferralInput(e.target.value.toUpperCase())}
                       placeholder="Contoh: A1B2C3D4"
-                      style={{
-                        width: '100%',
-                        borderRadius: '14px',
-                        border: '1px solid var(--line)',
-                        padding: '14px 18px',
-                        background: '#fff',
-                        fontSize: '1rem',
-                        fontFamily: 'var(--font-mono)',
-                        letterSpacing: '0.1em',
-                        transition: 'border-color 0.2s, box-shadow 0.2s',
-                        outline: 'none',
-                        textTransform: 'uppercase'
-                      }}
+                      className="w-full rounded-[14px] border border-[var(--line)] p-[14px_18px] bg-white text-[1rem] font-mono tracking-widest transition-all duration-200 focus:outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_4px_var(--accent-soft)] uppercase"
                     />
                   </div>
 
                   <button
                     id="submit-referral-btn"
                     type="submit"
-                    className="button primary"
                     disabled={isSubmitting}
-                    style={{
-                      width: '100%',
-                      padding: '14px',
-                      fontSize: '1.05rem',
-                      borderRadius: '14px',
-                      marginTop: '4px'
-                    }}
+                    className="w-full mt-[12px] p-[14px] text-[1.05rem] rounded-[14px] font-semibold bg-[var(--accent)] text-white hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(232,107,79,0.25)] transition-all disabled:opacity-70 disabled:cursor-not-allowed border-none cursor-pointer"
                   >
                     {isSubmitting ? 'Memproses...' : referralInput.trim() ? 'Gunakan Kode & Lanjutkan' : 'Lanjutkan Tanpa Kode'}
                   </button>
@@ -255,18 +169,7 @@ export default function SocialOnboardingPage() {
                   id="skip-onboarding-btn"
                   onClick={handleSkip}
                   disabled={isSubmitting}
-                  style={{
-                    width: '100%',
-                    marginTop: '12px',
-                    padding: '12px',
-                    background: 'transparent',
-                    border: 'none',
-                    color: 'var(--ink-soft)',
-                    fontSize: '0.9rem',
-                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                    textDecoration: 'underline',
-                    borderRadius: '14px'
-                  }}
+                  className="w-full mt-[12px] p-[12px] bg-transparent border-none text-[var(--ink-soft)] text-[0.9rem] underline rounded-[14px] cursor-pointer disabled:cursor-not-allowed"
                 >
                   Lewati langkah ini
                 </button>
@@ -275,49 +178,27 @@ export default function SocialOnboardingPage() {
 
             {/* STEP 2: Show user's referral code */}
             {step === 'referral-code' && (
-              <div style={{ animation: 'fadeUp 0.5s ease forwards', textAlign: 'center' }}>
-                <div
-                  style={{
-                    fontSize: '3rem',
-                    marginBottom: '12px',
-                    display: 'inline-block',
-                    animation: 'float 3s ease-in-out infinite'
-                  }}
-                >
+              <div className="animate-[fadeUp_0.5s_ease_forwards] text-center">
+                <div className="text-[3rem] mb-[12px] inline-block animate-[float_3s_ease-in-out_infinite]">
                   ✨
                 </div>
-                <h1
-                  className="hero-card-title"
-                  style={{ fontSize: '1.6rem', marginBottom: '8px' }}
-                >
+                <h1 className="m-0 text-[1.6rem] font-bold text-[#111] mb-[8px] tracking-normal">
                   {voucherEarned ? 'Voucher Kamu Sudah Aktif!' : 'Akun Siap Digunakan!'}
                 </h1>
-                <p className="hero-card-sub" style={{ lineHeight: '1.5', marginBottom: '28px' }}>
+                <p className="m-0 text-[1rem] text-[var(--ink-soft)] leading-[1.5] mb-7">
                   {voucherEarned
                     ? 'Kode referral berhasil digunakan. Kamu mendapat voucher Rp 20.000!'
                     : 'Bagikan kode referral kamu dan dapatkan voucher Rp 20.000 setiap ada teman yang mendaftar.'}
                 </p>
 
                 {voucherEarned && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '14px 16px',
-                      borderRadius: '14px',
-                      background: 'rgba(74, 124, 91, 0.1)',
-                      border: '1px solid rgba(74, 124, 91, 0.3)',
-                      marginBottom: '24px',
-                      textAlign: 'left'
-                    }}
-                  >
-                    <span style={{ fontSize: '1.5rem' }}>🎟️</span>
+                  <div className="flex items-center gap-[12px] p-[14px_16px] rounded-[14px] bg-[rgba(74,124,91,0.1)] border border-[rgba(74,124,91,0.3)] mb-[24px] text-left">
+                    <span className="text-[1.5rem]">🎟️</span>
                     <div>
-                      <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--accent-cool)' }}>
+                      <div className="font-semibold text-[0.9rem] text-[var(--accent-cool)]">
                         Voucher Rp 20.000 aktif!
                       </div>
-                      <div style={{ fontSize: '0.85rem', color: 'var(--ink-soft)' }}>
+                      <div className="text-[0.85rem] text-[var(--ink-soft)]">
                         Cek voucher kamu di halaman profil
                       </div>
                     </div>
@@ -325,69 +206,16 @@ export default function SocialOnboardingPage() {
                 )}
 
                 {/* Referral code card */}
-                <div
-                  style={{
-                    padding: '24px',
-                    borderRadius: '20px',
-                    background: 'linear-gradient(135deg, #e86b4f 0%, #f2c26b 100%)',
-                    marginBottom: '28px',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}
-                >
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '-20px',
-                      right: '-20px',
-                      width: '100px',
-                      height: '100px',
-                      borderRadius: '50%',
-                      background: 'rgba(255,255,255,0.1)'
-                    }}
-                  />
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: '-30px',
-                      left: '-10px',
-                      width: '80px',
-                      height: '80px',
-                      borderRadius: '50%',
-                      background: 'rgba(255,255,255,0.08)'
-                    }}
-                  />
-                  <p
-                    style={{
-                      margin: '0 0 8px',
-                      fontSize: '0.8rem',
-                      fontWeight: 600,
-                      color: 'rgba(255,255,255,0.8)',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.1em'
-                    }}
-                  >
+                <div className="p-[24px] rounded-[20px] bg-gradient-to-br from-[#e86b4f] to-[#f2c26b] mb-[28px] relative overflow-hidden">
+                  <div className="absolute -top-[20px] -right-[20px] w-[100px] h-[100px] rounded-full bg-[rgba(255,255,255,0.1)]" />
+                  <div className="absolute -bottom-[30px] -left-[10px] w-[80px] h-[80px] rounded-full bg-[rgba(255,255,255,0.08)]" />
+                  <p className="m-[0_0_8px] text-[0.8rem] font-semibold text-[rgba(255,255,255,0.8)] uppercase tracking-[0.1em]">
                     Kode Referral Kamu
                   </p>
-                  <div
-                    style={{
-                      fontSize: '2rem',
-                      fontFamily: 'var(--font-mono)',
-                      fontWeight: 700,
-                      color: '#fff',
-                      letterSpacing: '0.15em',
-                      marginBottom: '4px'
-                    }}
-                  >
+                  <div className="text-[2rem] font-[var(--font-mono)] font-bold text-[#fff] tracking-[0.15em] mb-[4px]">
                     {myReferralCode}
                   </div>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: '0.8rem',
-                      color: 'rgba(255,255,255,0.75)'
-                    }}
-                  >
+                  <p className="m-0 text-[0.8rem] text-[rgba(255,255,255,0.75)]">
                     Bagikan ke teman dan dapat Rp 20.000 bersama!
                   </p>
                 </div>
@@ -396,22 +224,7 @@ export default function SocialOnboardingPage() {
                 <button
                   id="copy-referral-btn"
                   onClick={handleCopy}
-                  className="button"
-                  style={{
-                    width: '100%',
-                    padding: '14px',
-                    borderRadius: '14px',
-                    fontSize: '1rem',
-                    marginBottom: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    background: copied ? 'rgba(74, 124, 91, 0.1)' : 'var(--surface-muted)',
-                    border: copied ? '1px solid rgba(74, 124, 91, 0.4)' : '1px solid var(--line)',
-                    color: copied ? 'var(--accent-cool)' : 'var(--ink)',
-                    transition: 'all 0.3s ease'
-                  }}
+                  className={`w-full p-[14px] rounded-[14px] text-[1rem] mb-[12px] flex items-center justify-center gap-[8px] transition-all duration-300 ${copied ? 'bg-[rgba(74,124,91,0.1)] border border-[rgba(74,124,91,0.4)] text-[var(--accent-cool)]' : 'bg-[var(--surface-muted)] border border-[var(--line)] text-[var(--ink)]'}`}
                 >
                   <span>{copied ? '✓' : '📋'}</span>
                   {copied ? 'Berhasil Disalin!' : 'Salin Kode Referral'}
@@ -420,13 +233,7 @@ export default function SocialOnboardingPage() {
                 <button
                   id="start-shopping-btn"
                   onClick={() => navigate('/')}
-                  className="button primary"
-                  style={{
-                    width: '100%',
-                    padding: '14px',
-                    borderRadius: '14px',
-                    fontSize: '1.05rem'
-                  }}
+                  className="w-full mt-[12px] p-[14px] text-[1.05rem] rounded-[14px] font-semibold bg-[var(--accent)] text-white hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(232,107,79,0.25)] transition-all disabled:opacity-70 disabled:cursor-not-allowed border-none cursor-pointer"
                 >
                   Mulai Belanja →
                 </button>
