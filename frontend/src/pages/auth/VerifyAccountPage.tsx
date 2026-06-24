@@ -67,22 +67,22 @@ export default function VerifyAccountPage() {
   };
 
   return (
-    <div className="page">
-      <main className="page-main">
-        <div className="shell auth-shell" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100svh', padding: 'clamp(24px, 5vw, 40px) clamp(16px, 5vw, 40px)' }}>
-          <div className="hero-card auth-card" style={{ width: '100%', maxWidth: '460px', padding: 'clamp(24px, 5vw, 40px) clamp(16px, 5vw, 32px)' }}>
-            <div className="auth-header" style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <button className="mobile-back-btn" onClick={() => navigate(-1)} type="button" aria-label="Go back">
+    <div className="min-h-[100svh] flex flex-col bg-[var(--bg)]">
+      <main className="flex-1 flex flex-col">
+        <div className="flex justify-center items-center min-h-[100svh] p-[clamp(16px,5vw,40px)] w-full">
+          <div className="w-full max-w-[420px] bg-white rounded-[24px] p-[clamp(24px,5vw,40px)_clamp(16px,5vw,32px)] shadow-[var(--shadow-soft)] border border-[var(--line)] relative">
+            <div className="text-center mb-[32px]">
+              <button className="absolute top-[24px] left-[16px] sm:left-[24px] w-[40px] h-[40px] rounded-full bg-white border border-[var(--line)] flex items-center justify-center cursor-pointer text-[var(--ink)] shadow-[0_2px_8px_rgba(0,0,0,0.02)] md:hidden" onClick={() => navigate(-1)} type="button" aria-label="Go back">
                 <ChevronLeft size={24} />
               </button>
-              <Link to="/" style={{ textDecoration: 'none', display: 'inline-block' }}>
-                <div className="logo" style={{ justifyContent: 'center', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <img src="/PanenMartLogo.svg" alt="PanenMart Logo" style={{ width: '32px', height: '32px' }} />
-                  <span style={{ fontSize: '1.4rem' }}>PanenMart</span>
+              <Link to="/" className="inline-block no-underline">
+                <div className="flex justify-center items-center gap-[8px] mb-[20px]">
+                  <img src="/PanenMartLogo.svg" alt="PanenMart Logo" className="w-[32px] h-[32px]" />
+                  <span className="text-[1.4rem] font-[family-name:var(--font-display)] font-semibold text-[var(--ink)] tracking-[-0.02em]">PanenMart</span>
                 </div>
               </Link>
-              <h1 className="hero-card-title" style={{ fontSize: '1.6rem', marginBottom: '8px' }}>Verifikasi Akun</h1>
-              <p className="hero-card-sub">Buat password untuk mengaktifkan akun Anda</p>
+              <h1 className="m-0 text-[1.6rem] font-bold text-[#111] mb-[8px] tracking-normal">Verifikasi Akun</h1>
+              <p className="m-0 text-[1rem] text-[var(--ink-soft)] leading-[1.5]">Buat password untuk mengaktifkan akun Anda</p>
             </div>
             
             {isSuccess ? (
@@ -105,16 +105,16 @@ export default function VerifyAccountPage() {
                 )}
                 
                 {token && (
-                  <form onSubmit={handleVerify} style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '32px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <label htmlFor="password" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--ink)' }}>Password Baru</label>
-                      <div style={{ position: 'relative' }}>
+                  <form onSubmit={handleVerify} className="flex flex-col gap-[20px] mb-[32px]">
+                    <div className="flex flex-col gap-[8px]">
+                      <label htmlFor="password" className="text-[0.95rem] font-semibold text-[var(--ink)]">Password Baru</label>
+                      <div className="relative">
                         <input
                           id="password"
                           type={showPassword ? "text" : "password"}
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          style={{ width: '100%', borderRadius: '14px', border: '1px solid var(--line)', padding: '14px 48px 14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
+                          className="w-full rounded-[14px] border border-[var(--line)] p-[14px_48px_14px_18px] bg-white text-[1rem] transition-all duration-200 outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_4px_var(--accent-soft)]"
                           placeholder="Minimal 6 karakter"
                           required
                           minLength={6}
@@ -122,7 +122,7 @@ export default function VerifyAccountPage() {
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                          className="absolute right-[16px] top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-[var(--ink-soft)] flex items-center justify-center p-0 hover:text-[var(--ink)]"
                           aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
                         >
                           {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -130,15 +130,15 @@ export default function VerifyAccountPage() {
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <label htmlFor="confirmPassword" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--ink)' }}>Konfirmasi Password</label>
-                      <div style={{ position: 'relative' }}>
+                    <div className="flex flex-col gap-[8px]">
+                      <label htmlFor="confirmPassword" className="text-[0.95rem] font-semibold text-[var(--ink)]">Konfirmasi Password</label>
+                      <div className="relative">
                         <input
                           id="confirmPassword"
                           type={showConfirmPassword ? "text" : "password"}
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
-                          style={{ width: '100%', borderRadius: '14px', border: '1px solid var(--line)', padding: '14px 48px 14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
+                          className="w-full rounded-[14px] border border-[var(--line)] p-[14px_48px_14px_18px] bg-white text-[1rem] transition-all duration-200 outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_4px_var(--accent-soft)]"
                           placeholder="Ulangi password baru"
                           required
                           minLength={6}
@@ -146,7 +146,7 @@ export default function VerifyAccountPage() {
                         <button
                           type="button"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                          className="absolute right-[16px] top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-[var(--ink-soft)] flex items-center justify-center p-0 hover:text-[var(--ink)]"
                           aria-label={showConfirmPassword ? "Sembunyikan password" : "Tampilkan password"}
                         >
                           {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -156,8 +156,7 @@ export default function VerifyAccountPage() {
                     
                     <button 
                       type="submit" 
-                      className="button primary" 
-                      style={{ width: '100%', marginTop: '12px', padding: '14px', fontSize: '1.05rem', borderRadius: '14px' }}
+                      className="w-full mt-[12px] p-[14px] text-[1.05rem] rounded-[14px] font-semibold bg-[var(--accent)] text-white hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(232,107,79,0.25)] transition-all disabled:opacity-70 disabled:cursor-not-allowed border-none cursor-pointer"
                       disabled={isSubmitting}
                     >
                       {isSubmitting ? 'Memproses...' : 'Simpan Password & Verifikasi'}
@@ -189,8 +188,7 @@ export default function VerifyAccountPage() {
                       />
                       <button 
                         type="submit" 
-                        className="button outline" 
-                        style={{ width: '100%', padding: '12px', fontSize: '1rem', borderRadius: '14px', background: 'transparent', border: '1px solid var(--ink)', cursor: 'pointer' }}
+                        className="w-full mt-[12px] p-[14px] text-[1.05rem] rounded-[14px] font-semibold bg-[var(--accent)] text-white hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(232,107,79,0.25)] transition-all disabled:opacity-70 disabled:cursor-not-allowed border-none cursor-pointer"
                         disabled={isResending}
                       >
                         {isResending ? 'Mengirim...' : 'Kirim Ulang Email Verifikasi'}

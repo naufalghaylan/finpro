@@ -66,61 +66,65 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
 
   return (
     <>
-      <div ref={mobileMenuRef} className="sticky top-0 z-20">
-      <header className={`transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${isScrolled ? 'bg-white/45 backdrop-blur-[20px] backdrop-saturate-[180%] border-b border-white/60 shadow-[0_8px_32px_0_rgba(31,38,135,0.05)]' : 'bg-[var(--surface)] border-b border-transparent'}`}>
-        <div className="w-full max-w-[1200px] mx-auto px-[clamp(16px,4vw,48px)] flex lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto_auto] justify-between items-center gap-5 py-[18px]">
-          {/* Logo */}
-          <div className="inline-flex items-center gap-2.5 font-[family-name:var(--font-display)] text-[1.1rem] tracking-[-0.02em] font-semibold text-[var(--ink)]">
-            <Link to="/home" onClick={closeMobileMenu} className="flex items-center gap-2.5 no-underline text-inherit">
-              <img src="/PanenMartLogo.svg" alt="Logo" className="h-8 w-auto" />
-              <span>{brandName}</span>
-            </Link>
+      <header ref={mobileMenuRef} className={`sticky top-0 z-20 transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${isScrolled ? 'bg-white/45 backdrop-blur-[20px] backdrop-saturate-[180%] border-b border-white/60 shadow-[0_8px_32px_0_rgba(31,38,135,0.05)]' : 'bg-[var(--surface)] border-b border-transparent'}`}>
+        <div className="w-full max-w-[1440px] mx-auto px-[clamp(16px,4vw,48px)] flex items-center justify-between gap-4 py-[18px]">
+          {/* Left section: Logo and Nav links */}
+          <div className="flex items-center gap-6 lg:gap-10">
+            {/* Logo */}
+            <div className="inline-flex items-center gap-2.5 font-[family-name:var(--font-display)] text-[1.1rem] tracking-[-0.02em] font-semibold text-[var(--ink)]">
+              <Link to="/home" onClick={closeMobileMenu} className="flex items-center gap-2.5 no-underline text-inherit">
+                <img src="/PanenMartLogo.svg" alt="Logo" className="h-8 w-auto" />
+                <span>{brandName}</span>
+              </Link>
+            </div>
+
+            {/* Desktop nav links */}
+            <nav className="hidden lg:flex items-center gap-6 justify-center whitespace-nowrap" aria-label="Main navigation">
+              {links.map((link) =>
+                link.href.startsWith('/') ? (
+                  <Link key={link.id} to={link.href} className="no-underline text-[var(--ink)] font-medium text-[0.95rem] transition-colors hover:text-[var(--accent-strong)]">
+                    {link.label}
+                  </Link>
+                ) : (
+                  <a key={link.id} href={link.href} className="no-underline text-[var(--ink)] font-medium text-[0.95rem] transition-colors hover:text-[var(--accent-strong)]">
+                    {link.label}
+                  </a>
+                )
+              )}
+              {(user?.role === 'SUPER_ADMIN' || user?.role === 'STORE_ADMIN') && (
+                <Link to="/admin/stores" className="!text-[var(--accent-strong)] font-bold no-underline text-[0.95rem]">Admin Toko</Link>
+              )}
+            </nav>
           </div>
 
-          {/* Desktop nav links */}
-          <nav className="hidden lg:flex items-center gap-[18px] justify-center" aria-label="Main navigation">
-            {links.map((link) =>
-              link.href.startsWith('/') ? (
-                <Link key={link.id} to={link.href} className="no-underline text-[var(--ink)] font-medium text-[0.95rem] transition-colors hover:text-[var(--accent-strong)]">
-                  {link.label}
-                </Link>
-              ) : (
-                <a key={link.id} href={link.href} className="no-underline text-[var(--ink)] font-medium text-[0.95rem] transition-colors hover:text-[var(--accent-strong)]">
-                  {link.label}
-                </a>
-              )
-            )}
-            {(user?.role === 'SUPER_ADMIN' || user?.role === 'STORE_ADMIN') && (
-              <Link to="/admin/stores" className="text-[var(--accent-strong)] font-semibold no-underline text-[0.95rem]">Admin Toko</Link>
-            )}
-          </nav>
+          {/* Right section: Search bar and Actions */}
+          <div className="flex items-center gap-4 lg:gap-6">
+            {/* Search bar */}
+            <div className="hidden lg:block">
+              <label className="sr-only" htmlFor="home-search">
+                Cari produk
+              </label>
+              <input
+                id="home-search"
+                type="search"
+                placeholder="Cari sayur, buah, bumbu"
+                value={keyword}
+                onChange={e => setKeyword(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && keyword.trim()) {
+                    navigate(`/search?keyword=${encodeURIComponent(keyword.trim())}`)
+                    setKeyword('')
+                  }
+                }}
+                className="w-[220px] rounded-full border border-[var(--line)] px-4 py-2.5 bg-[var(--surface)] text-[0.9rem] transition-colors focus:outline-none focus:border-[var(--accent)]"
+              />
+            </div>
 
-          {/* Search bar */}
-          <div className="hidden lg:block">
-            <label className="sr-only" htmlFor="home-search">
-              Cari produk
-            </label>
-            <input
-              id="home-search"
-              type="search"
-              placeholder="Cari sayur, buah, bumbu"
-              value={keyword}
-              onChange={e => setKeyword(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' && keyword.trim()) {
-                  navigate(`/search?keyword=${encodeURIComponent(keyword.trim())}`)
-                  setKeyword('')
-                }
-              }}
-              className="w-[220px] rounded-full border border-[var(--line)] px-4 py-2.5 bg-[var(--surface)] text-[0.9rem] transition-colors focus:outline-none focus:border-[var(--accent)]"
-            />
-          </div>
-
-          {/* Desktop actions */}
-          <div className="flex items-center gap-3">
+            {/* Desktop actions */}
+            <div className="flex items-center gap-4 justify-end">
             {isAuthenticated && user ? (
               <div className="flex items-center gap-3">
-                <div className="relative inline-flex group">
+                <div className="relative hidden lg:inline-flex group">
                   <div className="absolute top-full right-0 w-full h-3"></div>
                   <Link
                     to="/profile"
@@ -166,11 +170,11 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
             )}
             <button
               type="button"
-              className="inline-flex items-center justify-center rounded-full border border-transparent min-w-[68px] px-3.5 py-2.5 font-semibold cursor-pointer bg-[var(--accent)] text-white shadow-[var(--shadow-soft)] hover:-translate-y-[1px] hover:shadow-[var(--shadow-strong)] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center rounded-full border border-transparent p-[10px] cursor-pointer bg-[var(--accent)] text-white shadow-[var(--shadow-soft)] hover:-translate-y-[1px] hover:shadow-[var(--shadow-strong)] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               onClick={handleCartClick}
               aria-label={`Keranjang belanja, ${isLoadingCartCount ? 'memuat jumlah item' : `${cartCount} item`}`}
             >
-              <ShoppingCart className="w-4 h-4 stroke-[2.4]" aria-hidden="true" />
+              <ShoppingCart className="w-5 h-5 stroke-[2.4]" aria-hidden="true" />
               <span className="min-w-[24px] h-[24px] px-1.5 rounded-full inline-flex items-center justify-center text-[0.75rem] font-bold leading-none text-[var(--ink)] bg-white ml-2" aria-live="polite">
                 {isLoadingCartCount ? '...' : cartCount}
               </span>
@@ -192,6 +196,7 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
             </button>
           </div>
         </div>
+      </div>
 
         {/* Mobile dropdown menu */}
         <div
@@ -199,7 +204,7 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
           className={`overflow-hidden transition-all duration-350 ease-[cubic-bezier(0.4,0,0.2,1)] border-t bg-[var(--surface)] ${isMobileMenuOpen ? 'max-h-[600px] opacity-100 border-[var(--line)] shadow-[0_12px_32px_rgba(0,0,0,0.08)]' : 'max-h-0 opacity-0 border-transparent'}`}
           aria-hidden={!isMobileMenuOpen}
         >
-          <div className="w-full max-w-[1200px] mx-auto px-[clamp(16px,4vw,48px)] flex flex-col gap-3 py-4 pb-5">
+          <div className="w-full max-w-[1440px] mx-auto px-[clamp(16px,4vw,48px)] flex flex-col gap-3 py-4 pb-5">
             {/* Mobile Search */}
             <div>
               <label className="sr-only" htmlFor="mobile-search">Cari produk</label>
@@ -235,7 +240,7 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
                   )
                 )}
                 {(user?.role === 'SUPER_ADMIN' || user?.role === 'STORE_ADMIN') && (
-                  <Link to="/admin/stores" onClick={closeMobileMenu} className="no-underline font-bold text-base py-3 border-b border-[var(--line)] transition-colors text-[var(--accent-strong)]">
+                  <Link to="/admin/stores" onClick={closeMobileMenu} className="no-underline font-bold text-base py-3 border-b border-[var(--line)] transition-colors !text-[var(--accent-strong)]">
                     Admin Toko
                   </Link>
                 )}
@@ -300,7 +305,6 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
           </div>
         </div>
       </header>
-      </div>
 
       {/* Backdrop overlay */}
       {isMobileMenuOpen && (

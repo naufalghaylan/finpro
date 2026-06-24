@@ -8,7 +8,7 @@ type HomeFooterProps = {
 export const HomeFooter = ({ brandName, sections }: HomeFooterProps) => {
   return (
     <footer className="pt-12 pb-6 border-t border-[var(--line)] bg-[var(--surface)] mt-9">
-      <div className="w-full max-w-[1200px] mx-auto px-[clamp(16px,4vw,48px)] grid grid-cols-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)] gap-8 items-start">
+      <div className="w-full max-w-[1440px] mx-auto px-[clamp(16px,4vw,48px)] grid grid-cols-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)] gap-8 items-start">
         <div>
           <div className="inline-flex items-center gap-2.5 font-[family-name:var(--font-display)] text-[1.1rem] tracking-[-0.02em] font-semibold text-[var(--ink)]">
             <img src="/PanenMartLogo.svg" alt="Logo" className="h-8 w-auto" />
@@ -48,7 +48,7 @@ export const HomeFooter = ({ brandName, sections }: HomeFooterProps) => {
           ))}
         </div>
       </div>
-      <div className="w-full max-w-[1200px] mx-auto px-[clamp(16px,4vw,48px)] flex flex-col items-center justify-center gap-2 mt-8 pt-6 border-t border-[var(--line)] text-[0.85rem] text-[var(--ink-soft)] text-center">
+      <div className="w-full max-w-[1440px] mx-auto px-[clamp(16px,4vw,48px)] flex flex-col items-center justify-center gap-2 mt-8 pt-6 border-t border-[var(--line)] text-[0.85rem] text-[var(--ink-soft)] text-center">
         <span>2026 {brandName}. Semua hak dilindungi.</span>
         <span>Operasional 07.00 - 21.00</span>
       </div>

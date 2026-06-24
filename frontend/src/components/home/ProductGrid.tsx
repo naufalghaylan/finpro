@@ -33,7 +33,7 @@ export const ProductGrid = ({ products: initialProducts, storeId }: ProductGridP
 
   if (displayProducts.length === 0 && loading) return (
     <section className="py-[28px]" id="products">
-      <div className="w-full max-w-[1200px] mx-auto px-[clamp(16px,4vw,48px)]">
+      <div className="w-full max-w-[1440px] mx-auto px-[clamp(16px,4vw,48px)]">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-5 mb-5">
           <div>
             <p className="m-0 mb-2 uppercase tracking-[0.12em] text-[0.75rem] font-semibold text-[var(--accent-strong)]">Produk Terbaru</p>
@@ -50,7 +50,7 @@ export const ProductGrid = ({ products: initialProducts, storeId }: ProductGridP
 
   if (displayProducts.length === 0 && error) return (
     <section className="py-[28px]" id="products">
-      <div className="w-full max-w-[1200px] mx-auto px-[clamp(16px,4vw,48px)]">
+      <div className="w-full max-w-[1440px] mx-auto px-[clamp(16px,4vw,48px)]">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-5 mb-5">
           <div>
             <p className="m-0 mb-2 uppercase tracking-[0.12em] text-[0.75rem] font-semibold text-[var(--accent-strong)]">Produk Terbaru</p>
@@ -80,7 +80,7 @@ export const ProductGrid = ({ products: initialProducts, storeId }: ProductGridP
 
   return (
     <section className="py-[28px]" id="products">
-      <div className="w-full max-w-[1200px] mx-auto px-[clamp(16px,4vw,48px)]">
+      <div className="w-full max-w-[1440px] mx-auto px-[clamp(16px,4vw,48px)]">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-5 mb-5">
           <div>
             <p className="m-0 mb-2 uppercase tracking-[0.12em] text-[0.75rem] font-semibold text-[var(--accent-strong)]">Produk Terbaru</p>

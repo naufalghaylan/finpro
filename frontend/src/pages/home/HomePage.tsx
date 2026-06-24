@@ -171,7 +171,7 @@ export default function HomePage() {
       />
       <main className="flex flex-col gap-3 flex-1">
         {loading ? (
-          <div className="w-full max-w-[1200px] mx-auto px-[clamp(16px,4vw,48px)] py-32 flex flex-col items-center gap-4">
+          <div className="w-full max-w-[1440px] mx-auto px-[clamp(16px,4vw,48px)] py-32 flex flex-col items-center gap-4">
             <Loader2 size={40} className="animate-spin text-[var(--accent)]" />
             <p className="text-[var(--ink-soft)] font-medium">Loading...</p>
           </div>
@@ -179,7 +179,7 @@ export default function HomePage() {
           <>
             <HeroCarousel slides={activeBanners} storeName={activeStore.name} />
             <section className="pb-[18px]">
-              <div className="w-full max-w-[1200px] mx-auto px-[clamp(16px,4vw,48px)]">
+              <div className="w-full max-w-[1440px] mx-auto px-[clamp(16px,4vw,48px)]">
                 <div className="flex flex-wrap gap-2.5">
                   {activeNavLinks.map((link: NavLink) => (
                     <span key={link.id} className="flex items-center px-[14px] py-[8px] rounded-full border border-[var(--line)] bg-[var(--surface)] font-medium text-sm transition-colors hover:bg-[var(--surface-muted)] cursor-pointer">
@@ -215,7 +215,7 @@ export default function HomePage() {
           error={apiError}
         />
         <section className="py-7 md:py-[28px]" id="help">
-          <div className="w-full max-w-[1200px] mx-auto px-[clamp(16px,4vw,48px)]">
+          <div className="w-full max-w-[1440px] mx-auto px-[clamp(16px,4vw,48px)]">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-8 md:p-[48px] rounded-[24px] bg-[var(--ink)] text-white shadow-[var(--shadow-soft)]">
               <div className="flex flex-col gap-2">
                 <p className="m-0 text-[#f1b884] uppercase tracking-[0.12em] text-xs font-semibold">Butuh bantuan</p>

@@ -62,7 +62,7 @@ export const LocationPanel = ({
 
   return (
     <section className="py-[28px]">
-      <div className="w-full max-w-[1200px] mx-auto px-[clamp(16px,4vw,48px)]">
+      <div className="w-full max-w-[1440px] mx-auto px-[clamp(16px,4vw,48px)]">
         <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto] gap-5 items-start md:items-center p-6 rounded-3xl border border-[var(--line)] bg-[var(--surface)]">
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center gap-2.5 flex-wrap">

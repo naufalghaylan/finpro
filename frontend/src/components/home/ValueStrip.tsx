@@ -9,7 +9,7 @@ type ValueStripProps = {
 export const ValueStrip = ({ items, sectionId }: ValueStripProps) => {
   return (
     <section className="py-[28px]" id={sectionId}>
-      <div className="w-full max-w-[1200px] mx-auto px-[clamp(16px,4vw,48px)]">
+      <div className="w-full max-w-[1440px] mx-auto px-[clamp(16px,4vw,48px)]">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-5 mb-5">
           <div>
             <p className="m-0 mb-2 uppercase tracking-[0.12em] text-[0.75rem] font-semibold text-[var(--accent-strong)]">Kenapa PanenMart</p>

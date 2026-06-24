@@ -26,7 +26,7 @@ export const HeroCarousel = ({ slides, storeName }: HeroCarouselProps) => {
 
   return (
     <section className="pt-10 md:pt-16 pb-6" aria-label="Promo mingguan">
-      <div className="w-full max-w-[1200px] mx-auto px-[clamp(16px,4vw,48px)] grid grid-cols-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-12 items-center">
+      <div className="w-full max-w-[1440px] mx-auto px-[clamp(16px,4vw,48px)] grid grid-cols-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-12 items-center">
         <div className="flex flex-col gap-4">
           <span className="pill fade-in delay-1" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
             <Tag size={14} />

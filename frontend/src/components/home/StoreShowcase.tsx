@@ -14,7 +14,9 @@ export const StoreShowcase = ({ stores, activeStoreId, onSelectStore, error }: S
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
-      const scrollAmount = 300
+      // Get the width of one card + gap (16px)
+      const cardWidth = scrollRef.current.firstElementChild?.clientWidth || 300
+      const scrollAmount = cardWidth + 16
       scrollRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth'
@@ -24,7 +26,7 @@ export const StoreShowcase = ({ stores, activeStoreId, onSelectStore, error }: S
 
   return (
     <section className="py-[28px]" id="stores">
-      <div className="w-full max-w-[1200px] mx-auto px-[clamp(16px,4vw,48px)]">
+      <div className="w-full max-w-[1440px] mx-auto px-[clamp(16px,4vw,48px)]">
         <div className="flex justify-between items-end flex-wrap gap-4 mb-5">
           <div>
             <p className="m-0 mb-2 uppercase tracking-[0.12em] text-[0.75rem] font-semibold text-[var(--accent-strong)]">Jaringan store</p>
@@ -63,7 +65,7 @@ export const StoreShowcase = ({ stores, activeStoreId, onSelectStore, error }: S
             {stores.map((store) => (
               <article
                 key={store.id}
-                className={`flex-[0_0_280px] snap-start p-4 rounded-[18px] border bg-white transition-all ${store.id === activeStoreId ? 'border-[var(--accent)] shadow-[var(--shadow-soft)]' : 'border-[var(--line)]'}`}
+                className={`flex-[0_0_280px] sm:flex-[0_0_calc((100%-16px)/2)] md:flex-[0_0_calc((100%-32px)/3)] lg:flex-[0_0_calc((100%-48px)/4)] snap-start p-4 rounded-[18px] border bg-white transition-all ${store.id === activeStoreId ? 'border-[var(--accent)] shadow-[var(--shadow-soft)]' : 'border-[var(--line)]'}`}
                 onClick={() => onSelectStore?.(store.id)}
                 style={{ cursor: onSelectStore ? 'pointer' : 'default' }}
               >
