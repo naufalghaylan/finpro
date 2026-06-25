@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import ErrorPage from '../error/ErrorPage'
 import { Navbar } from '../../components/common/Navbar'
 import { HomeFooter } from '../../components/home/HomeFooter'
@@ -10,20 +10,13 @@ import { useProfileStore } from '../../store/profileStore'
 import { BRAND, navLinks, footerSections } from '../../data/home/homeData'
 
 export default function ProfilePage() {
-  const { fetchProfile } = useProfileStore()
-  const [fetchError, setFetchError] = useState<{message: string, code: number} | null>(null)
+  const { fetchProfile, error } = useProfileStore()
 
   useEffect(() => {
-    fetchProfile().catch((error) => {
-      console.error('Failed to fetch profile:', error)
-      setFetchError({
-        message: error?.response?.data?.message || 'Terjadi kesalahan saat memuat data profil Anda. Silakan coba lagi nanti.',
-        code: error?.response?.status || 500
-      })
-    })
+    fetchProfile()
   }, [fetchProfile])
 
-  if (fetchError) {
+  if (error) {
     return (
       <ErrorPage />
     )
