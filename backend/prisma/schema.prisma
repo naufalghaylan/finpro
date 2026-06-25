@@ -78,14 +78,15 @@ model User {
   email          String   @unique
   password       String?
   phone          String?
-  profilePicture String?
+  profilePicture String?  @map("profile_picture")
   role           Role     @default(CUSTOMER)
-  emailVerified  Boolean  @default(false)
-  authProvider   String?  @default("CREDENTIALS")
-  authProviderId String?
-  storeId        Int?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  emailVerified  Boolean  @default(false) @map("email_verified")
+  authProvider   String?  @default("CREDENTIALS") @map("auth_provider")
+  authProviderId String?  @map("auth_provider_id")
+  storeId        Int?     @map("store_id")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at") // untuk soft delete
 
   store              Store?          @relation("StoreAdmin", fields: [storeId], references: [id])
   addresses          UserAddress[]
@@ -97,6 +98,10 @@ model User {
   stockJournals      StockJournal[]
   requestedMutations StockMutation[] @relation("MutationRequester")
   approvedMutations  StockMutation[] @relation("MutationApprover")
+  rejectedMutations  StockMutation[] @relation("MutationRejecter")
+  receivedMutations  StockMutation[] @relation("MutationReceiver")
+  refreshTokens      RefreshToken[]
+  shippingCaches     UserShippingCache[]
 
   @@map("users")
 }
@@ -111,15 +116,16 @@ model Store {
   longitude     Float
   address       String
   city          String
-  cityId        String? // untuk integrasi API pengiriman (RajaOngkir)
+  cityId        String?  @map("city_id") // untuk integrasi API pengiriman (RajaOngkir)
   province      String
-  provinceId    String? // untuk integrasi API pengiriman (RajaOngkir)
-  postalCode    String?
+  provinceId    String?  @map("province_id") // untuk integrasi API pengiriman (RajaOngkir)
+  postalCode    String?  @map("postal_code")
   phone         String?
-  serviceRadius Float    @default(50) // dalam KM
+  serviceRadius Float    @default(50) @map("service_radius") // dalam KM
   status        Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at") // untuk soft delete
 
   admins               User[]          @relation("StoreAdmin")
   stocks               Stock[]
@@ -128,6 +134,7 @@ model Store {
   discounts            Discount[]
   sourceMutations      StockMutation[] @relation("MutationSource")
   destinationMutations StockMutation[] @relation("MutationDestination")
+  shippingCaches       UserShippingCache[]
 
   @@map("stores")
 }
@@ -138,8 +145,9 @@ model Category {
   slug        String   @unique
   icon        String?
   description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at") // untuk soft delete
 
   products Product[]
 
@@ -151,13 +159,13 @@ model Product {
   name        String   @unique // tidak boleh ada produk dengan nama yang sama
   slug        String   @unique
   description String?
-  categoryId  Int
-  basePrice   Float
+  categoryId  Int      @map("category_id")
+  basePrice   Float    @map("base_price")
   weight      Float    @default(0) // dalam gram, untuk kalkulasi ongkir
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  category       Category       @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at") // untuk soft delete
+  category       Category        @relation(fields: [categoryId], references: [id])
   images         ProductImage[]
   stocks         Stock[]
   cartItems      CartItem[]
@@ -172,11 +180,12 @@ model Product {
 
 model ProductImage {
   id        Int      @id @default(autoincrement())
-  productId Int
-  imageUrl  String
-  isPrimary Boolean  @default(false)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
+  productId Int      @map("product_id")
+  imageUrl  String   @map("image_url")
+  isPrimary Boolean   @default(false) @map("is_primary")
+  sortOrder Int       @default(0) @map("sort_order")
+  createdAt DateTime  @default(now()) @map("created_at")
+  deletedAt DateTime? @map("deleted_at") // untuk soft delete
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
@@ -186,10 +195,10 @@ model ProductImage {
 
 model Cart {
   id        Int      @id @default(autoincrement())
-  userId    Int      @unique
-  storeId   Int? // cart terikat ke toko terdekat user
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  userId    Int      @unique @map("user_id")
+  storeId   Int?     @map("store_id") // cart terikat ke toko terdekat user
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   store Store?     @relation(fields: [storeId], references: [id])
@@ -200,11 +209,11 @@ model Cart {
 
 model CartItem {
   id        Int      @id @default(autoincrement())
-  cartId    Int
-  productId Int
+  cartId    Int      @map("cart_id")
+  productId Int      @map("product_id")
   quantity  Int      @default(1)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id])
@@ -216,12 +225,13 @@ model CartItem {
 }
 
 model Stock {
-  id        Int      @id @default(autoincrement())
-  productId Int
-  storeId   Int
-  quantity  Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        Int       @id @default(autoincrement())
+  productId Int       @map("product_id")
+  storeId   Int       @map("store_id")
+  quantity  Int       @default(0)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at") // untuk soft delete
 
   product  Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
   store    Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)
@@ -234,23 +244,29 @@ model Stock {
 
 // Jurnal perubahan stok — setiap perubahan stok HARUS melalui jurnal
 model StockJournal {
-  id             Int              @id @default(autoincrement())
-  stockId        Int
-  orderId        Int? // nullable, hanya diisi jika terkait order
-  quantityChange Int // positif = penambahan, negatif = pengurangan
-  quantityBefore Int
-  quantityAfter  Int
-  type           StockJournalType
-  description    String?
-  createdBy      Int // user (admin) yang membuat perubahan
-  createdAt      DateTime         @default(now())
+  id              Int              @id @default(autoincrement())
+  stockId         Int              @map("stock_id")
+  orderId         Int?             @map("order_id") // nullable, hanya diisi jika terkait order
+  stockMutationId Int?             @map("stock_mutation_id") // nullable, hanya diisi jika terkait mutasi stok
+  quantityChange  Int              @map("quantity_change") // positif = penambahan, negatif = pengurangan
+  quantityBefore  Int              @map("quantity_before")
+  quantityAfter   Int              @map("quantity_after")
+  type            StockJournalType
+  description     String?
+  productSnapshot Json?            @map("product_snapshot")
+  storeSnapshot   Json?            @map("store_snapshot")
+  notes           String?
+  createdBy       Int              @map("created_by") // user (admin) yang membuat perubahan
+  createdAt       DateTime         @default(now()) @map("created_at")
 
-  stock   Stock  @relation(fields: [stockId], references: [id], onDelete: Cascade)
-  order   Order? @relation(fields: [orderId], references: [id])
-  creator User   @relation(fields: [createdBy], references: [id])
+  stock         Stock          @relation(fields: [stockId], references: [id], onDelete: Cascade)
+  order         Order?         @relation(fields: [orderId], references: [id])
+  stockMutation StockMutation? @relation(fields: [stockMutationId], references: [id])
+  creator       User           @relation(fields: [createdBy], references: [id])
 
   @@index([stockId])
   @@index([orderId])
+  @@index([stockMutationId])
   @@index([createdAt])
   @@map("stock_journals")
 }
@@ -258,49 +274,64 @@ model StockJournal {
 // Mutasi stok antar gudang/toko
 model StockMutation {
   id                 Int            @id @default(autoincrement())
-  sourceStoreId      Int
-  destinationStoreId Int
-  productId          Int
+  orderId            Int?           @map("order_id")
+  sourceStoreId      Int            @map("source_store_id")
+  destinationStoreId Int            @map("destination_store_id")
+  productId          Int            @map("product_id")
   quantity           Int
   status             MutationStatus @default(PENDING)
-  requestedBy        Int
-  approvedBy         Int?
+  requestedBy        Int            @map("requested_by")
+  approvedBy         Int?           @map("approved_by")
+  rejectedBy         Int?           @map("rejected_by")
+  receivedBy         Int?           @map("received_by")
   notes              String?
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
+  approvedAt         DateTime?      @map("approved_at")
+  rejectedAt         DateTime?      @map("rejected_at")
+  sentAt             DateTime?      @map("sent_at")
+  receivedAt         DateTime?      @map("received_at")
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
 
-  sourceStore      Store   @relation("MutationSource", fields: [sourceStoreId], references: [id])
-  destinationStore Store   @relation("MutationDestination", fields: [destinationStoreId], references: [id])
-  product          Product @relation(fields: [productId], references: [id])
-  requester        User    @relation("MutationRequester", fields: [requestedBy], references: [id])
-  approver         User?   @relation("MutationApprover", fields: [approvedBy], references: [id])
+  order            Order?         @relation(fields: [orderId], references: [id])
+  sourceStore      Store          @relation("MutationSource", fields: [sourceStoreId], references: [id])
+  destinationStore Store          @relation("MutationDestination", fields: [destinationStoreId], references: [id])
+  product          Product        @relation(fields: [productId], references: [id])
+  requester        User           @relation("MutationRequester", fields: [requestedBy], references: [id])
+  approver         User?          @relation("MutationApprover", fields: [approvedBy], references: [id])
+  rejecter         User?          @relation("MutationRejecter", fields: [rejectedBy], references: [id])
+  receiver         User?          @relation("MutationReceiver", fields: [receivedBy], references: [id])
+  stockJournals    StockJournal[]
 
+  @@index([orderId])
   @@index([sourceStoreId])
   @@index([destinationStoreId])
   @@index([productId])
+  @@index([status])
   @@map("stock_mutations")
 }
 
 model UserAddress {
   id            Int      @id @default(autoincrement())
-  userId        Int
-  recipientName String
+  userId        Int      @map("user_id")
+  recipientName String   @map("recipient_name")
   phone         String
   address       String
   city          String
-  cityId        String? // untuk integrasi API pengiriman (RajaOngkir)
+  cityId        String?  @map("city_id") // untuk integrasi API pengiriman (RajaOngkir)
   province      String
-  provinceId    String? // untuk integrasi API pengiriman (RajaOngkir)
+  provinceId    String?  @map("province_id") // untuk integrasi API pengiriman (RajaOngkir)
   district      String? // kecamatan
-  postalCode    String?
+  postalCode    String?  @map("postal_code")
   latitude      Float?
   longitude     Float?
-  isPrimary     Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  isPrimary     Boolean  @default(false) @map("is_primary")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at") // untuk soft delete
 
   user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   orders Order[]
+  shippingCaches UserShippingCache[]
 
   @@index([userId])
   @@map("user_addresses")
@@ -308,36 +339,37 @@ model UserAddress {
 
 model Order {
   id                 Int           @id @default(autoincrement())
-  orderNumber        String        @unique // nomor order yang mudah dibaca, untuk pencarian
-  userId             Int
-  storeId            Int
-  addressId          Int // alamat pengiriman yang dipilih saat checkout
+  orderNumber        String        @unique @map("order_number") // nomor order yang mudah dibaca, untuk pencarian
+  userId             Int           @map("user_id")
+  storeId            Int           @map("store_id")
+  addressId          Int           @map("address_id") // alamat pengiriman yang dipilih saat checkout
   status             OrderStatus   @default(PENDING_PAYMENT)
-  totalProductAmount Float         @default(0) // subtotal produk sebelum diskon & ongkir
-  totalAmount        Float // total akhir yang harus dibayar
-  shippingCost       Float         @default(0)
-  discountAmount     Float         @default(0)
-  shippingMethod     String? // nama kurir (JNE, TIKI, dll)
-  shippingService    String? // tipe layanan (REG, YES, dll)
-  voucherId          Int?
-  paymentMethod      PaymentMethod @default(MANUAL_TRANSFER)
-  paymentProof       String?
-  paymentGatewayId   String? // referensi transaksi payment gateway
-  paymentDeadline    DateTime? // batas waktu upload bukti bayar (~1 jam)
-  shippedAt          DateTime? // waktu pesanan dikirim (untuk hitung auto-confirm)
-  confirmedAt        DateTime? // waktu pesanan dikonfirmasi user
-  cancelledAt        DateTime?
-  cancelReason       String?
+  totalProductAmount Float         @default(0) @map("total_product_amount") // subtotal produk sebelum diskon & ongkir
+  totalAmount        Float         @map("total_amount") // total akhir yang harus dibayar 
+  shippingCost       Float         @default(0) @map("shipping_cost")
+  discountAmount     Float         @default(0) @map("discount_amount") // orderitem diskon dipindahkan ke order
+  shippingMethod     String?       @map("shipping_method") // nama kurir (JNE, TIKI, dll)
+  shippingService    String?       @map("shipping_service") // tipe layanan (REG, YES, dll)
+  voucherId          Int?          @map("voucher_id")
+  paymentMethod      PaymentMethod @default(MANUAL_TRANSFER) @map("payment_method")
+  paymentProof       String?       @map("payment_proof")
+  paymentGatewayId   String?       @map("payment_gateway_id") // referensi transaksi payment gateway
+  paymentDeadline    DateTime?     @map("payment_deadline") // batas waktu upload bukti bayar (~1 jam)
+  shippedAt          DateTime?     @map("shipped_at") // waktu pesanan dikirim (untuk hitung auto-confirm)
+  confirmedAt        DateTime?     @map("confirmed_at") // waktu pesanan dikonfirmasi user
+  cancelledAt        DateTime?     @map("cancelled_at")
+  cancelReason       String?       @map("cancel_reason")
   notes              String?
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
 
-  user          User           @relation(fields: [userId], references: [id])
-  store         Store          @relation(fields: [storeId], references: [id])
-  address       UserAddress    @relation(fields: [addressId], references: [id])
-  voucher       Voucher?       @relation(fields: [voucherId], references: [id])
-  items         OrderItem[]
-  stockJournals StockJournal[]
+  user           User            @relation(fields: [userId], references: [id])
+  store          Store           @relation(fields: [storeId], references: [id])
+  address        UserAddress     @relation(fields: [addressId], references: [id])
+  voucher        Voucher?        @relation(fields: [voucherId], references: [id])
+  items          OrderItem[]
+  stockJournals  StockJournal[]
+  stockMutations StockMutation[]
 
   @@index([userId])
   @@index([storeId])
@@ -347,15 +379,14 @@ model Order {
 }
 
 model OrderItem {
-  id                  Int      @id @default(autoincrement())
-  orderId             Int
-  productId           Int
-  quantity            Int
-  priceAtTime         Float // harga produk saat pemesanan
-  discountAmount      Float    @default(0)
-  discountDescription String? // catatan diskon apa yang diterapkan (untuk laporan)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id          Int      @id @default(autoincrement())
+  orderId     Int      @map("order_id")
+  productId   Int      @map("product_id")
+  quantity    Int
+  priceAtTime Float    @map("price_at_time") // harga produk saat pemesanan
+  subtotal    Float // dipindah ke OrderItem sebagai subtotal
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id])
@@ -368,19 +399,20 @@ model OrderItem {
 // Diskon yang dikelola per toko — setiap toko bisa atur diskon masing-masing
 model Discount {
   id            Int          @id @default(autoincrement())
-  storeId       Int // diskon dikelola per toko
-  productId     Int? // nullable: bisa diskon per produk atau tanpa produk tertentu
+  storeId       Int          @map("store_id") // diskon dikelola per toko
+  productId     Int?         @map("product_id") // nullable: bisa diskon per produk atau tanpa produk tertentu
   name          String
   description   String?
-  discountType  DiscountType
-  discountValue Float
-  minPurchase   Float        @default(0)
-  maxDiscount   Float?
-  startDate     DateTime
-  endDate       DateTime
-  isActive      Boolean      @default(true)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  discountType  DiscountType @map("discount_type")
+  discountValue Float        @map("discount_value")
+  minPurchase   Float        @default(0) @map("min_purchase")
+  maxDiscount   Float?       @map("max_discount")
+  startDate     DateTime     @map("start_date")
+  endDate       DateTime     @map("end_date")
+  isActive      Boolean      @default(true) @map("is_active")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+  deletedAt     DateTime?     @map("deleted_at") // untuk soft delete
 
   store   Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
   product Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -393,20 +425,20 @@ model Discount {
 model Voucher {
   id            Int                 @id @default(autoincrement())
   code          String              @unique
-  userId        Int
-  productId     Int?
+  userId        Int                 @map("user_id")
+  productId     Int?                @map("product_id")
   name          String
-  discountType  DiscountType
-  discountValue Float
-  maxDiscount   Float?
-  minPurchase   Float               @default(0) // minimal pembelanjaan untuk pakai voucher
-  applicableTo  VoucherApplicableTo @default(ALL_PRODUCTS)
+  discountType  DiscountType        @map("discount_type")
+  discountValue Float               @map("discount_value")
+  maxDiscount   Float?              @map("max_discount")
+  minPurchase   Float               @default(0) @map("min_purchase") // minimal pembelanjaan untuk pakai voucher
+  applicableTo  VoucherApplicableTo @default(ALL_PRODUCTS) @map("applicable_to")
   source        VoucherSource       @default(PROMO) // asal voucher: referral, reward, promo, dll
-  expiredAt     DateTime
+  expiredAt     DateTime            @map("expired_at")
   used          Boolean             @default(false)
-  usedAt        DateTime?
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
+  usedAt        DateTime?           @map("used_at")
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
 
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   product Product? @relation(fields: [productId], references: [id])
@@ -419,10 +451,10 @@ model Voucher {
 
 model ReferralCode {
   id        Int      @id @default(autoincrement())
-  userId    Int      @unique // satu user hanya punya satu kode
+  userId    Int      @unique @map("user_id") // satu user hanya punya satu kode
   code      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   user   User            @relation("ReferralCodeOwner", fields: [userId], references: [id], onDelete: Cascade)
   usages ReferralUsage[]
@@ -432,9 +464,9 @@ model ReferralCode {
 
 model ReferralUsage {
   id             Int      @id @default(autoincrement())
-  referralCodeId Int
-  usedByUserId   Int      @unique // satu user hanya bisa pakai 1 kode referral
-  createdAt      DateTime @default(now())
+  referralCodeId Int      @map("referral_code_id")
+  usedByUserId   Int      @unique @map("used_by_user_id") // satu user hanya bisa pakai 1 kode referral
+  createdAt      DateTime @default(now()) @map("created_at")
 
   referralCode ReferralCode @relation(fields: [referralCodeId], references: [id], onDelete: Cascade)
   usedBy       User         @relation("ReferralUsageUser", fields: [usedByUserId], references: [id], onDelete: Cascade)
@@ -468,12 +500,47 @@ model ResetPasswordToken {
 model Banner {
   id        Int      @id @default(autoincrement())
   title     String
-  imageUrl  String
-  linkUrl   String?
-  isActive  Boolean  @default(true)
-  sortOrder Int      @default(0) // urutan tampil di carousel
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  imageUrl  String   @map("image_url")
+  linkUrl   String?  @map("link_url")
+  isActive  Boolean  @default(true) @map("is_active")
+  sortOrder Int      @default(0) @map("sort_order") // urutan tampil di carousel
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("banners")
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int      @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model UserShippingCache {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  addressId    Int      @map("address_id")
+  storeId      Int      @map("store_id")
+  weight       Int      // berat dalam gram untuk API RajaOngkir
+  courier      String   // misal: 'jne', 'pos', 'tiki'
+  results      Json     // Array dari tipe layanan kurir
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address UserAddress @relation(fields: [addressId], references: [id], onDelete: Cascade)
+  store   Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, addressId, storeId, weight, courier])
+  @@index([userId])
+  @@index([addressId])
+  @@index([storeId])
+  @@map("user_shipping_caches")
 }

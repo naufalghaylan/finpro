@@ -1,0 +1,17 @@
+/* ================================================
+   Homepage Theme Tokens
+   ================================================ */
+
+@theme {
+  /* You can add specific homepage tokens here if needed,
+     e.g., custom colors, font sizes, etc., that apply only to the homepage */
+}
+
+/* --- Utilities --- */
+@utility home-shimmer {
+  background: linear-gradient(90deg, var(--surface-muted) 25%, var(--surface) 50%, var(--surface-muted) 75%);
+  background-size: 200% 100%;
+  animation: admin-shimmer 1.8s ease-in-out infinite;
+}
+
+/* Any complex homepage-specific CSS that cannot be expressed purely with Tailwind classes goes here */

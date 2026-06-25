@@ -130,18 +130,18 @@ The backend runs at `http://localhost:5000`. All API calls should go through `/a
 const response = await fetch('http://localhost:5000/api/auth/login', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ email, password }),
+  body: JSON.stringify({ emailOrUsername: email, password, rememberMe: false }),
 })
 const data = await response.json()
-// data.token — store this in localStorage or a context
+// The backend sets HTTP-only cookies for accessToken and refreshToken automatically.
+// No need to store anything in localStorage!
 ```
 
 ### Authenticated request
 ```ts
-const token = localStorage.getItem('token')
-
+// Ensure you send credentials (cookies) with your requests
 const response = await fetch('http://localhost:5000/api/auth/me', {
-  headers: { Authorization: `Bearer ${token}` },
+  credentials: 'include' // This sends the accessToken cookie
 })
 ```
 

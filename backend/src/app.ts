@@ -1,7 +1,9 @@
 import express from 'express'
+import path from 'path'
+
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
-import { router } from './routes'
+import router from './routes'
 
 const app = express()
 
@@ -15,11 +17,18 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 // ── Routes ─────────────────────────────────────────────────────────────────
+app.use('/uploads', express.static(path.join(__dirname, '../../uploads')))
 app.use('/', router)
+
 
 // ── Health check ───────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
+})
+
+// ── Root handler for browser ───────────────────────────────────────────────
+app.get('/', (_req, res) => {
+  res.json({ message: 'Welcome to Finpro API' })
 })
 
 // ── 404 handler ────────────────────────────────────────────────────────────

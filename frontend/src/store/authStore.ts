@@ -6,14 +6,18 @@ interface User {
   name: string;
   email: string;
   role: string;
+  profilePicture?: string;
+  emailVerified?: boolean;
+  storeId?: number;
 }
 
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (credentials: any) => Promise<void>;
-  register: (userData: any) => Promise<void>;
+  login: (credentials: { emailOrUsername: string; password: string; rememberMe?: boolean }) => Promise<void>;
+  socialLogin: (payload: { token: string, provider: 'GOOGLE' }) => Promise<{ isNewUser: boolean }>;
+  register: (userData: Record<string, unknown>) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
 }
@@ -34,12 +38,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   register: async (userData) => {
-    try {
-      await api.post('/auth/register', userData);
-      // Do not set user as they need to verify their email first
-    } catch (error) {
-      throw error;
-    }
+    await api.post('/auth/register', userData);
+    // Do not set user as they need to verify their email first
   },
 
   logout: async () => {
@@ -47,6 +47,17 @@ export const useAuthStore = create<AuthState>((set) => ({
       await api.post('/auth/logout');
     } finally {
       set({ user: null, isAuthenticated: false, isLoading: false });
+    }
+  },
+
+  socialLogin: async (payload: { token: string, provider: 'GOOGLE' }) => {
+    try {
+      const response = await api.post('/auth/social-login', payload);
+      set({ user: response.data.user, isAuthenticated: true, isLoading: false });
+      return { isNewUser: response.data.isNewUser as boolean };
+    } catch (error) {
+      set({ user: null, isAuthenticated: false, isLoading: false });
+      throw error;
     }
   },
 

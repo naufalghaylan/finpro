@@ -1,61 +1,37 @@
-import { useEffect, useState } from 'react'
-
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000'
+import { useEffect } from 'react'
+import { useAuthStore } from '../../store/authStore'
+import { useCartStore } from '../../store/cartStore'
 
 export const useCartCount = () => {
-  const [count, setCount] = useState(0)
-  const [isLoading, setIsLoading] = useState(true)
+  const { isAuthenticated } = useAuthStore()
+  const cartCount = useCartStore((state) => state.cartCount)
+  const isLoadingCartCount = useCartStore((state) => state.isLoadingCartCount)
+  const loadCartCount = useCartStore((state) => state.loadCartCount)
+  const resetCartCount = useCartStore((state) => state.resetCartCount)
 
   useEffect(() => {
-    let isMounted = true
-
-    const loadCartCount = async () => {
-      const token = localStorage.getItem('token')
-      if (!token) {
-        if (isMounted) {
-          setCount(0)
-          setIsLoading(false)
-        }
-        return
-      }
-
-      try {
-        const response = await fetch(`${API_URL}/api/cart/count`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-        if (!response.ok) {
-          if (isMounted) {
-            setCount(0)
-          }
-          return
-        }
-
-        const data = (await response.json()) as { count?: number }
-
-        if (isMounted) {
-          setCount(typeof data.count === 'number' ? data.count : 0)
-        }
-      } catch {
-        if (isMounted) {
-          setCount(0)
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false)
-        }
-      }
+    if (!isAuthenticated) {
+      resetCartCount()
+      return
     }
 
     void loadCartCount()
+  }, [isAuthenticated, loadCartCount, resetCartCount])
+
+  useEffect(() => {
+    const handleCartUpdated = () => {
+      if (isAuthenticated) {
+        void loadCartCount()
+      }
+    }
+
+    window.addEventListener('cartUpdated', handleCartUpdated)
 
     return () => {
-      isMounted = false
+      window.removeEventListener('cartUpdated', handleCartUpdated)
     }
-  }, [])
+  }, [isAuthenticated, loadCartCount])
 
-  return { cartCount: count, isLoadingCartCount: isLoading }
+  return { cartCount, isLoadingCartCount }
 }
 

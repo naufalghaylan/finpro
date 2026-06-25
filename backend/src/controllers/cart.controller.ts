@@ -1,116 +1,60 @@
 import { Request, Response } from 'express'
-import prisma from '../lib/prisma'
+import {
+  CART_ITEM_ERRORS,
+  addCartItem as addCartItemService,
+  deleteCartItem as deleteCartItemService,
+  updateCartItem as updateCartItemService,
+} from '../services/cart-item.service'
+import { getCart as getCartService, getCartCount as getCartCountService } from '../services/cart.service'
+import {
+  addToCartSchema,
+  cartItemParamsSchema,
+  updateCartItemSchema,
+} from '../validations/cart.validation'
+import {
+  getAuthenticatedUserId,
+  sendInternalError,
+  sendValidationError,
+} from './controller.utils'
 
-const INSUFFICIENT_STOCK_ERROR = 'INSUFFICIENT_STOCK'
-
-const toPositiveInt = (value: unknown): number | null => {
-  if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0) {
-    return null
+const handleCartItemError = (error: unknown, res: Response) => {
+  if (!(error instanceof Error)) {
+    return false
   }
-  return value
+
+  if (error.message === CART_ITEM_ERRORS.PRODUCT_NOT_FOUND) {
+    res.status(404).json({ message: 'Product not found' })
+    return true
+  }
+
+  if (error.message === CART_ITEM_ERRORS.CART_ITEM_NOT_FOUND) {
+    res.status(404).json({ message: 'Cart item not found' })
+    return true
+  }
+
+  if (error.message === CART_ITEM_ERRORS.INSUFFICIENT_STOCK) {
+    res.status(400).json({ message: 'Requested quantity exceeds available stock' })
+    return true
+  }
+
+  return false
 }
 
 export const addToCart = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.userId
-    if (!userId) {
-      res.status(401).json({ message: 'Unauthorized: Login required' })
+    const userId = getAuthenticatedUserId(req, res)
+    if (!userId) return
+
+    const parsed = addToCartSchema.safeParse(req.body)
+    if (!parsed.success) {
+      sendValidationError(res, parsed.error)
       return
     }
 
-    const productId = toPositiveInt(req.body?.productId)
-    const quantity = req.body?.quantity === undefined ? 1 : toPositiveInt(req.body?.quantity)
-
-    if (!productId || !quantity) {
-      res
-        .status(400)
-        .json({ message: 'productId and quantity are required and must be positive integers' })
-      return
-    }
-
-    const product = await prisma.product.findUnique({
-      where: { id: productId },
-      select: {
-        id: true,
-        stocks: {
-          select: {
-            quantity: true,
-          },
-        },
-      },
-    })
-
-    if (!product) {
-      res.status(404).json({ message: 'Product not found' })
-      return
-    }
-
-    const totalStock = product.stocks.reduce((sum, stock) => sum + stock.quantity, 0)
-    if (totalStock <= 0) {
-      res.status(400).json({ message: 'Product is out of stock' })
-      return
-    }
-
-    const result = await prisma.$transaction(async (tx) => {
-      const cart = await tx.cart.upsert({
-        where: { userId },
-        create: { userId },
-        update: {},
-        select: { id: true },
-      })
-
-      const existingItem = await tx.cartItem.findUnique({
-        where: {
-          cartId_productId: {
-            cartId: cart.id,
-            productId,
-          },
-        },
-        select: {
-          id: true,
-          quantity: true,
-        },
-      })
-
-      const nextQuantity = (existingItem?.quantity ?? 0) + quantity
-      if (nextQuantity > totalStock) {
-        throw new Error(INSUFFICIENT_STOCK_ERROR)
-      }
-
-      const cartItem = existingItem
-        ? await tx.cartItem.update({
-            where: { id: existingItem.id },
-            data: { quantity: nextQuantity },
-            select: {
-              id: true,
-              productId: true,
-              quantity: true,
-              updatedAt: true,
-            },
-          })
-        : await tx.cartItem.create({
-            data: {
-              cartId: cart.id,
-              productId,
-              quantity,
-            },
-            select: {
-              id: true,
-              productId: true,
-              quantity: true,
-              createdAt: true,
-            },
-          })
-
-      const totalItemInCart = await tx.cartItem.aggregate({
-        where: { cartId: cart.id },
-        _sum: { quantity: true },
-      })
-
-      return {
-        cartItem,
-        cartCount: totalItemInCart._sum.quantity ?? 0,
-      }
+    const result = await addCartItemService({
+      userId,
+      productId: parsed.data.productId,
+      quantity: parsed.data.quantity,
     })
 
     res.status(200).json({
@@ -118,43 +62,94 @@ export const addToCart = async (req: Request, res: Response): Promise<void> => {
       data: result,
     })
   } catch (error) {
-    if (error instanceof Error && error.message === INSUFFICIENT_STOCK_ERROR) {
-      res.status(400).json({ message: 'Requested quantity exceeds available stock' })
-      return
-    }
+    if (handleCartItemError(error, res)) return
 
-    console.error('[addToCart]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'addToCart', error)
+  }
+}
+
+export const getCart = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = getAuthenticatedUserId(req, res)
+    if (!userId) return
+
+    const cart = await getCartService(userId)
+    res.json({ data: cart })
+  } catch (error) {
+    sendInternalError(res, 'getCart', error)
   }
 }
 
 export const getCartCount = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.userId
-    if (!userId) {
-      res.status(401).json({ message: 'Unauthorized: Login required' })
-      return
-    }
+    const userId = getAuthenticatedUserId(req, res)
+    if (!userId) return
 
-    const cart = await prisma.cart.findUnique({
-      where: { userId },
-      select: { id: true },
-    })
-
-    if (!cart) {
-      res.json({ count: 0 })
-      return
-    }
-
-    const countAgg = await prisma.cartItem.aggregate({
-      where: { cartId: cart.id },
-      _sum: { quantity: true },
-    })
-
-    res.json({ count: countAgg._sum.quantity ?? 0 })
+    const count = await getCartCountService(userId)
+    res.json({ count })
   } catch (error) {
-    console.error('[getCartCount]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'getCartCount', error)
   }
 }
 
+export const updateCartItem = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = getAuthenticatedUserId(req, res)
+    if (!userId) return
+
+    const parsedParams = cartItemParamsSchema.safeParse(req.params)
+    const parsedBody = updateCartItemSchema.safeParse(req.body)
+    if (!parsedParams.success || !parsedBody.success) {
+      res.status(400).json({
+        message: 'Validation Error',
+        errors: {
+          ...(parsedParams.success ? {} : parsedParams.error.flatten().fieldErrors),
+          ...(parsedBody.success ? {} : parsedBody.error.flatten().fieldErrors),
+        },
+      })
+      return
+    }
+
+    const result = await updateCartItemService({
+      userId,
+      itemId: parsedParams.data.id,
+      quantity: parsedBody.data.quantity,
+    })
+
+    res.json({
+      message: 'Cart item updated',
+      data: result,
+    })
+  } catch (error) {
+    if (handleCartItemError(error, res)) return
+
+    sendInternalError(res, 'updateCartItem', error)
+  }
+}
+
+export const deleteCartItem = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = getAuthenticatedUserId(req, res)
+    if (!userId) return
+
+    const parsedParams = cartItemParamsSchema.safeParse(req.params)
+    if (!parsedParams.success) {
+      sendValidationError(res, parsedParams.error)
+      return
+    }
+
+    const result = await deleteCartItemService({
+      userId,
+      itemId: parsedParams.data.id,
+    })
+
+    res.json({
+      message: 'Cart item deleted',
+      data: result,
+    })
+  } catch (error) {
+    if (handleCartItemError(error, res)) return
+
+    sendInternalError(res, 'deleteCartItem', error)
+  }
+}

@@ -1,0 +1,116 @@
+.toast-container {
+  position: fixed;
+  top: 104px;
+  left: 50%;
+  z-index: 9999;
+  display: flex;
+  width: min(420px, calc(100% - 32px));
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 16px;
+  color: #fffdf7;
+  background: rgba(35, 42, 34, 0.92);
+  box-shadow:
+    0 20px 48px rgba(35, 42, 34, 0.24),
+    0 8px 20px rgba(35, 42, 34, 0.18);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+  animation: toast-pop-in 0.24s ease-out forwards;
+}
+
+.toast__icon {
+  flex: 0 0 auto;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 999px;
+  color: #fffdf7;
+  background: linear-gradient(135deg, #e86b4f, #f2c26b);
+  box-shadow: 0 8px 18px rgba(232, 107, 79, 0.36);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.toast--success .toast__icon {
+  background: linear-gradient(135deg, #4c9a6a, #a8c66c);
+  box-shadow: 0 8px 18px rgba(76, 154, 106, 0.34);
+}
+
+.toast--warning .toast__icon {
+  background: linear-gradient(135deg, #e7a340, #f2c26b);
+  box-shadow: 0 8px 18px rgba(231, 163, 64, 0.34);
+}
+
+.toast--error .toast__icon {
+  background: linear-gradient(135deg, #d94d3f, #e86b4f);
+  box-shadow: 0 8px 18px rgba(217, 77, 63, 0.34);
+}
+
+.toast__message {
+  flex: 1;
+  color: #fffdf7;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.toast__close {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255, 253, 247, 0.26);
+  border-radius: 999px;
+  color: #fffdf7;
+  background: rgba(255, 253, 247, 0.08);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.toast__close:hover {
+  border-color: rgba(255, 253, 247, 0.46);
+  background: rgba(255, 253, 247, 0.16);
+  transform: scale(1.04);
+}
+
+@keyframes toast-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .toast-container {
+    top: 86px;
+    width: calc(100% - 24px);
+  }
+
+  .toast {
+    border-radius: 14px;
+    padding: 12px 14px;
+  }
+}

@@ -17,10 +17,10 @@ export const MAIN_STORE_ID = 'store-main'
 export const SERVICE_RANGE_KM = 12
 
 export const navLinks: NavLink[] = [
-  { id: 'belanja', label: 'Belanja', href: '#products' },
-  { id: 'promo', label: 'Promo Harian', href: '#deals' },
-  { id: 'toko', label: 'Toko', href: '#stores' },
-  { id: 'bantuan', label: 'Bantuan', href: '#help' },
+  { id: 'katalog', label: 'Katalog', href: '/catalog' },
+  { id: 'promo', label: 'Promo Harian', href: '/home#deals' },
+  { id: 'toko', label: 'Toko', href: '/home#stores' },
+  { id: 'bantuan', label: 'Bantuan', href: '/home#help' },
 ]
 
 export const categoryChips: CategoryChip[] = [
@@ -38,7 +38,7 @@ export const heroSlides: PromoSlide[] = [
     kicker: 'Panen Minggu Ini',
     title: 'Sayur segar tiba pagi ini.',
     description:
-      'Pilih paket siap masak dari mitra lokal. Semua dikurasi dan dikirim dari store terdekat.',
+      'Pilih paket siap masak dari mitra lokal. Semua dikurasi dan dikirim dari toko terdekat.',
     ctaLabel: 'Mulai belanja',
     note: 'Gratis kirim untuk pesanan di atas Rp 150.000',
     highlight: 'Dipilih tim quality control',
@@ -60,7 +60,7 @@ export const heroSlides: PromoSlide[] = [
     description:
       'Kurasi daging dan ikan dengan kualitas konsisten. Cocok untuk menu cepat harian.',
     ctaLabel: 'Pilih protein',
-    note: 'Stok dari store terdekat setiap pagi',
+    note: 'Stok dari toko terdekat setiap pagi',
     highlight: 'Tersedia potongan hemat',
   },
 ]
@@ -79,7 +79,7 @@ export const valueProps: ValueProp[] = [
   {
     id: 'value-3',
     title: 'Transparansi stok per store',
-    description: 'Stok tampil sesuai store terdekatmu secara real-time.',
+    description: 'Stok tampil sesuai toko terdekatmu secara real-time.',
   },
 ]
 

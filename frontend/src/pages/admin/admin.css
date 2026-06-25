@@ -1,0 +1,108 @@
+/* ================================================
+   Admin Dashboard — Premium SaaS Styles
+   Uses Tailwind v4 utilities + minimal custom CSS
+   Font: Plus Jakarta Sans for premium dashboard feel
+   ================================================ */
+
+/* --- Custom admin theme tokens via @theme --- */
+@theme {
+  --font-admin: 'Plus Jakarta Sans', sans-serif;
+  --font-admin-display: 'Fraunces', serif;
+
+  --color-admin-bg: #f7f1e6;
+  --color-admin-surface: #fffaf2;
+  --color-admin-surface-2: #f5efe4;
+  --color-admin-surface-hover: #faf5eb;
+  --color-admin-ink: #1f2a22;
+  --color-admin-ink-soft: #546055;
+  --color-admin-ink-muted: #8a9489;
+  --color-admin-accent: #e86b4f;
+  --color-admin-accent-strong: #c55139;
+  --color-admin-accent-soft: rgba(232, 107, 79, 0.12);
+  --color-admin-green: #4a7c5b;
+  --color-admin-green-soft: rgba(74, 124, 91, 0.12);
+  --color-admin-amber: #b87514;
+  --color-admin-amber-soft: rgba(184, 117, 20, 0.1);
+  --color-admin-red: #c53030;
+  --color-admin-red-soft: rgba(197, 48, 48, 0.08);
+  --color-admin-blue: #2b6cb0;
+  --color-admin-blue-soft: rgba(43, 108, 176, 0.08);
+  --color-admin-line: #d8d1c5;
+  --color-admin-line-soft: rgba(216, 209, 197, 0.5);
+}
+
+/* --- Animations --- */
+@keyframes admin-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes admin-modal-in {
+  from { opacity: 0; transform: scale(0.96) translateY(12px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes admin-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes admin-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes admin-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* --- Utility classes via @utility --- */
+@utility admin-fade-in {
+  animation: admin-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@utility admin-modal-in {
+  animation: admin-modal-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@utility admin-backdrop-in {
+  animation: admin-backdrop-in 0.25s ease both;
+}
+
+@utility admin-shimmer {
+  background: linear-gradient(90deg, var(--color-admin-surface-2) 25%, var(--color-admin-surface) 50%, var(--color-admin-surface-2) 75%);
+  background-size: 200% 100%;
+  animation: admin-shimmer 1.8s ease-in-out infinite;
+}
+
+@utility admin-spin {
+  animation: admin-spin 0.9s linear infinite;
+}
+
+/* --- Table row hover via @layer --- */
+@layer components {
+  .admin-table-row {
+    transition: background-color 0.15s ease;
+  }
+  .admin-table-row:hover {
+    background-color: var(--color-admin-surface-hover);
+  }
+
+  /* Scrollbar styling for table containers */
+  .admin-table-wrap {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-admin-line) transparent;
+  }
+
+  .admin-table-wrap::-webkit-scrollbar {
+    height: 6px;
+  }
+  .admin-table-wrap::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .admin-table-wrap::-webkit-scrollbar-thumb {
+    background: var(--color-admin-line);
+    border-radius: 999px;
+  }
+}

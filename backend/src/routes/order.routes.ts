@@ -1,0 +1,112 @@
+import { Router } from 'express'
+import {
+  createCheckoutOrder,
+  getCheckoutPreview,
+} from '../controllers/order-checkout.controller'
+import {
+  approveFulfillment,
+  approveFulfillments,
+  listStoreFulfillments,
+  receiveFulfillment,
+  receiveFulfillments,
+  rejectFulfillment,
+  rejectFulfillments,
+  requestOrderFulfillment,
+  requestOrderFulfillments,
+} from '../controllers/order-fulfillment.controller'
+import {
+  adminCancelOrder,
+  cancelOrder,
+  confirmOrderReceived,
+  listAdminOrders,
+  listOrders,
+  shipOrder,
+} from '../controllers/order-management.controller'
+import {
+  confirmManualPayment,
+  createMidtransPayment,
+  getOrderPaymentDetails,
+  syncMidtransPaymentStatus,
+  uploadManualPaymentProof,
+} from '../controllers/order-payment.controller'
+import { authenticate, authorize } from '../middlewares/auth.middleware'
+import { handlePaymentProofUpload } from '../middlewares/payment-proof-upload.middleware'
+import { requireVerifiedUser } from '../middlewares/verified.middleware'
+
+const orderRouter = Router()
+
+orderRouter.use(authenticate, requireVerifiedUser)
+
+orderRouter.get('/', listOrders)
+orderRouter.get('/checkout', getCheckoutPreview)
+orderRouter.post('/checkout', createCheckoutOrder)
+orderRouter.get('/admin', authorize('SUPER_ADMIN', 'STORE_ADMIN'), listAdminOrders)
+orderRouter.get(
+  '/admin/fulfillments',
+  authorize('SUPER_ADMIN', 'STORE_ADMIN'),
+  listStoreFulfillments,
+)
+orderRouter.get('/:id', getOrderPaymentDetails)
+orderRouter.get('/:id/payment', getOrderPaymentDetails)
+orderRouter.post('/:id/payment-gateway', createMidtransPayment)
+orderRouter.post('/:id/payment-gateway/sync', syncMidtransPaymentStatus)
+orderRouter.post('/:id/payment-proof', handlePaymentProofUpload, uploadManualPaymentProof)
+orderRouter.post('/:id/cancel', cancelOrder)
+orderRouter.post('/:id/confirm', confirmOrderReceived)
+orderRouter.post(
+  '/admin/:id/confirm-payment',
+  authorize('SUPER_ADMIN', 'STORE_ADMIN'),
+  confirmManualPayment,
+)
+orderRouter.post(
+  '/admin/:id/ship',
+  authorize('SUPER_ADMIN', 'STORE_ADMIN'),
+  shipOrder,
+)
+orderRouter.post(
+  '/admin/:id/cancel',
+  authorize('SUPER_ADMIN', 'STORE_ADMIN'),
+  adminCancelOrder,
+)
+orderRouter.post(
+  '/admin/:id/fulfillments/batch',
+  authorize('SUPER_ADMIN', 'STORE_ADMIN'),
+  requestOrderFulfillments,
+)
+orderRouter.post(
+  '/admin/:id/fulfillments',
+  authorize('SUPER_ADMIN', 'STORE_ADMIN'),
+  requestOrderFulfillment,
+)
+orderRouter.post(
+  '/admin/fulfillments/batch/approve',
+  authorize('SUPER_ADMIN', 'STORE_ADMIN'),
+  approveFulfillments,
+)
+orderRouter.post(
+  '/admin/fulfillments/batch/receive',
+  authorize('SUPER_ADMIN', 'STORE_ADMIN'),
+  receiveFulfillments,
+)
+orderRouter.post(
+  '/admin/fulfillments/batch/reject',
+  authorize('SUPER_ADMIN', 'STORE_ADMIN'),
+  rejectFulfillments,
+)
+orderRouter.post(
+  '/admin/fulfillments/:mutationId/approve',
+  authorize('SUPER_ADMIN', 'STORE_ADMIN'),
+  approveFulfillment,
+)
+orderRouter.post(
+  '/admin/fulfillments/:mutationId/receive',
+  authorize('SUPER_ADMIN', 'STORE_ADMIN'),
+  receiveFulfillment,
+)
+orderRouter.post(
+  '/admin/fulfillments/:mutationId/reject',
+  authorize('SUPER_ADMIN', 'STORE_ADMIN'),
+  rejectFulfillment,
+)
+
+export default orderRouter

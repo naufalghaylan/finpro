@@ -1,10 +1,8 @@
 import { Request, Response, NextFunction } from 'express'
-import jwt from 'jsonwebtoken'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret'
+import { verifyAccessToken } from '../services/auth/jwt.service'
 
 export const authenticate = (req: Request, res: Response, next: NextFunction): void => {
-  let token = req.cookies?.token
+  let token = req.cookies?.accessToken
 
   if (!token) {
     const authHeader = req.headers.authorization
@@ -17,18 +15,15 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
     res.status(401).json({ message: 'Unauthorized: No token provided' })
     return
   }
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET)
-    if (typeof decoded === 'string' || !decoded || !('userId' in decoded)) {
-      res.status(401).json({ message: 'Unauthorized: Invalid token payload' })
-      return
-    }
 
+  try {
+    const decoded = verifyAccessToken(token)
     req.user = {
       userId: Number(decoded.userId),
       role: String(decoded.role),
-      iat: decoded.iat,
-      exp: decoded.exp,
+      emailVerified: decoded.emailVerified,
+      storeId: decoded.storeId,
+      // iat and exp are preserved if needed by checking token manually, but payload has our core items
     }
     next()
   } catch {
@@ -37,7 +32,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
 }
 
 export const requireVerified = (req: Request, res: Response, next: NextFunction): void => {
-  const user = (req as any).user
+  const user = req.user
 
   if (!user) {
     res.status(401).json({ message: 'Unauthorized: User not authenticated' })
@@ -50,4 +45,22 @@ export const requireVerified = (req: Request, res: Response, next: NextFunction)
   }
 
   next()
+}
+
+export const authorize = (...roles: string[]) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const user = req.user
+
+    if (!user) {
+      res.status(401).json({ message: 'Unauthorized' })
+      return
+    }
+
+    if (!roles.includes(user.role)) {
+      res.status(403).json({ message: 'Forbidden: You do not have permission' })
+      return
+    }
+
+    next()
+  }
 }
