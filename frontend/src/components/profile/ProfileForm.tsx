@@ -131,7 +131,9 @@ export const ProfileForm = () => {
       setTimeout(() => {
         window.location.reload()
       }, 1500)
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      showToast(error.response?.data?.message || 'Gagal mengupdate profil', 'error');
       // Error is handled in the store
     }
   }
@@ -147,46 +149,44 @@ export const ProfileForm = () => {
       setTimeout(() => {
         logout()
       }, 3000)
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      showToast(error.response?.data?.message || 'Gagal mengubah password', 'error');
       setLocalError(err.response?.data?.message || 'Gagal mengirim link reset password.')
       setIsResetting(false)
     }
   }
 
   return (
-    <div className="hero-card" style={{ padding: '32px' }}>
-      <h3 className="section-title" style={{ fontSize: '1.6rem', marginBottom: '8px' }}>Detail Profil</h3>
-      <p className="section-body" style={{ marginBottom: '24px' }}>Perbarui informasi pribadi dan keamanan akun Anda.</p>
+    <div className="p-[24px] rounded-[20px] border border-[var(--line)] bg-white/85 shadow-[var(--shadow-soft)] flex flex-col gap-1.5">
+      <h3 className="m-0 text-[#111] font-[family-name:var(--font-display)] font-normal tracking-normal text-[1.6rem] mb-1">Detail Profil</h3>
+      <p className="m-0 text-[0.95rem] text-[var(--ink-soft)] leading-[1.6] mb-6">Perbarui informasi pribadi dan keamanan akun Anda.</p>
       
       {(error || localError) && (
-        <div className="location-error" style={{ marginBottom: '20px', padding: '12px', background: '#fdf2f2', borderRadius: '12px' }}>
+        <div className="mb-5 p-3 bg-[#fdf2f2] rounded-xl text-[#dc2626]">
           {error || localError}
         </div>
       )}
       
       {successMsg && (
-        <div style={{ marginBottom: '20px', padding: '12px', background: '#f2fcf5', color: '#2b7a4b', border: '1px solid #c6f0d3', borderRadius: '12px', fontSize: '0.9rem' }}>
+        <div className="mb-5 p-3 bg-[#f2fcf5] text-[#2b7a4b] border border-[#c6f0d3] rounded-xl text-[0.9rem]">
           {successMsg}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '10px' }}>
-          <div style={{ 
-            width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', 
-            background: 'var(--surface-muted)', border: '1px solid var(--line)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}>
+      <form onSubmit={handleSubmit} className="grid gap-5">
+        <div className="flex items-center gap-5 mb-2.5">
+          <div className="w-[80px] h-[80px] rounded-full overflow-hidden bg-[var(--surface-muted)] border border-[var(--line)] flex items-center justify-center">
             {previewImage ? (
-              <img src={previewImage} alt="Profile preview" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={previewImage} alt="Profile preview" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
             ) : (
-              <span style={{ fontSize: '2rem', color: 'var(--ink-soft)' }}>
+              <span className="text-2xl text-[var(--ink-soft)]">
                 {profile?.name?.charAt(0).toUpperCase() || 'U'}
               </span>
             )}
           </div>
           <div>
-            <label htmlFor="profilePicture" className="button ghost" style={{ display: 'inline-block', cursor: 'pointer', padding: '8px 14px', fontSize: '0.9rem' }}>
+            <label htmlFor="profilePicture" className="inline-block cursor-pointer px-[14px] py-2 text-[0.9rem] rounded-xl font-medium bg-transparent border border-[var(--line)] text-[var(--ink)] hover:bg-[var(--surface-muted)] transition-colors">
               Ubah Foto
             </label>
             <input 
@@ -194,15 +194,15 @@ export const ProfileForm = () => {
               id="profilePicture" 
               ref={fileInputRef}
               accept=".jpg,.jpeg,.png,.gif"
-              style={{ display: 'none' }}
+              className="hidden"
               onChange={handleFileChange}
             />
-            <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: 'var(--ink-soft)' }}>Maks. 1MB (JPG, PNG, GIF)</p>
+            <p className="m-0 mt-1.5 text-[0.8rem] text-[var(--ink-soft)]">Maks. 1MB (JPG, PNG, GIF)</p>
           </div>
         </div>
 
-        <div className="input-group">
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>Nama Lengkap</label>
+        <div className="flex flex-col gap-2">
+          <label className="block font-medium text-[0.9rem]">Nama Lengkap</label>
           <input 
             type="text" 
             name="name" 
@@ -211,13 +211,13 @@ export const ProfileForm = () => {
               handleChange(e)
               if (formErrors.name) setFormErrors(prev => ({ ...prev, name: '' }))
             }}
-            style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: formErrors.name ? '1px solid #dc2626' : '1px solid var(--line)', background: 'var(--surface)' }} 
+            className={`w-full p-[12px_16px] rounded-xl border ${formErrors.name ? 'border-[#dc2626]' : 'border-[var(--line)]'} bg-[var(--surface)] focus:outline-none focus:border-[var(--accent)] transition-colors`}
           />
-          {formErrors.name && <span style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>{formErrors.name}</span>}
+          {formErrors.name && <span className="text-[#dc2626] text-[0.8rem] mt-1 block">{formErrors.name}</span>}
         </div>
 
-        <div className="input-group">
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>Nomor Telepon</label>
+        <div className="flex flex-col gap-2">
+          <label className="block font-medium text-[0.9rem]">Nomor Telepon</label>
           <input 
             type="tel" 
             name="phone" 
@@ -226,18 +226,18 @@ export const ProfileForm = () => {
               handleChange(e)
               if (formErrors.phone) setFormErrors(prev => ({ ...prev, phone: '' }))
             }}
-            style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: formErrors.phone ? '1px solid #dc2626' : '1px solid var(--line)', background: 'var(--surface)' }} 
+            className={`w-full p-[12px_16px] rounded-xl border ${formErrors.phone ? 'border-[#dc2626]' : 'border-[var(--line)]'} bg-[var(--surface)] focus:outline-none focus:border-[var(--accent)] transition-colors`}
           />
-          {formErrors.phone && <span style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>{formErrors.phone}</span>}
+          {formErrors.phone && <span className="text-[#dc2626] text-[0.8rem] mt-1 block">{formErrors.phone}</span>}
         </div>
         
-        <div style={{ height: '1px', background: 'var(--line)', margin: '10px 0' }}></div>
+        <div className="h-px bg-[var(--line)] my-2.5"></div>
         
-        <h4 style={{ margin: 0, fontSize: '1.1rem' }}>Ubah Password</h4>
+        <h4 className="m-0 text-[1.1rem] font-normal font-[family-name:var(--font-display)]">Ubah Password</h4>
 
-        <div className="input-group">
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>Password Saat Ini</label>
-          <div style={{ position: 'relative' }}>
+        <div className="flex flex-col gap-2">
+          <label className="block font-medium text-[0.9rem]">Password Saat Ini</label>
+          <div className="relative">
             <input 
               type={showCurrentPassword ? "text" : "password"} 
               name="currentPassword" 
@@ -247,23 +247,23 @@ export const ProfileForm = () => {
                 if (formErrors.currentPassword) setFormErrors(prev => ({ ...prev, currentPassword: '' }))
               }}
               placeholder="Masukkan jika ingin mengubah password"
-              style={{ width: '100%', padding: '12px 48px 12px 16px', borderRadius: '12px', border: formErrors.currentPassword ? '1px solid #dc2626' : '1px solid var(--line)', background: 'var(--surface)' }} 
+              className={`w-full p-[12px_48px_12px_16px] rounded-xl border ${formErrors.currentPassword ? 'border-[#dc2626]' : 'border-[var(--line)]'} bg-[var(--surface)] focus:outline-none focus:border-[var(--accent)] transition-colors`}
             />
             <button
               type="button"
               onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-              style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-[var(--ink-soft)] flex items-center justify-center p-0"
               aria-label={showCurrentPassword ? "Sembunyikan password" : "Tampilkan password"}
             >
               {showCurrentPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
-          {formErrors.currentPassword && <span style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>{formErrors.currentPassword}</span>}
+          {formErrors.currentPassword && <span className="text-[#dc2626] text-[0.8rem] mt-1 block">{formErrors.currentPassword}</span>}
         </div>
 
-        <div className="input-group">
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>Password Baru</label>
-          <div style={{ position: 'relative' }}>
+        <div className="flex flex-col gap-2">
+          <label className="block font-medium text-[0.9rem]">Password Baru</label>
+          <div className="relative">
             <input 
               type={showNewPassword ? "text" : "password"} 
               name="newPassword" 
@@ -273,43 +273,39 @@ export const ProfileForm = () => {
                 if (formErrors.newPassword) setFormErrors(prev => ({ ...prev, newPassword: '' }))
               }}
               placeholder="Minimal 6 karakter"
-              style={{ width: '100%', padding: '12px 48px 12px 16px', borderRadius: '12px', border: formErrors.newPassword ? '1px solid #dc2626' : '1px solid var(--line)', background: 'var(--surface)' }} 
+              className={`w-full p-[12px_48px_12px_16px] rounded-xl border ${formErrors.newPassword ? 'border-[#dc2626]' : 'border-[var(--line)]'} bg-[var(--surface)] focus:outline-none focus:border-[var(--accent)] transition-colors`}
             />
             <button
               type="button"
               onClick={() => setShowNewPassword(!showNewPassword)}
-              style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-[var(--ink-soft)] flex items-center justify-center p-0"
               aria-label={showNewPassword ? "Sembunyikan password" : "Tampilkan password"}
             >
               {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
-          {formErrors.newPassword && <span style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>{formErrors.newPassword}</span>}
+          {formErrors.newPassword && <span className="text-[#dc2626] text-[0.8rem] mt-1 block">{formErrors.newPassword}</span>}
         </div>
 
-        <div style={{ fontSize: '0.9rem', color: 'var(--ink-soft)' }}>
+        <div className="text-[0.9rem] text-[var(--ink-soft)]">
           Lupa password saat ini?{' '}
           <button 
             type="button" 
             onClick={handleResetPassword} 
             disabled={isResetting}
-            style={{ 
-              background: 'none', border: 'none', padding: 0, 
-              color: 'var(--accent-strong)', fontWeight: 600, 
-              cursor: 'pointer', textDecoration: 'underline' 
-            }}
+            className="bg-transparent border-none p-0 text-[var(--accent-strong)] font-semibold cursor-pointer underline hover:text-[var(--accent)] disabled:opacity-50"
           >
             {isResetting ? 'Mengirim...' : 'Kirim link reset password'}
           </button>
         </div>
         {resetMsg && (
-          <div style={{ padding: '10px', background: '#e8f5e9', color: '#2e7d32', borderRadius: '8px', fontSize: '0.85rem', marginTop: '-10px' }}>
+          <div className="p-2.5 bg-[#e8f5e9] text-[#2e7d32] rounded-lg text-[0.85rem] -mt-2.5">
             {resetMsg}
           </div>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
-          <button type="submit" className="button primary" disabled={isUpdating}>
+        <div className="flex justify-end mt-2.5">
+          <button type="submit" className="px-[18px] py-[10px] bg-[var(--accent)] text-white font-semibold rounded-full border-none cursor-pointer hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(232,107,79,0.25)] transition-all disabled:opacity-70 text-[0.95rem]" disabled={isUpdating}>
             {isUpdating ? 'Menyimpan...' : 'Simpan Perubahan'}
           </button>
         </div>

@@ -17,6 +17,7 @@ import {
   getNearestActiveStore,
   getUserAddresses,
 } from './order-checkout-validation.service'
+import { calculateStoreDiscountForCheckout } from './order-discount.service'
 import type {
   CheckoutPreviewParams,
   CreateCheckoutOrderParams,
@@ -168,12 +169,26 @@ export const getCheckoutPreview = async ({ userId, addressId }: CheckoutPreviewP
       ? await getNearestActiveStore(selectedAddress.latitude, selectedAddress.longitude)
       : null
 
+  let storeDiscountAmount = 0
+  if (nearestStore && cart && cart.items.length > 0) {
+    const totalProductAmount = cart.items.reduce(
+      (total, item) => total + item.quantity * item.product.basePrice,
+      0,
+    )
+    storeDiscountAmount = await calculateStoreDiscountForCheckout(
+      nearestStore.id,
+      cart.items,
+      totalProductAmount,
+    )
+  }
+
   return {
     cart,
     addresses,
     vouchers,
     selectedAddress,
     nearestStore,
+    discountAmount: storeDiscountAmount,
     paymentMethods: [
       {
         value: PaymentMethod.MANUAL_TRANSFER,
@@ -226,8 +241,17 @@ export const createCheckoutOrder = async ({
       (total, item) => total + item.quantity * item.product.basePrice,
       0,
     )
+    // Diskon toko otomatis (fitur Discount Management)
+    const storeDiscount = await calculateStoreDiscountForCheckout(
+      nearestStore.id,
+      cart.items,
+      totalProductAmount,
+      tx,
+    )
+
+    // Diskon voucher user (fitur Voucher)
     const selectedVoucher = voucherId ? await getCheckoutVoucher(userId, voucherId, tx) : null
-    const discountAmount = selectedVoucher
+    const voucherDiscount = selectedVoucher
       ? calculateVoucherDiscount({
         voucher: selectedVoucher,
         cartItems: cart.items,
@@ -236,13 +260,19 @@ export const createCheckoutOrder = async ({
       })
       : 0
 
-    if (selectedVoucher && discountAmount <= 0) {
+    if (selectedVoucher && voucherDiscount <= 0) {
       throw new OrderServiceError(
         ORDER_ERRORS.VOUCHER_NOT_AVAILABLE,
         'Voucher tidak dapat digunakan untuk pesanan ini',
         400,
       )
     }
+
+    // Stack kedua diskon, batasi agar tidak melebihi (subtotal produk + ongkir)
+    const discountAmount = Math.min(
+      storeDiscount + voucherDiscount,
+      totalProductAmount + shippingCost,
+    )
 
     const isPaymentGateway = paymentMethod === PaymentMethod.PAYMENT_GATEWAY
     const paymentDeadline = isPaymentGateway ? null : new Date(Date.now() + PAYMENT_DEADLINE_IN_MS)

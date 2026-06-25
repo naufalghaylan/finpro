@@ -1,28 +1,16 @@
 import { Router } from 'express'
-import path from 'path'
-import fs from 'fs'
 import multer from 'multer'
 import * as productController from '../controllers/product.controller'
 import { authenticate, authorize } from '../middlewares/auth.middleware'
 
-const uploadDir = path.join(__dirname, '../../../uploads')
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true })
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadDir),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase()
-    cb(null, `product-${Date.now()}${ext}`)
-  }
-})
-
-const ALLOWED_EXT = ['.jpg', '.jpeg', '.png', '.gif']
+// Simpan file di memori (buffer) lalu di-upload ke Cloudinary di controller —
+// tidak ada file yang ditulis ke disk server.
+const ALLOWED_MIMETYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 1 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase()
-    if (ALLOWED_EXT.includes(ext)) {
+    if (ALLOWED_MIMETYPES.includes(file.mimetype)) {
       cb(null, true)
     } else {
       cb(new Error('Ekstensi tidak diizinkan. Gunakan .jpg, .jpeg, .png, atau .gif'))

@@ -84,8 +84,9 @@ model User {
   authProvider   String?  @default("CREDENTIALS") @map("auth_provider")
   authProviderId String?  @map("auth_provider_id")
   storeId        Int?     @map("store_id")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at") // untuk soft delete
 
   store              Store?          @relation("StoreAdmin", fields: [storeId], references: [id])
   addresses          UserAddress[]
@@ -122,8 +123,9 @@ model Store {
   phone         String?
   serviceRadius Float    @default(50) @map("service_radius") // dalam KM
   status        Boolean  @default(true)
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at") // untuk soft delete
 
   admins               User[]          @relation("StoreAdmin")
   stocks               Stock[]
@@ -145,6 +147,7 @@ model Category {
   description String?
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at") // untuk soft delete
 
   products Product[]
 
@@ -161,7 +164,7 @@ model Product {
   weight      Float    @default(0) // dalam gram, untuk kalkulasi ongkir
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
-
+  deletedAt   DateTime? @map("deleted_at") // untuk soft delete
   category       Category        @relation(fields: [categoryId], references: [id])
   images         ProductImage[]
   stocks         Stock[]
@@ -179,9 +182,10 @@ model ProductImage {
   id        Int      @id @default(autoincrement())
   productId Int      @map("product_id")
   imageUrl  String   @map("image_url")
-  isPrimary Boolean  @default(false) @map("is_primary")
-  sortOrder Int      @default(0) @map("sort_order")
-  createdAt DateTime @default(now()) @map("created_at")
+  isPrimary Boolean   @default(false) @map("is_primary")
+  sortOrder Int       @default(0) @map("sort_order")
+  createdAt DateTime  @default(now()) @map("created_at")
+  deletedAt DateTime? @map("deleted_at") // untuk soft delete
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
@@ -221,12 +225,13 @@ model CartItem {
 }
 
 model Stock {
-  id        Int      @id @default(autoincrement())
-  productId Int      @map("product_id")
-  storeId   Int      @map("store_id")
-  quantity  Int      @default(0)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id        Int       @id @default(autoincrement())
+  productId Int       @map("product_id")
+  storeId   Int       @map("store_id")
+  quantity  Int       @default(0)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at") // untuk soft delete
 
   product  Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
   store    Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)
@@ -305,8 +310,6 @@ model StockMutation {
   @@map("stock_mutations")
 }
 
-
-
 model UserAddress {
   id            Int      @id @default(autoincrement())
   userId        Int      @map("user_id")
@@ -322,8 +325,9 @@ model UserAddress {
   latitude      Float?
   longitude     Float?
   isPrimary     Boolean  @default(false) @map("is_primary")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at") // untuk soft delete
 
   user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   orders Order[]
@@ -406,8 +410,9 @@ model Discount {
   startDate     DateTime     @map("start_date")
   endDate       DateTime     @map("end_date")
   isActive      Boolean      @default(true) @map("is_active")
-  createdAt     DateTime     @default(now()) @map("created_at")
-  updatedAt     DateTime     @updatedAt @map("updated_at")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+  deletedAt     DateTime?     @map("deleted_at") // untuk soft delete
 
   store   Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
   product Product? @relation(fields: [productId], references: [id], onDelete: Cascade)

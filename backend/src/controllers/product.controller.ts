@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import * as productService from '../lib/product.service'
+import cloudinary from '../lib/cloudinary'
 import { z } from 'zod'
 import 'multer'
 
@@ -234,18 +235,30 @@ export async function deleteCategory(req: Request, res: Response, next: NextFunc
 // ─── Admin: Product Images ─────────────────────────────────────────────────
 
 export async function uploadProductImage(req: Request, res: Response, next: NextFunction) {
+  let uploadedPublicId: string | undefined
   try {
     const { id } = req.params
     if (!req.file) return res.status(400).json({ success: false, error: 'Tidak ada file yang diupload' })
 
-    const product = await productService.getProductById(parseInt(String(id)))
-    const isPrimary = product.images.length === 0
-    const sortOrder = product.images.length
-    const imageUrl = `/uploads/${req.file.filename}`
-
-    const image = await productService.addProductImage(parseInt(String(id)), imageUrl, isPrimary, sortOrder)
+    // Upload buffer dari memori langsung ke Cloudinary, lalu simpan URL hasilnya.
+    const uploadResponse = await cloudinary.uploader.upload(
+      `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
+      { folder: 'finpro/product-image' }
+    )
+    uploadedPublicId = uploadResponse.public_id
+    const image = await productService.addProductImage(parseInt(String(id)), uploadResponse.secure_url)
     res.status(201).json({ success: true, data: image })
   } catch (error) {
+    // Hapus gambar yatim di Cloudinary jika record DB gagal dibuat (mis. kena limit / produk tidak valid)
+    if (uploadedPublicId) {
+      cloudinary.uploader.destroy(uploadedPublicId).catch(() => {})
+    }
+    if (error instanceof Error && error.message === 'Maksimal 3 foto per produk') {
+      return res.status(400).json({ success: false, error: error.message })
+    }
+    if (error instanceof Error && error.message === 'Product not found') {
+      return res.status(404).json({ success: false, error: 'Product not found' })
+    }
     next(error)
   }
 }

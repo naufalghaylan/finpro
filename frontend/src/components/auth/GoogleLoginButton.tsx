@@ -45,9 +45,10 @@ export default function GoogleLoginButton({ onError }: GoogleLoginButtonProps) {
               } else {
                 navigate('/');
               }
-            } catch (err: any) {
-              setIsLoading(false);
-              if (onError) onError(err.response?.data?.message || 'Gagal login dengan Google');
+            } catch (err: unknown) {
+              const error = err as { response?: { data?: { message?: string } } };
+              console.error('Google login error:', error)
+              if (onError) onError(error.response?.data?.message || 'Login dengan Google gagal.');
             }
           }}
           onError={() => {

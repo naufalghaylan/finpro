@@ -8,10 +8,11 @@ import {
   Package,
   Repeat2,
   SlidersHorizontal,
+  Trash2,
   TrendingDown,
   TrendingUp,
 } from 'lucide-react'
-import { adjustStock, getStockById, type StockDetail, type StockJournal, type StockJournalType } from '../../api/stock.api'
+import { adjustStock, deleteStock, getStockById, type StockDetail, type StockJournal, type StockJournalType } from '../../api/stock.api'
 import { useToast } from '../../components/common/Toast'
 import { formatDateTime } from '../../utils/format'
 
@@ -44,6 +45,7 @@ export default function AdminStockDetail({ stockId, onBack }: { stockId: number;
   const [stock, setStock] = useState<StockDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [adjusting, setAdjusting] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [adjustmentForm, setAdjustmentForm] = useState({
     quantityChange: '',
     notes: '',
@@ -86,7 +88,21 @@ export default function AdminStockDetail({ stockId, onBack }: { stockId: number;
     } finally {
       setAdjusting(false)
     }
-  }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('Hapus data stok produk ini dari toko? Stok akan disembunyikan (soft delete), namun riwayat jurnalnya tetap tersimpan dan bisa dipulihkan saat produk ditambahkan kembali.')) return;
+    try {
+      setDeleting(true);
+      await deleteStock(stockId);
+      showToast('Data stok berhasil dihapus', 'success');
+      onBack();
+    } catch (e) {
+      const error = e as AxiosError<{ message?: string }>;
+      showToast(error.response?.data?.message || 'Gagal menghapus stok', 'error');
+      setDeleting(false);
+    }
+  };
 
   if (loading || !stock) {
     return (
@@ -101,15 +117,29 @@ export default function AdminStockDetail({ stockId, onBack }: { stockId: number;
   const manualJournalCount = stock.journals.filter((journal) => journal.type === 'ADJUSTMENT').length
 
   return (
-    <div className="font-admin admin-fade-in">
-      <button
-        type="button"
-        onClick={onBack}
-        className="mb-6 inline-flex cursor-pointer items-center gap-2 rounded-xl border border-admin-line-soft bg-admin-surface px-4 py-2 text-sm font-semibold text-admin-ink-soft transition-all duration-150 hover:bg-admin-surface-2 hover:text-admin-ink"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Kembali
-      </button>
+    <div className="font-[family-name:var(--font-admin)] admin-fade-in">
+      {/* Action Bar */}
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium
+                     text-admin-ink-soft bg-admin-surface border border-admin-line-soft cursor-pointer
+                     hover:bg-admin-surface-2 hover:text-admin-ink transition-all duration-150"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Kembali
+        </button>
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold
+                     text-admin-red bg-admin-red-soft border-none cursor-pointer
+                     hover:bg-admin-red/15 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
+        >
+          {deleting ? <Loader2 className="w-4 h-4 admin-spin" /> : <Trash2 className="w-4 h-4" />}
+          Hapus Stok
+        </button>
+      </div>
 
       <div className="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
         <section className="rounded-2xl border border-admin-line-soft bg-admin-surface p-6 shadow-sm">

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { RefreshCcw, Home } from 'lucide-react'
 
 interface ErrorPageProps {
@@ -8,16 +8,14 @@ interface ErrorPageProps {
   code?: number | string
 }
 
-const ErrorPage: React.FC<ErrorPageProps> = ({ title: propTitle, message: propMessage, code: propCode }) => {
+const ErrorPage: React.FC<ErrorPageProps> = ({ title: propTitle, message: propMessage }) => {
   const location = useLocation()
-  const navigate = useNavigate()
   
   // Try to get error details from navigation state
   const state = location.state as ErrorPageProps | null
   
   const title = propTitle || state?.title || 'Terjadi Kesalahan'
   const message = propMessage || state?.message || 'Kami mengalami masalah yang tidak terduga. Tim kami telah diberitahu dan sedang memperbaikinya.'
-  const code = propCode || state?.code || '500'
 
   return (
     <div className="page flex items-center justify-center p-4 sm:p-6">

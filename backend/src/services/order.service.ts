@@ -13,6 +13,12 @@ export {
 } from './order/order-fulfillment-request.service'
 export { listStoreFulfillments } from './order/order-fulfillment-query.service'
 export { createCheckoutOrder, getCheckoutPreview } from './order/order-checkout.service'
+export {
+  calculateOrderDiscount,
+  calculateStoreDiscountForCheckout,
+  getActiveStoreDiscounts,
+} from './order/order-discount.service'
+export type { CheckoutDiscount } from './order/order-discount.service'
 export { autoCancelExpiredManualTransferOrders, cancelOrder } from './order/order-cancellation.service'
 export { autoConfirmShippedOrders, confirmOrderReceived, shipOrder } from './order/order-completion.service'
 export * from './order/order-manual-payment.service'

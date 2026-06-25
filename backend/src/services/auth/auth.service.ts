@@ -9,13 +9,14 @@ export class AuthService {
   static async login(data: { emailOrUsername: string; password: string; rememberMe?: boolean }) {
     const { emailOrUsername, password, rememberMe } = data;
 
-    const user = await prisma.user.findFirst({ 
-      where: { 
+    const user = await prisma.user.findFirst({
+      where: {
+        deletedAt: null,
         OR: [
           { email: emailOrUsername },
           { username: emailOrUsername }
         ]
-      } 
+      }
     });
 
     if (!user) {
@@ -58,7 +59,7 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, emailVerified: user.emailVerified, profilePicture: user.profilePicture, storeId: user.storeId }
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, emailVerified: user.emailVerified, storeId: user.storeId }
     };
   }
 

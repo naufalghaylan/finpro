@@ -54,22 +54,22 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="page">
-      <main className="page-main">
-        <div className="shell auth-shell" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100svh', padding: 'clamp(24px, 5vw, 40px) clamp(16px, 5vw, 40px)' }}>
-          <div className="hero-card auth-card" style={{ width: '100%', maxWidth: '460px', padding: 'clamp(24px, 5vw, 40px) clamp(16px, 5vw, 32px)' }}>
-            <div className="auth-header" style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <button className="mobile-back-btn" onClick={() => navigate(-1)} type="button" aria-label="Go back">
+    <div className="min-h-[100svh] flex flex-col bg-[var(--bg)]">
+      <main className="flex-1 flex flex-col">
+        <div className="flex justify-center items-center min-h-[100svh] p-[clamp(16px,5vw,40px)] w-full">
+          <div className="w-full max-w-[420px] bg-white rounded-[24px] p-[clamp(24px,5vw,40px)_clamp(16px,5vw,32px)] shadow-[var(--shadow-soft)] border border-[var(--line)] relative">
+            <div className="text-center mb-[32px]">
+              <button className="absolute top-[24px] left-[16px] sm:left-[24px] w-[40px] h-[40px] rounded-full bg-white border border-[var(--line)] flex items-center justify-center cursor-pointer text-[var(--ink)] shadow-[0_2px_8px_rgba(0,0,0,0.02)] md:hidden" onClick={() => navigate(-1)} type="button" aria-label="Go back">
                 <ChevronLeft size={24} />
               </button>
-              <Link to="/" style={{ textDecoration: 'none', display: 'inline-block' }}>
-                <div className="logo" style={{ justifyContent: 'center', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <img src="/PanenMartLogo.svg" alt="PanenMart Logo" style={{ width: '32px', height: '32px' }} />
-                  <span style={{ fontSize: '1.4rem' }}>PanenMart</span>
+              <Link to="/" className="inline-block no-underline">
+                <div className="flex justify-center items-center gap-[8px] mb-[20px]">
+                  <img src="/PanenMartLogo.svg" alt="PanenMart Logo" className="w-[32px] h-[32px]" />
+                  <span className="text-[1.4rem] font-[family-name:var(--font-display)] font-semibold text-[var(--ink)] tracking-[-0.02em]">PanenMart</span>
                 </div>
               </Link>
-              <h1 className="hero-card-title" style={{ fontSize: '1.6rem', marginBottom: '8px' }}>Buat Akun Baru</h1>
-              <p className="hero-card-sub">Daftar untuk mulai berbelanja di PanenMart</p>
+              <h1 className="m-0 text-[1.6rem] font-bold text-[#111] mb-[8px] tracking-normal">Buat Akun Baru</h1>
+              <p className="m-0 text-[1rem] text-[var(--ink-soft)] leading-[1.5]">Daftar untuk mulai berbelanja di PanenMart</p>
             </div>
             
             {error && (
@@ -94,9 +94,9 @@ export default function RegisterPage() {
                 </Link>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label htmlFor="name" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--ink)' }}>Nama Lengkap</label>
+              <form onSubmit={handleSubmit} className="flex flex-col gap-[20px]">
+                <div className="flex flex-col gap-[8px]">
+                  <label htmlFor="name" className="text-[0.95rem] font-semibold text-[var(--ink)]">Nama Lengkap</label>
                   <input
                     id="name"
                     type="text"
@@ -105,14 +105,14 @@ export default function RegisterPage() {
                       setName(e.target.value);
                       if (formErrors.name) setFormErrors(prev => ({ ...prev, name: '' }));
                     }}
-                    style={{ width: '100%', borderRadius: '14px', border: formErrors.name ? '1px solid #dc2626' : '1px solid var(--line)', padding: '14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
+                    className={`w-full rounded-[14px] border ${formErrors.name ? 'border-[#dc2626]' : 'border-[var(--line)]'} p-[14px_18px] bg-white text-[1rem] transition-all duration-200 outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_4px_var(--accent-soft)]`}
                     placeholder="Masukkan nama lengkap"
                   />
-                  {formErrors.name && <span style={{ color: '#dc2626', fontSize: '0.8rem' }}>{formErrors.name}</span>}
+                  {formErrors.name && <span className="text-[#dc2626] text-[0.8rem]">{formErrors.name}</span>}
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label htmlFor="username" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--ink)' }}>Username</label>
+                <div className="flex flex-col gap-[8px]">
+                  <label htmlFor="username" className="text-[0.95rem] font-semibold text-[var(--ink)]">Username</label>
                   <input
                     id="username"
                     type="text"
@@ -121,14 +121,14 @@ export default function RegisterPage() {
                       setUsername(e.target.value);
                       if (formErrors.username) setFormErrors(prev => ({ ...prev, username: '' }));
                     }}
-                    style={{ width: '100%', borderRadius: '14px', border: formErrors.username ? '1px solid #dc2626' : '1px solid var(--line)', padding: '14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
+                    className={`w-full rounded-[14px] border ${formErrors.username ? 'border-[#dc2626]' : 'border-[var(--line)]'} p-[14px_18px] bg-white text-[1rem] transition-all duration-200 outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_4px_var(--accent-soft)]`}
                     placeholder="Minimal 3 karakter, tanpa spasi"
                   />
-                  {formErrors.username && <span style={{ color: '#dc2626', fontSize: '0.8rem' }}>{formErrors.username}</span>}
+                  {formErrors.username && <span className="text-[#dc2626] text-[0.8rem]">{formErrors.username}</span>}
                 </div>
                 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label htmlFor="email" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--ink)' }}>Email</label>
+                <div className="flex flex-col gap-[8px]">
+                  <label htmlFor="email" className="text-[0.95rem] font-semibold text-[var(--ink)]">Email</label>
                   <input
                     id="email"
                     type="text"
@@ -137,29 +137,28 @@ export default function RegisterPage() {
                       setEmail(e.target.value);
                       if (formErrors.email) setFormErrors(prev => ({ ...prev, email: '' }));
                     }}
-                    style={{ width: '100%', borderRadius: '14px', border: formErrors.email ? '1px solid #dc2626' : '1px solid var(--line)', padding: '14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
+                    className={`w-full rounded-[14px] border ${formErrors.email ? 'border-[#dc2626]' : 'border-[var(--line)]'} p-[14px_18px] bg-white text-[1rem] transition-all duration-200 outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_4px_var(--accent-soft)]`}
                     placeholder="Masukkan alamat email"
                   />
-                  {formErrors.email && <span style={{ color: '#dc2626', fontSize: '0.8rem' }}>{formErrors.email}</span>}
+                  {formErrors.email && <span className="text-[#dc2626] text-[0.8rem]">{formErrors.email}</span>}
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label htmlFor="referralCode" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--ink)' }}>Kode Referral (Opsional)</label>
+                <div className="flex flex-col gap-[8px]">
+                  <label htmlFor="referralCode" className="text-[0.95rem] font-semibold text-[var(--ink)]">Kode Referral (Opsional)</label>
                   <input
                     id="referralCode"
                     type="text"
                     value={referralCode}
                     onChange={(e) => setReferralCode(e.target.value)}
-                    style={{ width: '100%', borderRadius: '14px', border: '1px solid var(--line)', padding: '14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
+                    className="w-full rounded-[14px] border border-[var(--line)] p-[14px_18px] bg-white text-[1rem] transition-all duration-200 outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_4px_var(--accent-soft)]"
                     placeholder="Masukkan kode referral teman Anda"
                   />
-                  <span style={{ fontSize: '0.8rem', color: 'var(--ink-soft)' }}>Dapatkan voucher diskon Rp 20.000 jika menggunakan kode valid!</span>
+                  <span className="text-[0.8rem] text-[var(--ink-soft)] leading-[1.5]">Dapatkan voucher diskon Rp 20.000 jika menggunakan kode valid!</span>
                 </div>
                 
                 <button 
                   type="submit" 
-                  className="button primary" 
-                  style={{ width: '100%', marginTop: '12px', padding: '14px', fontSize: '1.05rem', borderRadius: '14px' }}
+                  className="w-full mt-[12px] p-[14px] text-[1.05rem] rounded-[14px] font-semibold bg-[var(--accent)] text-white hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(232,107,79,0.25)] transition-all disabled:opacity-70 disabled:cursor-not-allowed border-none cursor-pointer"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? 'Memproses...' : 'Daftar Sekarang'}
@@ -169,16 +168,21 @@ export default function RegisterPage() {
             
             {!isSuccess && (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', margin: '24px 0' }}>
-                  <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--line)' }}></div>
-                  <span style={{ padding: '0 12px', fontSize: '0.9rem', color: 'var(--ink-soft)' }}>atau daftar dengan</span>
-                  <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--line)' }}></div>
-                </div>
+                {import.meta.env.VITE_GOOGLE_CLIENT_ID && (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', margin: '24px 0' }}>
+                      <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--line)' }}></div>
+                      <span style={{ padding: '0 12px', fontSize: '0.9rem', color: 'var(--ink-soft)' }}>atau daftar dengan</span>
+                      <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--line)' }}></div>
+                    </div>
+                    <GoogleLoginButton onError={setError} />
+                  </>
+                )}
 
-                <GoogleLoginButton onError={setError} />
-
-                <div style={{ marginTop: '32px', textAlign: 'center', fontSize: '0.95rem', color: 'var(--ink-soft)' }}>
-                  Sudah punya akun? <Link to="/login" style={{ color: 'var(--accent-strong)', fontWeight: 600, textDecoration: 'none' }}>Masuk di sini</Link>
+                <div className="mt-[32px] text-center text-[0.95rem] text-[var(--ink-soft)] flex flex-col gap-[8px]">
+                  <div>
+                    Sudah punya akun? <Link to="/login" className="font-semibold no-underline hover:underline" style={{ color: 'var(--accent-strong)' }}>Masuk di sini</Link>
+                  </div>
                 </div>
               </>
             )}

@@ -7,6 +7,7 @@ import { Navbar } from '../../components/common/Navbar'
 import { HomeFooter } from '../../components/home/HomeFooter'
 import { BRAND, navLinks, footerSections } from '../../data/home/homeData'
 import type { Product } from '../../types/product'
+import { getImageUrl } from '../../utils/image'
 
 //komponen & logic
 
@@ -18,10 +19,12 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [activeImage, setActiveImage] = useState(0)
 
   useEffect(() => {
     if (!id) return
     setLoading(true)
+    setActiveImage(0)
     getProductById(parseInt(id))
       .then(setProduct)
       .catch(() => setError('Produk tidak ditemukan'))
@@ -49,19 +52,44 @@ export default function ProductDetailPage() {
               <span>Kembali</span>
             </button>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', alignItems: 'start' }}>
+            <div className="product-detail">
 
               {/* Gambar Produk */}
-              <div style={{ borderRadius: '20px', overflow: 'hidden', background: 'var(--surface)', border: '1px solid var(--line)', minHeight: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {product.images && product.images.length > 0 ? (
-                  <img src={product.images[0].imageUrl} alt={product.name} style={{ width: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <p style={{ color: 'var(--ink-soft)' }}>Tidak ada gambar</p>
+              <div className="product-gallery">
+                <div className="product-gallery-main">
+                  {product.images && product.images.length > 0 ? (
+                    <img
+                      src={getImageUrl(product.images[activeImage]?.imageUrl ?? product.images[0].imageUrl)}
+                      alt={product.name}
+                    />
+                  ) : (
+                    <p style={{ color: 'var(--ink-soft)' }}>Tidak ada gambar</p>
+                  )}
+                </div>
+
+                {/* Thumbnail galeri */}
+                {product.images && product.images.length > 1 && (
+                  <div className="product-gallery-thumbs">
+                    {product.images.map((image, index) => (
+                      <button
+                        key={image.id}
+                        type="button"
+                        onClick={() => setActiveImage(index)}
+                        className={`product-gallery-thumb${index === activeImage ? ' is-active' : ''}`}
+                        aria-label={`Lihat foto ${index + 1}`}
+                      >
+                        <img
+                          src={getImageUrl(image.imageUrl)}
+                          alt={`${product.name} ${index + 1}`}
+                        />
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
 
               {/* Info Produk */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="product-detail-info">
                 <span className="product-tag" style={{ width: 'fit-content' }}>{product.category.name}</span>
                 <h1 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: '2rem' }}>{product.name}</h1>
                 <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--accent)' }}>

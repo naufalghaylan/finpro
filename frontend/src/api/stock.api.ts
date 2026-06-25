@@ -68,6 +68,11 @@ export const adjustStock = async (id: number, data: { quantityChange: number; no
 }
 
 export const addStock = async (data: { storeId: number; productId: number; quantity: number; notes?: string }) => {
-  const response = await api.post<{ message: string; data: Stock }>('/stocks', data)
-  return response.data
-}
+  const response = await api.post<{ message: string; data: Stock }>('/stocks', data);
+  return response.data;
+};
+
+export const deleteStock = async (id: number) => {
+  const response = await api.delete<{ message: string }>(`/stocks/${id}`);
+  return response.data;
+};

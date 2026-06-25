@@ -70,22 +70,22 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="page">
-      <main className="page-main">
-        <div className="shell auth-shell" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100svh', padding: 'clamp(16px, 5vw, 40px)' }}>
-          <div className="hero-card auth-card" style={{ width: '100%', maxWidth: '420px', padding: 'clamp(24px, 5vw, 40px) clamp(16px, 5vw, 32px)' }}>
-            <div className="auth-header" style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <button className="mobile-back-btn" onClick={() => navigate(-1)} type="button" aria-label="Go back">
+    <div className="min-h-[100svh] flex flex-col bg-[var(--bg)]">
+      <main className="flex-1 flex flex-col">
+        <div className="flex justify-center items-center min-h-[100svh] p-[clamp(16px,5vw,40px)] w-full">
+          <div className="w-full max-w-[420px] bg-white rounded-[24px] p-[clamp(24px,5vw,40px)_clamp(16px,5vw,32px)] shadow-[var(--shadow-soft)] border border-[var(--line)] relative">
+            <div className="text-center mb-[32px]">
+              <button className="absolute top-[24px] left-[16px] sm:left-[24px] w-[40px] h-[40px] rounded-full bg-white border border-[var(--line)] flex items-center justify-center cursor-pointer text-[var(--ink)] shadow-[0_2px_8px_rgba(0,0,0,0.02)] md:hidden" onClick={() => navigate(-1)} type="button" aria-label="Go back">
                 <ChevronLeft size={24} />
               </button>
-              <Link to="/" style={{ textDecoration: 'none', display: 'inline-block' }}>
-                <div className="logo" style={{ justifyContent: 'center', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <img src="/PanenMartLogo.svg" alt="PanenMart Logo" style={{ width: '32px', height: '32px' }} />
-                  <span style={{ fontSize: '1.4rem' }}>PanenMart</span>
+              <Link to="/" className="inline-block no-underline">
+                <div className="flex justify-center items-center gap-[8px] mb-[20px]">
+                  <img src="/PanenMartLogo.svg" alt="PanenMart Logo" className="w-[32px] h-[32px]" />
+                  <span className="text-[1.4rem] font-[family-name:var(--font-display)] font-semibold text-[var(--ink)] tracking-[-0.02em]">PanenMart</span>
                 </div>
               </Link>
-              <h1 className="hero-card-title" style={{ fontSize: '1.6rem', marginBottom: '8px' }}>Buat Password Baru</h1>
-              <p className="hero-card-sub">Silakan masukkan password baru untuk akun Anda</p>
+              <h1 className="m-0 text-[1.6rem] font-bold text-[#111] mb-[8px] tracking-normal">Buat Password Baru</h1>
+              <p className="m-0 text-[1rem] text-[var(--ink-soft)] leading-[1.5]">Silakan masukkan password baru untuk akun Anda</p>
             </div>
             
             {error && (
@@ -167,8 +167,8 @@ export default function ResetPasswordPage() {
               </form>
             )}
             
-            <div style={{ marginTop: '32px', textAlign: 'center', fontSize: '0.95rem', color: 'var(--ink-soft)' }}>
-              Kembali ke <Link to="/login" style={{ color: 'var(--accent-strong)', fontWeight: 600, textDecoration: 'none' }}>Halaman Login</Link>
+            <div className="mt-[32px] text-center text-[0.95rem] text-[var(--ink-soft)]">
+              Ingat password Anda? <Link to="/login" className="font-semibold no-underline hover:underline" style={{ color: 'var(--accent-strong)' }}>Kembali ke Login</Link>
             </div>
           </div>
         </div>
