@@ -31,7 +31,7 @@ function CheckoutPage() {
     selectedCourier,
     courierServices,
     selectedShippingService,
-    isFetchingShipping,
+    fetchingCouriers,
     paymentSummary,
     canCreateOrder,
     isCartEmpty,
@@ -44,6 +44,7 @@ function CheckoutPage() {
     handleAddressChange,
     handleCreateOrder,
     loadPreview,
+    fetchShippingForCourier,
   } = useCheckout()
 
   return (
@@ -119,8 +120,13 @@ function CheckoutPage() {
                       selectedCourier={selectedCourier}
                       courierServices={courierServices}
                       selectedShippingService={selectedShippingService}
-                      isFetchingShipping={isFetchingShipping}
-                      onCourierChange={setSelectedCourier}
+                      fetchingCouriers={fetchingCouriers}
+                      onCourierChange={(courier) => {
+                        setSelectedCourier(courier)
+                        if (courier && !courierServices[courier]) {
+                          void fetchShippingForCourier(courier)
+                        }
+                      }}
                       onShippingServiceChange={setSelectedShippingService}
                     />
 

@@ -10,6 +10,17 @@ import { getApiErrorMessage } from '../../utils/apiError'
 
 const getErrorMessage = (error: unknown) => getApiErrorMessage(error, 'Gagal memproses checkout')
 
+const calculateRoundedWeight = (weightInGrams: number): number => {
+  const kg = Math.floor(weightInGrams / 1000)
+  const remainder = weightInGrams % 1000
+  
+  if (remainder <= 300) {
+    return Math.max(1000, kg * 1000)
+  } else {
+    return (kg + 1) * 1000
+  }
+}
+
 
 export function useCheckout() {
   const [preview, setPreview] = useState<CheckoutPreview | null>(null)
@@ -26,7 +37,7 @@ export function useCheckout() {
   const [selectedCourier, setSelectedCourier] = useState<string>('')
   const [courierServices, setCourierServices] = useState<Record<string, ShippingCostResult[]>>({})
   const [selectedShippingService, setSelectedShippingService] = useState<ShippingCostResult | null>(null)
-  const [isFetchingShipping, setIsFetchingShipping] = useState(false)
+  const [fetchingCouriers, setFetchingCouriers] = useState<Record<string, boolean>>({})
   const { showToast } = useToast()
   const navigate = useNavigate()
   const setCartCount = useCartStore((state) => state.setCartCount)
@@ -132,6 +143,29 @@ export function useCheckout() {
     }
   }, [selectedVoucher, selectedVoucherId])
 
+  const fetchShippingForCourier = useCallback(async (courierCode: string) => {
+    if (!selectedAddressId || !preview?.nearestStore || totalWeight === 0) return
+
+    setFetchingCouriers(prev => ({ ...prev, [courierCode]: true }))
+    
+    try {
+      const roundedWeight = calculateRoundedWeight(totalWeight)
+      const results = await calculateShippingCost({
+        addressId: selectedAddressId,
+        storeId: preview.nearestStore.id,
+        weight: roundedWeight,
+        courier: courierCode,
+      })
+      
+      setCourierServices(prev => ({ ...prev, [courierCode]: results || [] }))
+    } catch {
+      // Ignore individual courier errors (e.g. unsupported route)
+      setCourierServices(prev => ({ ...prev, [courierCode]: [] }))
+    } finally {
+      setFetchingCouriers(prev => ({ ...prev, [courierCode]: false }))
+    }
+  }, [selectedAddressId, preview, totalWeight])
+
   useEffect(() => {
     if (!selectedAddressId || !preview?.nearestStore || totalWeight === 0) {
       window.setTimeout(() => {
@@ -142,49 +176,15 @@ export function useCheckout() {
       return
     }
 
-    const fetchAllCouriers = async () => {
-      setIsFetchingShipping(true)
-      const ALL_COURIERS = ['jne', 'pos', 'tiki', 'sicepat', 'jnt', 'anteraja', 'ninja', 'idexpress', 'sap']
-      
-      try {
-        const newCourierServices: Record<string, ShippingCostResult[]> = {}
-        const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-        
-        for (const c of ALL_COURIERS) {
-          try {
-            const results = await calculateShippingCost({
-              addressId: selectedAddressId,
-              storeId: preview.nearestStore!.id,
-              weight: Math.max(1, Math.ceil(totalWeight)),
-              courier: c,
-            })
-            if (results && results.length > 0) {
-              newCourierServices[c] = results
-            }
-          } catch (err) {
-            // Ignore individual courier errors (e.g. unsupported route)
-          }
-          await delay(300)
-        }
-        
-        setCourierServices(newCourierServices)
-        
-        // Auto-select first available courier if current is invalid
-        setSelectedCourier(prev => {
-          if (prev && newCourierServices[prev]) return prev;
-          return Object.keys(newCourierServices)[0] || '';
-        })
-        setSelectedShippingService(null)
-      } catch (err) {
-        showToast('Gagal memuat daftar kurir.', 'error')
-        setCourierServices({})
-      } finally {
-        setIsFetchingShipping(false)
-      }
-    }
-
-    void fetchAllCouriers()
-  }, [selectedAddressId, preview?.nearestStore, totalWeight, showToast])
+    // Reset courier services when address or weight changes using setTimeout
+    // to avoid synchronous cascading renders inside useEffect
+    window.setTimeout(() => {
+      setCourierServices({})
+      setSelectedShippingService(null)
+      setSelectedCourier('jne') // Set default selected courier
+      void fetchShippingForCourier('jne')
+    }, 0)
+  }, [selectedAddressId, preview, totalWeight, fetchShippingForCourier])
 
   const handleCreateOrder = async () => {
     if (!selectedAddressId || !canCreateOrder || !selectedShippingService) return
@@ -227,7 +227,7 @@ export function useCheckout() {
     selectedCourier,
     courierServices,
     selectedShippingService,
-    isFetchingShipping,
+    fetchingCouriers,
     paymentSummary,
     canCreateOrder,
     isCartEmpty,
@@ -240,5 +240,6 @@ export function useCheckout() {
     handleAddressChange,
     handleCreateOrder,
     loadPreview,
+    fetchShippingForCourier,
   }
 }
