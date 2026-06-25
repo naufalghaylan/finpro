@@ -1,8 +1,8 @@
 import { AdminModal } from '../../components/admin/AdminModal'
-import { AdminOrderFulfillmentModalHeader } from '../../components/admin/orders/AdminOrderFulfillmentModalHeader'
-import { FulfillmentHistoryColumn } from '../../components/admin/orders/FulfillmentHistoryColumn'
-import { FulfillmentRequestFooter } from '../../components/admin/orders/FulfillmentRequestFooter'
-import { FulfillmentRequirementList } from '../../components/admin/orders/FulfillmentRequirementList'
+import { AdminOrderFulfillmentModalHeader } from '../../components/admin/orders/fulfillment/AdminOrderFulfillmentModalHeader'
+import { FulfillmentHistoryColumn } from '../../components/admin/orders/fulfillment/FulfillmentHistoryColumn'
+import { FulfillmentRequestFooter } from '../../components/admin/orders/fulfillment/FulfillmentRequestFooter'
+import { FulfillmentRequirementList } from '../../components/admin/orders/fulfillment/FulfillmentRequirementList'
 import { useAdminOrderFulfillment } from '../../hooks/admin/useAdminOrderFulfillment'
 import type { AdminOrder } from '../../types/order'
 
