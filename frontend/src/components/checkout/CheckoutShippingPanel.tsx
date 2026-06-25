@@ -33,7 +33,7 @@ interface CheckoutShippingPanelProps {
   selectedCourier: string
   courierServices: Record<string, ShippingCostResult[]>
   selectedShippingService: ShippingCostResult | null
-  isFetchingShipping: boolean
+  fetchingCouriers: Record<string, boolean>
   onCourierChange: (courier: string) => void
   onShippingServiceChange: (service: ShippingCostResult) => void
 }
@@ -44,13 +44,11 @@ export function CheckoutShippingPanel({
   selectedCourier,
   courierServices,
   selectedShippingService,
-  isFetchingShipping,
+  fetchingCouriers,
   onCourierChange,
   onShippingServiceChange,
 }: CheckoutShippingPanelProps) {
-  const visibleCouriers = AVAILABLE_COURIERS.filter(
-    (courier) => courierServices[courier.code] !== undefined && courierServices[courier.code].length > 0,
-  )
+  const visibleCouriers = AVAILABLE_COURIERS
 
   return (
     <section className="checkout-panel">
@@ -74,12 +72,7 @@ export function CheckoutShippingPanel({
         </div>
       ) : (
         <div className="checkout-shipping-container">
-          {isFetchingShipping ? (
-            <div className="checkout-inline-alert">
-              <Loader2 className="button-icon spin" aria-hidden="true" />
-              Memuat kurir yang tersedia...
-            </div>
-          ) : visibleCouriers.length > 0 ? (
+          {visibleCouriers.length > 0 ? (
             <div className="checkout-courier-list">
               {visibleCouriers.map((courier) => {
                 const isExpanded = selectedCourier === courier.code
@@ -116,7 +109,12 @@ export function CheckoutShippingPanel({
 
                     {isExpanded && (
                       <div className="checkout-courier-services">
-                        {shippingCosts.length > 0 ? (
+                        {fetchingCouriers[courier.code] ? (
+                          <div className="checkout-inline-alert">
+                            <Loader2 className="button-icon spin" aria-hidden="true" />
+                            Memuat layanan pengiriman...
+                          </div>
+                        ) : shippingCosts.length > 0 ? (
                           <div className="checkout-shipping-service-grid">
                             {shippingCosts.map((service, index) => {
                               const isSelected = selectedShippingService?.service === service.service
