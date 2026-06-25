@@ -1,0 +1,18 @@
+export type PaymentMethod = 'MANUAL_TRANSFER' | 'PAYMENT_GATEWAY'
+export type DiscountType = 'PERCENTAGE' | 'NOMINAL' | 'BUY_ONE_GET_ONE'
+export type OrderStatus =
+  | 'PENDING_PAYMENT'
+  | 'WAITING_CONFIRMATION'
+  | 'PROCESSING'
+  | 'SHIPPED'
+  | 'CONFIRMED'
+  | 'CANCELLED'
+export type OrderStatusGroup = 'ongoing' | 'completed' | 'cancelled'
+export type MutationStatus = 'PENDING' | 'APPROVED' | 'IN_TRANSIT' | 'COMPLETED' | 'REJECTED'
+export type StockFulfillmentStatus =
+  | 'NOT_REQUIRED'
+  | 'REQUIRED'
+  | 'PENDING'
+  | 'IN_TRANSIT'
+  | 'COMPLETED'
+  | 'REJECTED'
