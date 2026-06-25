@@ -12,7 +12,7 @@ import {
   groupStoreFulfillments,
   type FulfillmentAction,
   type StoreFulfillmentGroup,
-} from '../../components/admin/orders/storeFulfillmentGroup'
+} from '../../components/admin/orders/utils/storeFulfillmentGroup'
 import { useToast } from '../../components/common/Toast'
 import type {
   FulfillmentDirection,
