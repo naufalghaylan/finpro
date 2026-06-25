@@ -1,0 +1,97 @@
+/* Feature 3 checkout shipping card equalization */
+.checkout-shipping-service-grid {
+  align-items: stretch;
+  grid-template-columns: repeat(auto-fit, minmax(214px, 1fr));
+}
+
+.checkout-shipping-service-card {
+  height: 100%;
+  min-height: 120px;
+  padding: 14px 16px;
+}
+
+.checkout-shipping-service-content {
+  min-height: 92px;
+  justify-content: space-between;
+}
+
+.checkout-shipping-service-top {
+  min-height: 40px;
+}
+
+.checkout-shipping-service-info {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.checkout-shipping-service-info strong {
+  display: block;
+  color: var(--ink);
+  font-size: 0.98rem;
+  line-height: 1.22;
+  overflow-wrap: anywhere;
+}
+
+.checkout-shipping-service-info span {
+  display: -webkit-box;
+  min-height: 2.56em;
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+  line-height: 1.28;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.checkout-shipping-service-bottom {
+  align-items: flex-end;
+  margin-top: 10px;
+  padding-top: 10px;
+  width: 100%;
+}
+
+.checkout-shipping-service-etd span {
+  font-size: 0.72rem;
+}
+
+.checkout-shipping-service-etd strong {
+  font-size: 0.84rem;
+}
+
+.checkout-shipping-service-cost {
+  font-size: 1.02rem;
+}
+
+.checkout-shipping-service-etd strong,
+.checkout-shipping-service-cost {
+  white-space: nowrap;
+}
+
+.checkout-shipping-selected-icon {
+  width: 18px;
+  height: 18px;
+}
+
+@media (max-width: 720px) {
+  .checkout-shipping-service-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .checkout-shipping-service-card {
+    min-height: 0;
+    padding: 14px;
+  }
+
+  .checkout-shipping-service-content {
+    min-height: 0;
+  }
+
+  .checkout-shipping-service-top {
+    min-height: 0;
+  }
+
+  .checkout-shipping-service-info span {
+    min-height: 0;
+  }
+}

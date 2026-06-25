@@ -78,7 +78,7 @@ export function CheckoutShippingPanel({
                 const isExpanded = selectedCourier === courier.code
                 const shippingCosts = courierServices[courier.code] || []
                 const selectedServiceInThisCourier = shippingCosts.find(
-                  (service) => selectedShippingService?.service === service.service,
+                  (service) => selectedShippingService?.service === service.service && selectedShippingService?.code === courier.code,
                 )
 
                 return (
@@ -117,7 +117,7 @@ export function CheckoutShippingPanel({
                         ) : shippingCosts.length > 0 ? (
                           <div className="checkout-shipping-service-grid">
                             {shippingCosts.map((service, index) => {
-                              const isSelected = selectedShippingService?.service === service.service
+                              const isSelected = selectedShippingService?.service === service.service && selectedShippingService?.code === courier.code
                               return (
                                 <label
                                   key={`${service.service}-${index}`}

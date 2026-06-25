@@ -1,0 +1,135 @@
+.payment-gateway-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: flex-start;
+  border: 1px solid rgba(232, 107, 79, 0.18);
+  border-radius: 22px;
+  padding: 18px;
+  background: #fff4ec;
+}
+
+.payment-gateway-card--embedded {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.payment-gateway-card > svg {
+  width: 34px;
+  height: 34px;
+  color: var(--accent-strong);
+}
+
+.payment-gateway-intro {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.payment-gateway-intro > svg {
+  width: 30px;
+  height: 30px;
+  color: var(--accent-strong);
+}
+
+.payment-gateway-card h3,
+.payment-gateway-card p {
+  margin: 0;
+}
+
+.payment-gateway-card p {
+  margin-top: 6px;
+  color: var(--ink-soft);
+}
+
+.payment-gateway-card > .button {
+  grid-column: 1 / -1;
+  justify-self: flex-start;
+}
+
+.payment-gateway-status-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: flex-start;
+  border: 1px solid rgba(74, 124, 91, 0.18);
+  border-radius: 18px;
+  padding: 16px;
+  background: #edf7ee;
+  color: var(--ink);
+}
+
+.payment-gateway-card > .payment-gateway-status-card {
+  grid-column: 1 / -1;
+}
+
+.payment-gateway-status-card--pending {
+  border-color: rgba(232, 107, 79, 0.2);
+  background: #fff8f2;
+}
+
+.payment-gateway-status-card--error {
+  border-color: rgba(184, 55, 55, 0.2);
+  background: #fff1ed;
+}
+
+.payment-gateway-status-card > svg {
+  width: 24px;
+  height: 24px;
+  color: var(--green);
+}
+
+.payment-gateway-status-card--pending > svg {
+  color: var(--accent-strong);
+}
+
+.payment-gateway-status-card--error > svg {
+  color: #c94733;
+}
+
+.payment-gateway-status-card h3,
+.payment-gateway-status-card p {
+  margin: 0;
+}
+
+.payment-gateway-status-card p {
+  margin-top: 4px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+.payment-gateway-retry-button {
+  margin-top: 12px;
+}
+
+.midtrans-embed-shell {
+  width: 100%;
+  height: 560px;
+  overflow: hidden;
+  border: 1px solid rgba(32, 44, 34, 0.1);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 14px 28px rgba(32, 44, 34, 0.08);
+}
+
+.midtrans-embed-container {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+}
+
+.midtrans-embed-container > * {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.midtrans-embed-container iframe {
+  display: block;
+  width: 100% !important;
+  max-width: none !important;
+  height: 100% !important;
+  min-height: 0;
+  border: 0;
+}

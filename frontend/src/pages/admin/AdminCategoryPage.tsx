@@ -67,7 +67,7 @@ export default function AdminCategoryPage() {
                   </div>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-widest text-admin-accent-strong mb-0 m-0">Admin</p>
-                    <h2 className="font-[family-name:var(--font-admin-display)] text-2xl md:text-3xl font-bold text-admin-ink m-0">
+                    <h2 className="font-admin-display text-2xl md:text-3xl font-bold text-admin-ink m-0">
                       Manajemen Kategori
                     </h2>
                   </div>
@@ -76,7 +76,7 @@ export default function AdminCategoryPage() {
                   <button
                     onClick={openCreate}
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-admin-accent text-white
-                               text-sm font-semibold border-none cursor-pointer shadow-md font-[family-name:var(--font-admin)]
+                               text-sm font-semibold border-none cursor-pointer shadow-md font-admin
                                hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
                   >
                     <Plus className="w-4 h-4" />
@@ -84,13 +84,13 @@ export default function AdminCategoryPage() {
                   </button>
                 )}
               </div>
-              <p className="text-sm text-admin-ink-soft mt-2 m-0 font-[family-name:var(--font-admin)]">
+              <p className="text-sm text-admin-ink-soft mt-2 m-0 font-admin">
                 {categories.length} kategori terdaftar
               </p>
             </div>
 
             {/* Table Card */}
-            <div className="admin-fade-in rounded-2xl border border-admin-line-soft bg-admin-surface shadow-sm overflow-hidden font-[family-name:var(--font-admin)]"
+            <div className="admin-fade-in rounded-2xl border border-admin-line-soft bg-admin-surface shadow-sm overflow-hidden font-admin"
                  style={{ animationDelay: '80ms' }}>
               <div className="admin-table-wrap overflow-x-auto">
                 <table className="w-full text-left text-sm">

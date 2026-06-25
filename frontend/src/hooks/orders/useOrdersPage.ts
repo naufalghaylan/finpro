@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { getOrders } from '../../api/order.api'
 import { getOrderItemQuantity } from '../../components/orders/orderDisplay'
 import type { CheckoutOrder, OrderListMeta, OrderStatusGroup } from '../../types/order'
-import { getApiErrorMessage } from '../../utils/apiError'
+import { getApiFetchError, type ApiFetchError } from '../../utils/apiError'
 
 export type OrderStatusTab = 'all' | OrderStatusGroup
 
@@ -28,8 +28,8 @@ const getPositivePage = (value: string | null) => {
 const getSearchValue = (searchParams: URLSearchParams, key: string) =>
   searchParams.get(key)?.trim() ?? ''
 
-const getErrorMessage = (error: unknown, fallback = 'Gagal memuat daftar pesanan') =>
-  getApiErrorMessage(error, fallback)
+const getFetchError = (error: unknown, fallback = 'Gagal memuat daftar pesanan') =>
+  getApiFetchError(error, fallback)
 
 const setParamOrDelete = (params: URLSearchParams, key: string, value: string) => {
   if (value.trim()) {
@@ -44,7 +44,8 @@ export function useOrdersPage() {
   const [orders, setOrders] = useState<CheckoutOrder[]>([])
   const [meta, setMeta] = useState<OrderListMeta | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [fetchError, setFetchError] = useState<ApiFetchError | null>(null)
+  const error = fetchError?.message ?? null
 
   const statusGroupParam = searchParams.get('statusGroup')
   const activeStatusGroup: OrderStatusTab = isOrderStatusGroup(statusGroupParam) ? statusGroupParam : 'all'
@@ -90,7 +91,7 @@ export function useOrdersPage() {
 
   const loadOrders = useCallback(async () => {
     setIsLoading(true)
-    setError(null)
+    setFetchError(null)
 
     try {
       const result = await getOrders({
@@ -105,7 +106,7 @@ export function useOrdersPage() {
       setOrders(result.orders)
       setMeta(result.meta)
     } catch (loadError) {
-      setError(getErrorMessage(loadError))
+      setFetchError(getFetchError(loadError))
     } finally {
       setIsLoading(false)
     }

@@ -1,0 +1,9 @@
+@import './payment/layout.css';
+@import './payment/status-insight.css';
+@import './payment/order-tracking.css';
+@import './payment/manual-payment.css';
+@import './payment/bank-card.css';
+@import './payment/upload-proof.css';
+@import './payment/gateway.css';
+@import './payment/summary-actions.css';
+@import './payment/responsive.css';

@@ -1,0 +1,95 @@
+.cart-summary-panel {
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.cart-summary-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.cart-summary-heading h3 {
+  margin: 0;
+}
+
+.cart-summary-heading span {
+  border-radius: 999px;
+  padding: 5px 9px;
+  color: var(--accent-strong);
+  background: rgba(232, 107, 79, 0.1);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.cart-summary-store {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(74, 124, 91, 0.18);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(247, 251, 244, 0.84);
+}
+
+.cart-summary-store svg {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  color: var(--green);
+  flex: 0 0 auto;
+}
+
+.cart-summary-store div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cart-summary-store span,
+.cart-summary-note {
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+}
+
+.cart-summary-store strong {
+  color: var(--ink);
+  font-size: 0.94rem;
+  line-height: 1.35;
+}
+
+.cart-summary-benefits {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.cart-summary-benefits div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid rgba(232, 107, 79, 0.14);
+  border-radius: 8px;
+  padding: 10px 11px;
+  background: #fffaf2;
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.cart-summary-benefits svg {
+  width: 18px;
+  height: 18px;
+  color: var(--accent-strong);
+  flex: 0 0 auto;
+}
+
+.cart-summary-note {
+  margin: 12px 0 0;
+  line-height: 1.55;
+}

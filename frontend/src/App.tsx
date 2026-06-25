@@ -31,6 +31,7 @@ import AdminOrderList from './pages/admin/AdminOrderList'
 import NotFoundPage from './pages/error/NotFoundPage'
 import AdminUserPage from './pages/admin/AdminUserPage'
 import './App.css'
+import './styles/index.css'
 
 function OrderPaymentRedirect() {
   const { id } = useParams()

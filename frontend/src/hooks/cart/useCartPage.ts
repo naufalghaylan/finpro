@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { getCart } from '../../api/cart.api'
 import { useCartStore } from '../../store/cartStore'
 import type { Cart } from '../../types/cart'
-import { getApiErrorMessage } from '../../utils/apiError'
+import { getApiFetchError, type ApiFetchError } from '../../utils/apiError'
 import { useCartMutations } from './useCartMutations'
 
 const emptyCart: Cart = {
@@ -15,7 +15,12 @@ const emptyCart: Cart = {
   },
 }
 
-const getErrorMessage = (error: unknown) => getApiErrorMessage(error, 'Gagal memproses keranjang')
+const createCartFetchError = (error: unknown) => getApiFetchError(error, 'Gagal memproses keranjang')
+
+const createCartInlineError = (message: string): ApiFetchError => ({
+  message,
+  code: 500,
+})
 
 const getQuantityDrafts = (cart: Cart) =>
   cart.items.reduce<Record<number, string>>((drafts, item) => {
@@ -27,8 +32,13 @@ export function useCartPage() {
   const [cart, setCart] = useState<Cart>(emptyCart)
   const [quantityDrafts, setQuantityDrafts] = useState<Record<number, string>>({})
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [fetchError, setFetchError] = useState<ApiFetchError | null>(null)
   const setCartCount = useCartStore((state) => state.setCartCount)
+  const error = fetchError?.message ?? null
+
+  const setInlineError = useCallback((message: string | null) => {
+    setFetchError(message ? createCartInlineError(message) : null)
+  }, [])
 
   const loadCart = useCallback(async (showLoading = true) => {
     if (showLoading) {
@@ -40,9 +50,9 @@ export function useCartPage() {
       setCart(nextCart)
       setQuantityDrafts(getQuantityDrafts(nextCart))
       setCartCount(nextCart.summary.totalQuantity)
-      setError(null)
+      setFetchError(null)
     } catch (loadError) {
-      setError(getErrorMessage(loadError))
+      setFetchError(createCartFetchError(loadError))
     } finally {
       if (showLoading) {
         setIsLoading(false)
@@ -67,7 +77,7 @@ export function useCartPage() {
     handleQuantityUpdate,
     handleQuantitySubmit,
     handleDeleteItem,
-  } = useCartMutations(quantityDrafts, setQuantityDrafts, setError, loadCart)
+  } = useCartMutations(quantityDrafts, setQuantityDrafts, setInlineError, loadCart)
 
   return {
     cart,

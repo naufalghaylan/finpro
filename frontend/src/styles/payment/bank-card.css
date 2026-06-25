@@ -1,0 +1,131 @@
+.payment-bank-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  margin-bottom: 18px;
+  border: 1px solid rgba(74, 124, 91, 0.2);
+  border-radius: 20px;
+  padding: 22px;
+  background: #f7fbf4;
+}
+
+.payment-bank-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-soft);
+  font-size: 0.96rem;
+  font-weight: 700;
+}
+
+.payment-bank-header svg {
+  width: 18px;
+  height: 18px;
+  color: var(--green);
+}
+
+.payment-bank-card > h3 {
+  color: var(--ink);
+  font-size: 1.4rem;
+  line-height: 1.2;
+  margin: -6px 0 0;
+}
+
+.payment-bank-info-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid rgba(74, 124, 91, 0.16);
+  border-radius: 16px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.payment-bank-info-block > span,
+.payment-bank-instruction,
+.payment-bank-total span {
+  color: var(--ink-soft);
+}
+
+.payment-bank-info-block > span {
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.payment-bank-value-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.payment-bank-value-row strong {
+  color: var(--ink);
+  font-size: 1.45rem;
+  line-height: 1.15;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.payment-bank-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  border-radius: 999px;
+  padding: 0 13px;
+  flex: 0 0 auto;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.payment-bank-copy.copied {
+  border-color: rgba(74, 124, 91, 0.22);
+  background: rgba(74, 124, 91, 0.12);
+  color: var(--green);
+}
+
+.payment-bank-account-name {
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.payment-bank-total {
+  border-color: rgba(74, 124, 91, 0.22);
+  background: #edf7ee;
+}
+
+.payment-bank-total strong {
+  color: var(--green);
+  font-size: 1.55rem;
+  line-height: 1.15;
+}
+
+.payment-bank-instruction {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.payment-deadline-card div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.payment-deadline-card span,
+.payment-deadline-card em,
+.payment-summary-meta span {
+  color: var(--ink-soft);
+}
+
+.payment-deadline-card strong {
+  font-size: 1.1rem;
+}
+
+.payment-deadline-card em {
+  font-style: normal;
+  font-weight: 800;
+}

@@ -189,7 +189,7 @@ export default function AdminStoreDetailPage() {
             </p>
           </div>
 
-          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3 xl:w-[560px]">
+          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3 xl:w-140">
             {storeMetrics.map((metric) => {
               const Icon = metric.Icon
 
