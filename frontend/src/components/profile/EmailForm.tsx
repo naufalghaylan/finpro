@@ -39,8 +39,9 @@ export const EmailForm = () => {
     try {
       await updateEmail(email)
       setSuccessMsg('Email berhasil diperbarui. Silakan cek inbox Anda untuk memverifikasi email baru.')
-    } catch (err: any) {
-      // Error handled by store, we can use global error or local
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setLocalError(error.response?.data?.message || 'Gagal mengubah email.');
     }
   }
 
@@ -50,7 +51,7 @@ export const EmailForm = () => {
     try {
       await reverifyEmail()
       setSuccessMsg('Email verifikasi berhasil dikirim ulang. Silakan cek inbox Anda.')
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Error handled by store
     }
   }

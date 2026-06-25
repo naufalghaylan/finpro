@@ -131,7 +131,9 @@ export const ProfileForm = () => {
       setTimeout(() => {
         window.location.reload()
       }, 1500)
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      showToast(error.response?.data?.message || 'Gagal mengupdate profil', 'error');
       // Error is handled in the store
     }
   }
@@ -147,7 +149,9 @@ export const ProfileForm = () => {
       setTimeout(() => {
         logout()
       }, 3000)
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      showToast(error.response?.data?.message || 'Gagal mengubah password', 'error');
       setLocalError(err.response?.data?.message || 'Gagal mengirim link reset password.')
       setIsResetting(false)
     }

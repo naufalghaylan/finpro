@@ -180,9 +180,10 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
         await createAddress(formData)
       }
       onClose()
-    } catch (err: any) {
-      const backendMessage = err.response?.data?.message;
-      const validationErrors = err.response?.data?.errors;
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string, errors?: Array<{ message: string }> } }, message?: string };
+      const backendMessage = error.response?.data?.message;
+      const validationErrors = error.response?.data?.errors;
       
       if (validationErrors && Array.isArray(validationErrors)) {
         setErrorMsg(`Validasi gagal: ${validationErrors[0].message}`);
