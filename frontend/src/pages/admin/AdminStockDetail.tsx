@@ -56,7 +56,7 @@ export default function AdminStockDetail({ stockId, onBack }: { stockId: number,
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Hapus data stok produk ini dari toko? Seluruh riwayat jurnalnya juga akan ikut terhapus.')) return;
+    if (!window.confirm('Hapus data stok produk ini dari toko? Stok akan disembunyikan (soft delete), namun riwayat jurnalnya tetap tersimpan dan bisa dipulihkan saat produk ditambahkan kembali.')) return;
     try {
       setDeleting(true);
       await deleteStock(stockId);

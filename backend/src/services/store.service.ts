@@ -32,7 +32,7 @@ function deg2rad(deg: number) {
 
 export const getNearestStoreService = async (lat: number, lng: number) => {
   const stores = await prisma.store.findMany({
-    where: { status: true }
+    where: { status: true, deletedAt: null }
   });
 
   if (!stores || stores.length === 0) {
@@ -152,13 +152,29 @@ export const deleteStoreService = async (id: number) => {
 };
 
 export const createStoreAdminService = async (storeId: number, data: any) => {
-  // Check if email already exists
-  const existingUser = await prisma.user.findUnique({ where: { email: data.email } });
+  // Konflik dengan user AKTIF (belum dihapus) ditolak
+  const existingUser = await prisma.user.findFirst({ where: { email: data.email, deletedAt: null } });
   if (existingUser) {
     throw new Error('Email already registered');
   }
 
   const hashedPassword = await bcrypt.hash(data.password, 10);
+
+  // Kalau ada user yang sudah di-soft-delete dengan email sama → pulihkan (restore), bukan error
+  const softDeleted = await prisma.user.findFirst({ where: { email: data.email, deletedAt: { not: null } } });
+  if (softDeleted) {
+    return await prisma.user.update({
+      where: { id: softDeleted.id },
+      data: {
+        name: data.name,
+        password: hashedPassword,
+        role: 'STORE_ADMIN',
+        emailVerified: true,
+        deletedAt: null,
+        storeId: storeId,
+      },
+    });
+  }
 
   return await createStoreAdminRepository({
     name: data.name,

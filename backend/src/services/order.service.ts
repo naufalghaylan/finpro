@@ -1,4 +1,5 @@
 import {
+  type DiscountType,
   MutationStatus,
   OrderStatus,
   PaymentMethod,
@@ -260,6 +261,7 @@ const orderSelect = {
           name: true,
           slug: true,
           images: {
+            where: { deletedAt: null },
             orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }],
             select: {
               id: true,
@@ -360,7 +362,7 @@ const assertAdminCanAccessStore = async (
 
 const getNearestActiveStore = async (latitude: number, longitude: number, db: DatabaseClient = prisma) => {
   const stores = await db.store.findMany({
-    where: { status: true },
+    where: { status: true, deletedAt: null },
     select: {
       id: true,
       name: true,
@@ -392,7 +394,7 @@ const getNearestActiveStore = async (latitude: number, longitude: number, db: Da
 
 const getUserAddresses = async (userId: number) => {
   return prisma.userAddress.findMany({
-    where: { userId },
+    where: { userId, deletedAt: null },
     orderBy: [{ isPrimary: 'desc' }, { updatedAt: 'desc' }],
     select: {
       id: true,
@@ -486,6 +488,84 @@ const assertGlobalStockAvailable = async (items: CheckoutCartItem[], db: Databas
       { items: insufficientItems },
     )
   }
+}
+
+type CheckoutDiscount = {
+  productId: number | null
+  discountType: DiscountType
+  discountValue: number
+  minPurchase: number
+  maxDiscount: number | null
+}
+
+// Ambil diskon toko yang sedang berlaku (aktif & dalam rentang tanggal)
+const getActiveStoreDiscounts = async (storeId: number, db: DatabaseClient) => {
+  const now = new Date()
+  return db.discount.findMany({
+    where: {
+      storeId,
+      isActive: true,
+      deletedAt: null,
+      startDate: { lte: now },
+      endDate: { gte: now },
+    },
+    select: {
+      productId: true,
+      discountType: true,
+      discountValue: true,
+      minPurchase: true,
+      maxDiscount: true,
+    },
+  })
+}
+
+const capDiscount = (amount: number, maxDiscount: number | null) =>
+  maxDiscount != null && maxDiscount > 0 ? Math.min(amount, maxDiscount) : amount
+
+// Hitung total potongan diskon untuk sebuah checkout.
+// Aturan: tiap produk ambil diskon-produk terbaik (PERCENTAGE/NOMINAL/BOGO),
+// lalu tambah satu diskon level-toko terbaik (productId null) bila min. belanja terpenuhi.
+// Total dibatasi maksimal sebesar subtotal produk.
+export const calculateOrderDiscount = (
+  items: CheckoutCartItem[],
+  discounts: CheckoutDiscount[],
+  totalProductAmount: number,
+) => {
+  let productDiscountTotal = 0
+  for (const item of items) {
+    const lineSubtotal = item.quantity * item.product.basePrice
+    const productDiscounts = discounts.filter((d) => d.productId === item.productId)
+
+    let bestLineDiscount = 0
+    for (const d of productDiscounts) {
+      let amount = 0
+      if (d.discountType === 'BUY_ONE_GET_ONE') {
+        amount = Math.floor(item.quantity / 2) * item.product.basePrice
+      } else if (d.discountType === 'PERCENTAGE') {
+        amount = capDiscount((lineSubtotal * d.discountValue) / 100, d.maxDiscount)
+      } else {
+        amount = capDiscount(d.discountValue, d.maxDiscount)
+      }
+      amount = Math.min(amount, lineSubtotal)
+      if (amount > bestLineDiscount) bestLineDiscount = amount
+    }
+    productDiscountTotal += bestLineDiscount
+  }
+
+  let storeDiscount = 0
+  const storeWideDiscounts = discounts.filter((d) => d.productId === null)
+  for (const d of storeWideDiscounts) {
+    if (totalProductAmount < d.minPurchase) continue
+    if (d.discountType === 'BUY_ONE_GET_ONE') continue // BOGO butuh produk tertentu
+
+    const amount =
+      d.discountType === 'PERCENTAGE'
+        ? capDiscount((totalProductAmount * d.discountValue) / 100, d.maxDiscount)
+        : capDiscount(d.discountValue, d.maxDiscount)
+    if (amount > storeDiscount) storeDiscount = amount
+  }
+
+  return Math.min(Math.round(productDiscountTotal + storeDiscount), totalProductAmount)
 }
 
 const getOrderNumberDatePart = (date: Date) => {
@@ -713,11 +793,22 @@ export const getCheckoutPreview = async ({ userId, addressId }: CheckoutPreviewP
       ? await getNearestActiveStore(selectedAddress.latitude, selectedAddress.longitude)
       : null
 
+  let discountAmount = 0
+  if (nearestStore && cart && cart.items.length > 0) {
+    const totalProductAmount = cart.items.reduce(
+      (total, item) => total + item.quantity * item.product.basePrice,
+      0,
+    )
+    const activeDiscounts = await getActiveStoreDiscounts(nearestStore.id, prisma)
+    discountAmount = calculateOrderDiscount(cart.items, activeDiscounts, totalProductAmount)
+  }
+
   return {
     cart,
     addresses,
     selectedAddress,
     nearestStore,
+    discountAmount,
     paymentMethods: [
       {
         value: PaymentMethod.MANUAL_TRANSFER,
@@ -747,6 +838,7 @@ export const createCheckoutOrder = async ({
       where: {
         id: addressId,
         userId,
+        deletedAt: null,
       },
       select: {
         id: true,
@@ -769,6 +861,8 @@ export const createCheckoutOrder = async ({
       (total, item) => total + item.quantity * item.product.basePrice,
       0,
     )
+    const activeDiscounts = await getActiveStoreDiscounts(nearestStore.id, tx)
+    const discountAmount = calculateOrderDiscount(cart.items, activeDiscounts, totalProductAmount)
     const isPaymentGateway = paymentMethod === PaymentMethod.PAYMENT_GATEWAY
     const paymentDeadline = isPaymentGateway ? null : new Date(Date.now() + PAYMENT_DEADLINE_IN_MS)
     const paymentGatewayId = null
@@ -782,11 +876,11 @@ export const createCheckoutOrder = async ({
         addressId,
         status,
         totalProductAmount,
-        totalAmount: totalProductAmount + shippingCost,
+        totalAmount: totalProductAmount - discountAmount + shippingCost,
         shippingCost,
         shippingMethod,
         shippingService,
-        discountAmount: 0,
+        discountAmount,
         paymentMethod,
         paymentDeadline,
         paymentGatewayId,

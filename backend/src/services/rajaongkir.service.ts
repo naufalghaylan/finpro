@@ -52,14 +52,14 @@ export const calculateShippingCostService = async (userId: number, addressId: nu
 
   // 2. Not cached, get address and store
   const address = await prisma.userAddress.findFirst({
-    where: { id: addressId, userId }
+    where: { id: addressId, userId, deletedAt: null }
   })
   if (!address || !address.cityId) {
     throw new AppError(400, 'Invalid address or missing city data')
   }
 
-  const store = await prisma.store.findUnique({
-    where: { id: storeId }
+  const store = await prisma.store.findFirst({
+    where: { id: storeId, deletedAt: null }
   })
   if (!store || !store.cityId) {
     throw new AppError(400, 'Invalid store or missing city data')

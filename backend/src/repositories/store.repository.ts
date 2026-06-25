@@ -10,11 +10,14 @@ export const updateStoreRepository = async (id: number, data: Prisma.StoreUpdate
 };
 
 export const deleteStoreRepository = async (id: number) => {
-  return await prisma.store.delete({ where: { id } });
+  return await prisma.store.update({ where: { id }, data: { deletedAt: new Date() } });
 };
 
 export const getStoresRepository = async (skip: number, take: number, search?: string, userId?: number, role?: string) => {
-  const where: any = search ? { name: { contains: search, mode: 'insensitive' as const } } : {};
+  const where: any = { deletedAt: null };
+  if (search) {
+    where.name = { contains: search, mode: 'insensitive' as const };
+  }
   
   if (role === 'STORE_ADMIN' && userId) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -41,8 +44,8 @@ export const getStoresRepository = async (skip: number, take: number, search?: s
 };
 
 export const getStoreByIdRepository = async (id: number) => {
-  return await prisma.store.findUnique({ 
-    where: { id }, 
+  return await prisma.store.findFirst({
+    where: { id, deletedAt: null },
     include: { 
       admins: { 
         select: { id: true, name: true, email: true, createdAt: true } 

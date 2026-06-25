@@ -9,13 +9,14 @@ export class AuthService {
   static async login(data: { emailOrUsername: string; password: string; rememberMe?: boolean }) {
     const { emailOrUsername, password, rememberMe } = data;
 
-    const user = await prisma.user.findFirst({ 
-      where: { 
+    const user = await prisma.user.findFirst({
+      where: {
+        deletedAt: null,
         OR: [
           { email: emailOrUsername },
           { username: emailOrUsername }
         ]
-      } 
+      }
     });
 
     if (!user) {

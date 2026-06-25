@@ -79,10 +79,10 @@ function App() {
 
         <Route path="/admin/stores" element={<AdminRoute><AdminStoreLayout /></AdminRoute>}>
           <Route index element={<AdminStoreIndexRedirect />} />
-          <Route path="list" element={<AdminStoreList />} />
-          <Route path="admins" element={<AdminStoreAdminList />} />
-          <Route path="stocks" element={<AdminStockList />} />
-          <Route path="products" element={<AdminProductPage />} />
+          <Route path="list" element={<SuperAdminRoute><AdminStoreList /></SuperAdminRoute>} />
+          <Route path="admins" element={<SuperAdminRoute><AdminStoreAdminList /></SuperAdminRoute>} />
+          <Route path="stocks" element={<SuperAdminRoute><AdminStockList /></SuperAdminRoute>} />
+          <Route path="products" element={<SuperAdminRoute><AdminProductPage /></SuperAdminRoute>} />
           <Route path=":id" element={<AdminStoreDetailPage />} />
         </Route>
       </Routes>

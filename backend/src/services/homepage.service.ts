@@ -43,7 +43,7 @@ export const getHomepageDataService = async (lat?: number, lng?: number) => {
 
   // Fetch all active stores for StoreShowcase
   const stores = await prisma.store.findMany({
-    where: { status: true },
+    where: { status: true, deletedAt: null },
     select: {
       id: true,
       name: true,
@@ -83,7 +83,7 @@ export const getHomepageDataService = async (lat?: number, lng?: number) => {
         product: {
           include: {
             images: {
-              where: { isPrimary: true },
+              where: { isPrimary: true, deletedAt: null },
               take: 1
             },
             category: {

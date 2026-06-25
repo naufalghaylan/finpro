@@ -127,6 +127,7 @@ export const addStock = async (req: Request, res: Response): Promise<void> => {
 export const deleteStock = async (req: Request, res: Response): Promise<void> => {
   try {
     const id = parseInt(req.params.id as string);
+    const userId = req.user!.userId;
 
     const stock = await getStockByIdService(id);
     if (!stock) {
@@ -140,7 +141,7 @@ export const deleteStock = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    await deleteStockService(id);
+    await deleteStockService(id, userId);
 
     res.status(200).json({ message: 'Stock deleted successfully' });
   } catch (error: any) {

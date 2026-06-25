@@ -19,6 +19,7 @@ const updateUserSchema = z.object({
 // Helper: build where clause untuk filter
 function buildUserWhere(search: string, role?: string) {
   return {
+    deletedAt: null,
     ...(search && {
       OR: [
         { name: { contains: search, mode: 'insensitive' as const } },
@@ -28,15 +29,6 @@ function buildUserWhere(search: string, role?: string) {
     }),
     ...(role && { role: role as any }),
   }
-}
-
-// Helper: cek email dan username unique
-async function checkUnique(email: string, username: string, res: Response): Promise<boolean> {
-  const byEmail = await prisma.user.findUnique({ where: { email } })
-  if (byEmail) { res.status(409).json({ message: 'Email already registered' }); return false }
-  const byUsername = await prisma.user.findUnique({ where: { username } })
-  if (byUsername) { res.status(409).json({ message: 'Username already taken' }); return false }
-  return true
 }
 
 // GET /admin/users — list semua user dengan pagination + filter + sort +++++++(buat jadi utilitis)
@@ -77,16 +69,36 @@ export const createStoreAdmin = async (req: Request, res: Response): Promise<voi
       return
     }
     const { name, username, email, password } = parsed.data
-    const isUnique = await checkUnique(email, username, res)
-    if (!isUnique) return
+
+    // Konflik dengan user AKTIF (belum dihapus) benar-benar ditolak
+    const activeConflict = await prisma.user.findFirst({
+      where: { deletedAt: null, OR: [{ email }, { username }] },
+    })
+    if (activeConflict) {
+      const message = activeConflict.email === email ? 'Email already registered' : 'Username already taken'
+      res.status(409).json({ message })
+      return
+    }
 
     const hashed = await bcrypt.hash(password, 10)
-    const user = await prisma.user.create({
-      data: { name, username, email, password: hashed, role: 'STORE_ADMIN', emailVerified: true },
-      select: { id: true, name: true, username: true, email: true, role: true, createdAt: true },
+    const userData = { name, username, email, password: hashed, role: 'STORE_ADMIN' as const, emailVerified: true }
+    const select = { id: true, name: true, username: true, email: true, role: true, createdAt: true }
+
+    // Kalau ada user yang sudah di-soft-delete dengan email/username sama → pulihkan (restore), bukan error
+    const softDeleted = await prisma.user.findFirst({
+      where: { deletedAt: { not: null }, OR: [{ email }, { username }] },
     })
+
+    const user = softDeleted
+      ? await prisma.user.update({ where: { id: softDeleted.id }, data: { ...userData, deletedAt: null }, select })
+      : await prisma.user.create({ data: userData, select })
+
     res.status(201).json({ message: 'Store admin created', data: user })
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.code === 'P2002') {
+      res.status(409).json({ message: 'Email atau username sudah dipakai akun lain' })
+      return
+    }
     console.error('[createStoreAdmin]', err)
     res.status(500).json({ message: 'Internal server error' })
   }
@@ -117,15 +129,15 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
   }
 }
 
-// DELETE /admin/users/:id — hapus user ++++ (buat jadi soft delete)
+// DELETE /admin/users/:id — soft delete user
 export const deleteUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const id = Number(req.params.id)
-    const existing = await prisma.user.findUnique({ where: { id } })
+    const existing = await prisma.user.findFirst({ where: { id, deletedAt: null } })
     if (!existing) { res.status(404).json({ message: 'User not found' }); return }
     if (existing.role === 'SUPER_ADMIN') { res.status(403).json({ message: 'Cannot delete super admin' }); return }
 
-    await prisma.user.delete({ where: { id } })
+    await prisma.user.update({ where: { id }, data: { deletedAt: new Date() } })
     res.json({ message: 'User deleted' })
   } catch (err) {
     console.error('[deleteUser]', err)

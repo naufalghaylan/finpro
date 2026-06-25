@@ -8,12 +8,13 @@ import {
   deleteStoreService, 
   createStoreAdminService 
 } from '../services/store.service';
-import { 
-  nearestStoreSchema, 
-  createStoreSchema, 
-  updateStoreSchema, 
-  createStoreAdminSchema 
+import {
+  nearestStoreSchema,
+  createStoreSchema,
+  updateStoreSchema,
+  createStoreAdminSchema
 } from '../validations/store.validation';
+import { UserService } from '../services/user.service';
 export const getNearestStore = async (req: Request, res: Response): Promise<void> => {
   try {
     const validatedQuery = nearestStoreSchema.parse({ query: req.query });
@@ -64,11 +65,14 @@ export const getStoreById = async (req: Request, res: Response): Promise<void> =
     const id = parseInt(req.params.id as string);
     const userId = req.user?.userId;
     const role = req.user?.role;
-    const userStoreId = req.user?.storeId;
 
-    if (role === 'STORE_ADMIN' && userStoreId !== id) {
-      res.status(403).json({ message: 'Forbidden: You can only access your own store' });
-      return;
+    if (role === 'STORE_ADMIN') {
+      // Read storeId from DB (not the JWT) so re-assignment takes effect without re-login
+      const currentUser = userId ? await UserService.getUserById(userId, false) : null;
+      if (currentUser?.storeId !== id) {
+        res.status(403).json({ message: 'Forbidden: You can only access your own store' });
+        return;
+      }
     }
 
     const store = await getStoreByIdService(id);
@@ -108,12 +112,16 @@ export const createStore = async (req: Request, res: Response): Promise<void> =>
 export const updateStore = async (req: Request, res: Response): Promise<void> => {
   try {
     const id = parseInt(req.params.id as string);
+    const userId = req.user?.userId;
     const role = req.user?.role;
-    const userStoreId = req.user?.storeId;
 
-    if (role === 'STORE_ADMIN' && userStoreId !== id) {
-      res.status(403).json({ message: 'Forbidden: You can only update your own store' });
-      return;
+    if (role === 'STORE_ADMIN') {
+      // Read storeId from DB (not the JWT) so re-assignment takes effect without re-login
+      const currentUser = userId ? await UserService.getUserById(userId, false) : null;
+      if (currentUser?.storeId !== id) {
+        res.status(403).json({ message: 'Forbidden: You can only update your own store' });
+        return;
+      }
     }
 
     const validatedData = updateStoreSchema.parse({ body: req.body });

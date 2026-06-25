@@ -6,6 +6,7 @@ export const getActivePromotionsService = async () => {
   const promotions = await prisma.discount.findMany({
     where: {
       isActive: true,
+      deletedAt: null,
       startDate: { lte: now },
       endDate: { gte: now }
     },
