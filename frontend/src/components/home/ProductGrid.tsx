@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, AlertCircle, RefreshCcw, Loader2 } from 'lucide-react'
 import { useProducts } from '../../hooks/useProducts'
 import { ProductCard } from '../product/ProductCard'
 import type { Product } from '../../types/product'
@@ -32,39 +32,70 @@ export const ProductGrid = ({ products: initialProducts, storeId }: ProductGridP
   const { addToCart, addingProductId } = useAddToCart()
 
   if (displayProducts.length === 0 && loading) return (
-    <section className="section" id="products">
-      <div className="shell">
-        <p>Memuat produk...</p>
+    <section className="py-[28px]" id="products">
+      <div className="w-full max-w-[1440px] mx-auto px-[clamp(16px,4vw,48px)]">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-5 mb-5">
+          <div>
+            <p className="m-0 mb-2 uppercase tracking-[0.12em] text-[0.75rem] font-semibold text-[var(--accent-strong)]">Produk Terbaru</p>
+            <h2 className="m-0 font-[family-name:var(--font-display)] text-[clamp(1.6rem,2.4vw,2.2rem)] text-[var(--ink)] leading-tight">Fresh picks untuk kamu</h2>
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center gap-4 py-16 px-6 bg-[var(--surface)] rounded-3xl border border-dashed border-[var(--line)]">
+          <Loader2 size={32} className="animate-spin text-[var(--accent)]" />
+          <p className="text-[var(--ink-soft)] font-medium m-0">Memuat produk...</p>
+        </div>
       </div>
     </section>
   )
 
   if (displayProducts.length === 0 && error) return (
-    <section className="section" id="products">
-      <div className="shell">
-        <p style={{ color: 'var(--accent)' }}>{error}</p>
+    <section className="py-[28px]" id="products">
+      <div className="w-full max-w-[1440px] mx-auto px-[clamp(16px,4vw,48px)]">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-5 mb-5">
+          <div>
+            <p className="m-0 mb-2 uppercase tracking-[0.12em] text-[0.75rem] font-semibold text-[var(--accent-strong)]">Produk Terbaru</p>
+            <h2 className="m-0 font-[family-name:var(--font-display)] text-[clamp(1.6rem,2.4vw,2.2rem)] text-[var(--ink)] leading-tight">Fresh picks untuk kamu</h2>
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center gap-4 py-12 px-6 bg-[var(--surface)] rounded-3xl border border-dashed border-[var(--line)] text-center">
+          <div className="w-16 h-16 rounded-full bg-[#fdf2f2] flex items-center justify-center text-[#c53030] mb-1">
+            <AlertCircle size={32} />
+          </div>
+          <h3 className="m-0 text-xl text-[var(--ink)] font-[family-name:var(--font-display)]">Yah, gagal memuat produk</h3>
+          <p className="m-0 text-[var(--ink-soft)] max-w-[400px]">
+            {error || 'Terjadi masalah saat memuat daftar produk. Silakan coba beberapa saat lagi.'}
+          </p>
+          <button 
+            type="button" 
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-transparent px-4.5 py-2.5 font-semibold cursor-pointer bg-[var(--accent)] text-white shadow-[var(--shadow-soft)] hover:-translate-y-[1px] hover:shadow-[var(--shadow-strong)] transition-all mt-2"
+            onClick={() => window.location.reload()}
+          >
+            <RefreshCcw size={18} />
+            Muat Ulang
+          </button>
+        </div>
       </div>
     </section>
   )
 
   return (
-    <section className="section" id="products">
-      <div className="shell">
-        <div className="section-head">
+    <section className="py-[28px]" id="products">
+      <div className="w-full max-w-[1440px] mx-auto px-[clamp(16px,4vw,48px)]">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-5 mb-5">
           <div>
-            <p className="section-kicker">Produk Terbaru</p>
-            <h2 className="section-title">Fresh picks untuk kamu</h2>
+            <p className="m-0 mb-2 uppercase tracking-[0.12em] text-[0.75rem] font-semibold text-[var(--accent-strong)]">Produk Terbaru</p>
+            <h2 className="m-0 font-[family-name:var(--font-display)] text-[clamp(1.6rem,2.4vw,2.2rem)] text-[var(--ink)] leading-tight">Fresh picks untuk kamu</h2>
           </div>
           <button
             type="button"
-            className="button ghost"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-transparent px-4.5 py-2.5 font-semibold cursor-pointer text-[var(--ink)] transition-all hover:-translate-y-[1px] hover:shadow-[var(--shadow-strong)] hover:border-transparent"
             onClick={() => navigate('/catalog')}
           >
             <span>Lihat semua</span>
-            <ArrowRight className="button-icon" aria-hidden="true" />
+            <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
-        <div className="product-grid" style={{ opacity: (!initialProducts && loading) ? 0.5 : 1, transition: 'opacity 0.2s', pointerEvents: (!initialProducts && loading) ? 'none' : 'auto' }}>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-[18px] transition-opacity duration-200" style={{ opacity: (!initialProducts && loading) ? 0.5 : 1, pointerEvents: (!initialProducts && loading) ? 'none' : 'auto' }}>
           {displayProducts.map((product) => (
             <ProductCard
               key={product.id}

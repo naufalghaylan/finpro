@@ -1,7 +1,6 @@
 import prisma from '../lib/prisma';
 import axios from 'axios';
 import bcrypt from 'bcryptjs';
-import { getProvincesService, getCitiesService } from './rajaongkir.service';
 import { 
   createStoreRepository, 
   updateStoreRepository, 
@@ -60,47 +59,8 @@ export const getNearestStoreService = async (lat: number, lng: number) => {
   };
 };
 
-export const reverseGeocodeAndMatchRajaOngkir = async (lat: number, lng: number) => {
-  try {
-    const response = await axios.get(`https://nominatim.openstreetmap.org/reverse`, {
-      params: { lat, lon: lng, format: 'jsonv2' },
-      headers: { 'User-Agent': 'FinproGroceryApp/1.0' }
-    });
-    
-    if (!response.data || !response.data.address) return null;
-    
-    const address = response.data.address;
-    let cityName = address.city || address.town || address.municipality || address.county;
-    let provinceName = address.state || address.province;
-
-    if (!cityName || !provinceName) return null;
-
-    cityName = cityName.replace(/Kota |Kabupaten |Kab\. /gi, '').trim();
-
-    const provinces = await getProvincesService();
-    const matchedProvince = provinces.find((p: any) => 
-      provinceName.toLowerCase().includes(p.province.toLowerCase()) || 
-      p.province.toLowerCase().includes(provinceName.toLowerCase())
-    );
-
-    if (!matchedProvince) return null;
-
-    const cities = await getCitiesService(matchedProvince.province_id);
-    const matchedCity = cities.find((c: any) => 
-      c.city_name.toLowerCase() === cityName.toLowerCase() ||
-      cityName.toLowerCase().includes(c.city_name.toLowerCase())
-    );
-
-    return {
-      provinceId: matchedProvince.province_id,
-      provinceName: matchedProvince.province,
-      cityId: matchedCity?.city_id,
-      cityName: matchedCity ? `${matchedCity.type} ${matchedCity.city_name}` : cityName
-    };
-  } catch (error) {
-    console.error('Reverse geocoding error:', error);
-    return null;
-  }
+export const reverseGeocodeAndMatchRajaOngkir = async (lat: number, lng: number): Promise<any> => {
+  return null;
 };
 
 export const getStoresService = async (page: number, limit: number, search?: string, userId?: number, role?: string) => {

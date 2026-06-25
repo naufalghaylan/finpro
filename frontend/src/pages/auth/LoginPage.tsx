@@ -4,6 +4,14 @@ import { useAuthStore } from '../../store/authStore';
 import GoogleLoginButton from '../../components/auth/GoogleLoginButton';
 import { Eye, EyeOff, ChevronLeft } from 'lucide-react';
 import { useToast } from '../../components/common/Toast';
+import { z } from 'zod';
+
+const loginSchema = z.object({
+  identifier: z.string().min(1, 'Email atau username tidak boleh kosong'),
+  password: z.string().min(1, 'Password tidak boleh kosong'),
+});
+
+type LoginErrors = Partial<Record<keyof z.infer<typeof loginSchema>, string>>;
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
@@ -11,6 +19,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
+  const [formErrors, setFormErrors] = useState<LoginErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuthStore();
   const navigate = useNavigate();
@@ -22,6 +31,18 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setFormErrors({});
+
+    const result = loginSchema.safeParse({ identifier, password });
+    if (!result.success) {
+      const errors: LoginErrors = {};
+      result.error.issues.forEach((issue: z.ZodIssue) => {
+        if (issue.path[0]) errors[issue.path[0] as keyof LoginErrors] = issue.message;
+      });
+      setFormErrors(errors);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await login({ emailOrUsername: identifier, password, rememberMe });
@@ -32,7 +53,7 @@ export default function LoginPage() {
         showToast('Akun belum diverifikasi. Silakan verifikasi ulang.', 'warning');
         navigate('/verify', { state: { email: identifier } });
       } else {
-        setError(error.response?.data?.message || 'Login failed. Please check your credentials.');
+        setError(error.response?.data?.message || 'Login gagal. Periksa kembali email/username dan password Anda.');
       }
     } finally {
       setIsSubmitting(false);
@@ -40,22 +61,22 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="page">
-      <main className="page-main">
-        <div className="shell auth-shell" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100svh', padding: 'clamp(16px, 5vw, 40px)' }}>
-          <div className="hero-card auth-card" style={{ width: '100%', maxWidth: '420px', padding: 'clamp(24px, 5vw, 40px) clamp(16px, 5vw, 32px)' }}>
-            <div className="auth-header" style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <button className="mobile-back-btn" onClick={() => navigate(-1)} type="button" aria-label="Go back">
+    <div className="min-h-[100svh] flex flex-col bg-[var(--bg)]">
+      <main className="flex-1 flex flex-col">
+        <div className="flex justify-center items-center min-h-[100svh] p-[clamp(16px,5vw,40px)] w-full">
+          <div className="w-full max-w-[420px] bg-white rounded-[24px] p-[clamp(24px,5vw,40px)_clamp(16px,5vw,32px)] shadow-[var(--shadow-soft)] border border-[var(--line)] relative">
+            <div className="text-center mb-[32px]">
+              <button className="absolute top-[24px] left-[16px] sm:left-[24px] w-[40px] h-[40px] rounded-full bg-white border border-[var(--line)] flex items-center justify-center cursor-pointer text-[var(--ink)] shadow-[0_2px_8px_rgba(0,0,0,0.02)] md:hidden" onClick={() => navigate(-1)} type="button" aria-label="Go back">
                 <ChevronLeft size={24} />
               </button>
-              <Link to="/" style={{ textDecoration: 'none', display: 'inline-block' }}>
-                <div className="logo" style={{ justifyContent: 'center', marginBottom: '20px' }}>
-                  <span className="logo-mark"></span>
-                  <span style={{ fontSize: '1.4rem' }}>PanenMart</span>
+              <Link to="/" className="inline-block no-underline">
+                <div className="flex justify-center items-center gap-[8px] mb-[20px]">
+                  <img src="/PanenMartLogo.svg" alt="PanenMart Logo" className="w-[32px] h-[32px]" />
+                  <span className="text-[1.4rem] font-[family-name:var(--font-display)] font-semibold text-[var(--ink)] tracking-[-0.02em]">PanenMart</span>
                 </div>
               </Link>
-              <h1 className="hero-card-title" style={{ fontSize: '1.6rem', marginBottom: '8px' }}>Selamat Datang Kembali</h1>
-              <p className="hero-card-sub">Masuk untuk melanjutkan belanja</p>
+              <h1 className="m-0 text-[1.6rem] font-bold text-[#111] mb-[8px] tracking-normal">Selamat Datang Kembali</h1>
+              <p className="m-0 text-[1rem] text-[var(--ink-soft)] leading-[1.5]">Masuk untuk melanjutkan belanja</p>
             </div>
             
             {error && (
@@ -64,51 +85,57 @@ export default function LoginPage() {
               </div>
             )}
             
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <label htmlFor="identifier" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--ink)' }}>Email atau Username</label>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-[20px]">
+              <div className="flex flex-col gap-[8px]">
+                <label htmlFor="identifier" className="text-[0.95rem] font-semibold text-[var(--ink)]">Email atau Username</label>
                 <input
                   id="identifier"
                   type="text"
                   value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  style={{ width: '100%', borderRadius: '14px', border: '1px solid var(--line)', padding: '14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
+                  onChange={(e) => {
+                    setIdentifier(e.target.value);
+                    if (formErrors.identifier) setFormErrors(prev => ({ ...prev, identifier: '' }));
+                  }}
+                  className={`w-full rounded-[14px] border ${formErrors.identifier ? 'border-[#dc2626]' : 'border-[var(--line)]'} p-[14px_18px] bg-white text-[1rem] transition-all duration-200 outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_4px_var(--accent-soft)]`}
                   placeholder="Masukkan email atau username"
-                  required
                 />
+                {formErrors.identifier && <span className="text-[#dc2626] text-[0.8rem]">{formErrors.identifier}</span>}
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <label htmlFor="password" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--ink)' }}>Password</label>
-                <div style={{ position: 'relative' }}>
+              <div className="flex flex-col gap-[8px]">
+                <label htmlFor="password" className="text-[0.95rem] font-semibold text-[var(--ink)]">Password</label>
+                <div className="relative">
                   <input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    style={{ width: '100%', borderRadius: '14px', border: '1px solid var(--line)', padding: '14px 48px 14px 18px', background: '#fff', fontSize: '1rem', transition: 'border-color 0.2s, box-shadow 0.2s', outline: 'none' }}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (formErrors.password) setFormErrors(prev => ({ ...prev, password: '' }));
+                    }}
+                    className={`w-full rounded-[14px] border ${formErrors.password ? 'border-[#dc2626]' : 'border-[var(--line)]'} p-[14px_48px_14px_18px] bg-white text-[1rem] transition-all duration-200 outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_4px_var(--accent-soft)]`}
                     placeholder="Masukkan password"
-                    required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                    className="absolute right-[16px] top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-[var(--ink-soft)] flex items-center justify-center p-0 hover:text-[var(--ink)]"
                     aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--ink)' }}>
+                {formErrors.password && <span className="text-[#dc2626] text-[0.8rem]">{formErrors.password}</span>}
+                <div className="flex justify-between items-center mt-[4px]">
+                  <label className="flex items-center gap-[8px] cursor-pointer text-[0.9rem] text-[var(--ink)]">
                     <input 
                       type="checkbox" 
                       checked={rememberMe} 
                       onChange={(e) => setRememberMe(e.target.checked)}
-                      style={{ accentColor: 'var(--accent-strong)', width: '16px', height: '16px', cursor: 'pointer' }}
+                      className="accent-[var(--accent-strong)] w-[16px] h-[16px] cursor-pointer"
                     />
                     Ingat Saya
                   </label>
-                  <Link to="/forgot-password" style={{ fontSize: '0.9rem', color: 'var(--accent-strong)', fontWeight: 500, textDecoration: 'none' }}>
+                  <Link to="/forgot-password" className="text-[0.9rem] font-semibold no-underline hover:underline" style={{ color: 'var(--accent-strong)' }}>
                     Lupa Password?
                   </Link>
                 </div>
@@ -116,31 +143,27 @@ export default function LoginPage() {
               
               <button 
                 type="submit" 
-                className="button primary" 
-                style={{ width: '100%', marginTop: '12px', padding: '14px', fontSize: '1.05rem', borderRadius: '14px' }}
+                className="w-full mt-[12px] p-[14px] text-[1.05rem] rounded-[14px] font-semibold bg-[var(--accent)] text-white hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(232,107,79,0.25)] transition-all disabled:opacity-70 disabled:cursor-not-allowed border-none cursor-pointer"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Memproses...' : 'Masuk'}
               </button>
             </form>
             
-            {import.meta.env.VITE_GOOGLE_CLIENT_ID && (
-              <>
-                <div style={{ display: 'flex', alignItems: 'center', margin: '24px 0' }}>
-                  <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--line)' }}></div>
-                  <span style={{ padding: '0 12px', fontSize: '0.9rem', color: 'var(--ink-soft)' }}>atau masuk dengan</span>
-                  <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--line)' }}></div>
-                </div>
-                <GoogleLoginButton onError={setError} />
-              </>
-            )}
+            <div className="flex items-center my-[24px]">
+              <div className="flex-1 h-[1px] bg-[var(--line)]"></div>
+              <span className="px-[12px] text-[0.9rem] text-[var(--ink-soft)]">atau masuk dengan</span>
+              <div className="flex-1 h-[1px] bg-[var(--line)]"></div>
+            </div>
+
+            <GoogleLoginButton onError={setError} />
             
-            <div style={{ marginTop: '32px', textAlign: 'center', fontSize: '0.95rem', color: 'var(--ink-soft)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div className="mt-[32px] text-center text-[0.95rem] text-[var(--ink-soft)] flex flex-col gap-[8px]">
               <div>
-                Belum punya akun? <Link to="/register" style={{ color: 'var(--accent-strong)', fontWeight: 600, textDecoration: 'none' }}>Daftar sekarang</Link>
+                Belum punya akun? <Link to="/register" className="font-semibold no-underline hover:underline" style={{ color: 'var(--accent-strong)' }}>Daftar sekarang</Link>
               </div>
               <div>
-                Belum verifikasi email? <Link to="/verify" style={{ color: 'var(--accent-strong)', fontWeight: 600, textDecoration: 'none' }}>Kirim ulang verifikasi</Link>
+                Belum verifikasi email? <Link to="/verify" className="font-semibold no-underline hover:underline" style={{ color: 'var(--accent-strong)' }}>Kirim ulang verifikasi</Link>
               </div>
             </div>
           </div>

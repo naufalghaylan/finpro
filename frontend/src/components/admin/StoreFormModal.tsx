@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import type { Store, StoreInput } from '../../types/store';
 import { createStore, updateStore } from '../../api/store';
-import { getProvinces, getCities } from '../../api/rajaongkir';
-import type { RajaOngkirProvince, RajaOngkirCity } from '../../api/rajaongkir';
+import { searchDestinations } from '../../api/rajaongkir';
+import type { KomerceDestination } from '../../api/rajaongkir';
+import { Search, Loader2 } from 'lucide-react';
 
 // Fix leaflet icon issue in React
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -52,26 +53,56 @@ export default function StoreFormModal({ store, onClose, onSuccess }: Props) {
   });
 
   const [position, setPosition] = useState<[number, number]>([form.latitude, form.longitude]);
-  const [provinces, setProvinces] = useState<RajaOngkirProvince[]>([]);
-  const [cities, setCities] = useState<RajaOngkirCity[]>([]);
+  
+  const [searchQuery, setSearchQuery] = useState(form.city ? `${form.city}, ${form.province}` : '');
+  const [destinations, setDestinations] = useState<KomerceDestination[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getProvinces().then(setProvinces).catch(console.error);
-  }, []);
-
-  useEffect(() => {
-    if (form.provinceId) {
-      getCities(form.provinceId).then(setCities).catch(console.error);
-    } else {
-      setCities([]);
-    }
-  }, [form.provinceId]);
-
-  useEffect(() => {
     setForm(f => ({ ...f, latitude: position[0], longitude: position[1] }));
   }, [position]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    setShowSuggestions(true);
+    
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    
+    if (val.length >= 3) {
+      searchTimeoutRef.current = setTimeout(async () => {
+        setIsSearching(true);
+        try {
+          const results = await searchDestinations(val);
+          setDestinations(results);
+        } catch (err) {
+          console.error(err);
+          setError('Gagal mencari lokasi.');
+        } finally {
+          setIsSearching(false);
+        }
+      }, 500);
+    } else {
+      setDestinations([]);
+    }
+  };
+
+  const handleSelectDestination = (dest: KomerceDestination) => {
+    setSearchQuery(dest.label);
+    setForm(prev => ({
+      ...prev,
+      cityId: dest.id.toString(), // destination_id
+      city: dest.city_name,
+      province: dest.province_name,
+      postalCode: dest.zip_code
+    }));
+    setShowSuggestions(false);
+  };
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -103,30 +134,34 @@ export default function StoreFormModal({ store, onClose, onSuccess }: Props) {
             <input placeholder="Nama Toko" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all" />
             <input placeholder="No. Telepon" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all" />
             
-            <select 
-              value={form.provinceId} 
-              onChange={e => {
-                const selected = provinces.find(p => p.province_id === e.target.value);
-                setForm({ ...form, provinceId: e.target.value, province: selected?.province || '', cityId: '', city: '' });
-              }}
-              className="w-full px-4 py-2.5 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all"
-            >
-              <option value="">Pilih Provinsi</option>
-              {provinces.map(p => <option key={p.province_id} value={p.province_id}>{p.province}</option>)}
-            </select>
-
-            <select 
-              value={form.cityId} 
-              onChange={e => {
-                const selected = cities.find(c => c.city_id === e.target.value);
-                setForm({ ...form, cityId: e.target.value, city: selected ? `${selected.type} ${selected.city_name}` : '' });
-              }}
-              className="w-full px-4 py-2.5 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all disabled:opacity-50 disabled:bg-admin-surface-2"
-              disabled={!form.provinceId}
-            >
-              <option value="">Pilih Kota/Kabupaten</option>
-              {cities.map(c => <option key={c.city_id} value={c.city_id}>{c.type} {c.city_name}</option>)}
-            </select>
+            <div className="relative">
+              <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-admin-ink-soft" />
+              <input 
+                type="text" 
+                placeholder="Cari Kecamatan / Kota Toko"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all"
+              />
+              {isSearching && (
+                <Loader2 size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-admin-ink-soft animate-spin" />
+              )}
+              {showSuggestions && destinations.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-admin-surface rounded-xl border border-admin-line shadow-xl z-50 max-h-[200px] overflow-y-auto">
+                  {destinations.map(dest => (
+                    <div 
+                      key={dest.id}
+                      onClick={() => handleSelectDestination(dest)}
+                      className="px-4 py-3 cursor-pointer border-b border-admin-line last:border-0 text-sm hover:bg-admin-surface-hover transition-colors"
+                    >
+                      <strong>{dest.subdistrict_name}</strong> - {dest.city_name}, {dest.province_name} ({dest.zip_code})
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <textarea placeholder="Alamat Lengkap" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all min-h-[80px]" />
             

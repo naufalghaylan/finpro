@@ -1,6 +1,9 @@
 import type { Cart } from './cart'
 
 export type PaymentMethod = 'MANUAL_TRANSFER' | 'PAYMENT_GATEWAY'
+export type DiscountType = 'PERCENTAGE' | 'NOMINAL' | 'BUY_ONE_GET_ONE'
+export type VoucherSource = 'REFERRAL' | 'MIN_PURCHASE_REWARD' | 'PROMO' | 'FREE_SHIPPING_REWARD'
+export type VoucherApplicableTo = 'ALL_PRODUCTS' | 'SPECIFIC_PRODUCT' | 'SHIPPING'
 export type OrderStatus =
   | 'PENDING_PAYMENT'
   | 'WAITING_CONFIRMATION'
@@ -9,6 +12,14 @@ export type OrderStatus =
   | 'CONFIRMED'
   | 'CANCELLED'
 export type OrderStatusGroup = 'ongoing' | 'completed' | 'cancelled'
+export type MutationStatus = 'PENDING' | 'APPROVED' | 'IN_TRANSIT' | 'COMPLETED' | 'REJECTED'
+export type StockFulfillmentStatus =
+  | 'NOT_REQUIRED'
+  | 'REQUIRED'
+  | 'PENDING'
+  | 'IN_TRANSIT'
+  | 'COMPLETED'
+  | 'REJECTED'
 
 export type CheckoutAddress = {
   id: number
@@ -48,6 +59,7 @@ export type CheckoutPaymentMethod = {
 export type CheckoutPreview = {
   cart: Cart
   addresses: CheckoutAddress[]
+  vouchers: CheckoutVoucher[]
   selectedAddress: CheckoutAddress | null
   nearestStore: CheckoutStore | null
   paymentMethods: CheckoutPaymentMethod[]
@@ -71,6 +83,22 @@ export type CheckoutOrderItem = {
   }
 }
 
+export type OrderVoucher = {
+  id: number
+  code: string
+  name: string
+  productId: number | null
+  source: VoucherSource
+  discountType: DiscountType
+  discountValue: number
+  maxDiscount: number | null
+  minPurchase: number
+  applicableTo: VoucherApplicableTo
+  expiredAt: string
+}
+
+export type CheckoutVoucher = OrderVoucher
+
 export type CheckoutOrder = {
   id: number
   orderNumber: string
@@ -79,6 +107,7 @@ export type CheckoutOrder = {
   totalAmount: number
   shippingCost: number
   discountAmount: number
+  voucher: OrderVoucher | null
   paymentMethod: PaymentMethod
   paymentProof: string | null
   paymentGatewayId: string | null
@@ -97,7 +126,11 @@ export type CheckoutOrder = {
 
 export type CreateCheckoutOrderPayload = {
   addressId: number
+  shippingMethod: string
+  shippingService: string
+  shippingCost: number
   paymentMethod: PaymentMethod
+  voucherId?: number
   notes?: string
 }
 
@@ -119,9 +152,14 @@ export type OrderListQuery = {
   limit?: number
   startDate?: string
   endDate?: string
+  search?: string
   orderNumber?: string
   status?: OrderStatus
   statusGroup?: OrderStatusGroup
+}
+
+export type AdminOrderListQuery = OrderListQuery & {
+  storeId?: number
 }
 
 export type OrderListMeta = {
@@ -135,5 +173,101 @@ export type OrderListMeta = {
 
 export type OrderListResponse = {
   orders: CheckoutOrder[]
+  meta: OrderListMeta
+}
+
+export type AdminOrder = CheckoutOrder & {
+  shippingMethod: string | null
+  shippingService: string | null
+  user: {
+    id: number
+    name: string
+    email: string
+    phone: string | null
+  }
+  stockMutations: OrderFulfillmentMutation[]
+  stockFulfillment: OrderStockFulfillment
+}
+
+export type FulfillmentSourceRecommendation = {
+  storeId: number
+  storeName: string
+  city: string
+  distanceKm: number
+  availableQuantity: number
+  reservedQuantity: number
+}
+
+export type FulfillmentRequirement = {
+  productId: number
+  productName: string
+  requiredQuantity: number
+  completedQuantity: number
+  activeQuantity: number
+  remainingQuantity: number
+  status: StockFulfillmentStatus
+  sources: FulfillmentSourceRecommendation[]
+}
+
+export type OrderStockFulfillment = {
+  status: StockFulfillmentStatus
+  required: boolean
+  canShip: boolean
+  requirements: FulfillmentRequirement[]
+}
+
+export type OrderFulfillmentMutation = {
+  id: number
+  orderId: number | null
+  sourceStoreId: number
+  destinationStoreId: number
+  productId: number
+  quantity: number
+  status: MutationStatus
+  notes: string | null
+  approvedAt: string | null
+  rejectedAt: string | null
+  sentAt: string | null
+  receivedAt: string | null
+  createdAt: string
+  updatedAt: string
+  sourceStore: {
+    id: number
+    name: string
+  }
+  destinationStore: {
+    id: number
+    name: string
+  }
+  product: {
+    id: number
+    name: string
+    slug: string
+  }
+  order?: {
+    id: number
+    orderNumber: string
+    status: OrderStatus
+  } | null
+}
+
+export type FulfillmentDirection = 'all' | 'incoming' | 'outgoing'
+
+export type StoreFulfillmentListQuery = {
+  storeId: number
+  page?: number
+  limit?: number
+  direction?: FulfillmentDirection
+  status?: MutationStatus
+  search?: string
+}
+
+export type StoreFulfillmentListResponse = {
+  fulfillments: OrderFulfillmentMutation[]
+  meta: OrderListMeta
+}
+
+export type AdminOrderListResponse = {
+  orders: AdminOrder[]
   meta: OrderListMeta
 }

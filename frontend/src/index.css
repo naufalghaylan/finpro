@@ -1,9 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Lexend:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 @import "flowbite-react/plugin/tailwindcss";
 @source "../.flowbite-react/class-list.json";
 @import "./pages/admin/admin.css";
-
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Lexend:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import "./pages/home/home.css";
 
 :root {
   --bg: #f7f1e6;
@@ -15,6 +15,7 @@
   --accent-strong: #c55139;
   --accent-soft: rgba(232, 107, 79, 0.15);
   --accent-cool: #4a7c5b;
+  --green: #4a7c5b;
   --line: #d8d1c5;
   --shadow-soft: 0 14px 30px rgba(31, 42, 34, 0.08);
   --shadow-strong: 0 18px 45px rgba(31, 42, 34, 0.16);

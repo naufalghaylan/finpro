@@ -8,6 +8,11 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import type { CheckoutOrder, OrderStatus } from '../../types/order'
+import {
+  formatCompactDateTime,
+  formatCurrency,
+  formatDateTime,
+} from '../../utils/format'
 
 type OrderStatusDisplay = {
   label: string
@@ -48,21 +53,9 @@ export const orderStatusDisplay: Record<OrderStatus, OrderStatusDisplay> = {
   },
 }
 
-export const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(value)
+export { formatCurrency, formatDateTime }
 
-export const formatDateTime = (value: string | null) => {
-  if (!value) return '-'
-
-  return new Intl.DateTimeFormat('id-ID', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(value))
-}
+export const formatTrackingDateTime = formatCompactDateTime
 
 export const getPrimaryOrderImage = (order: CheckoutOrder) => {
   const itemWithImage = order.items.find((item) => item.product.images.length > 0)
@@ -87,6 +80,19 @@ export const getOrderItemsSummary = (order: CheckoutOrder) => {
 
 export const getOrderItemQuantity = (order: CheckoutOrder) =>
   order.items.reduce((sum, item) => sum + item.quantity, 0)
+
+export const getOrderDiscountBreakdown = (order: CheckoutOrder) => {
+  const discountAmount = Math.max(0, order.discountAmount ?? 0)
+  const isReferralVoucher = order.voucher?.source === 'REFERRAL'
+  const isVoucherDiscount = Boolean(order.voucher)
+
+  return {
+    storeDiscountAmount: !isVoucherDiscount ? discountAmount : 0,
+    referralVoucherAmount: isReferralVoucher ? discountAmount : 0,
+    otherVoucherAmount: isVoucherDiscount && !isReferralVoucher ? discountAmount : 0,
+    voucherLabel: order.voucher ? `${order.voucher.name} (${order.voucher.code})` : null,
+  }
+}
 
 export const canCancelOrder = (order: CheckoutOrder) =>
   order.status === 'PENDING_PAYMENT' && !order.paymentProof

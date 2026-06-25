@@ -9,10 +9,15 @@ export const checkDuplicateUser = async (req: Request, res: Response, next: Next
     if (email) {
       const existingEmail = await prisma.user.findUnique({
         where: { email },
-        select: { id: true }
+        select: { emailVerified: true },
       });
       if (existingEmail) {
-        throw new AppError(409, 'Email already registered');
+        throw new AppError(
+          409,
+          existingEmail.emailVerified
+            ? 'Email already registered'
+            : 'Email already registered but not verified. Please resend the verification email.',
+        );
       }
     }
 

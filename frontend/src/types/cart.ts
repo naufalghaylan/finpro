@@ -45,6 +45,9 @@ export type CartItem = {
 export type CartSummary = {
   totalQuantity: number
   subtotal: number
+  storeDiscountAmount?: number
+  voucherReferralAmount?: number
+  discountAmount?: number
 }
 
 export type Cart = {

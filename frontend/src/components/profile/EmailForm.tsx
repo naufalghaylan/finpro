@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import { useProfileStore } from '../../store/profileStore'
+import { z } from 'zod'
+
+const emailSchema = z.object({
+  email: z.string().min(1, 'Email tidak boleh kosong').email('Format email tidak valid'),
+})
 
 export const EmailForm = () => {
   const { profile, updateEmail, reverifyEmail, isUpdating } = useProfileStore()
   const [email, setEmail] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
   const [localError, setLocalError] = useState('')
+  const [emailError, setEmailError] = useState('')
 
   useEffect(() => {
     if (profile) {
@@ -17,6 +23,13 @@ export const EmailForm = () => {
     e.preventDefault()
     setSuccessMsg('')
     setLocalError('')
+    setEmailError('')
+
+    const result = emailSchema.safeParse({ email })
+    if (!result.success) {
+      setEmailError(result.error.issues[0]?.message || 'Email tidak valid')
+      return
+    }
 
     if (email === profile?.email) {
       setLocalError('Email masih sama dengan email saat ini.')
@@ -26,8 +39,9 @@ export const EmailForm = () => {
     try {
       await updateEmail(email)
       setSuccessMsg('Email berhasil diperbarui. Silakan cek inbox Anda untuk memverifikasi email baru.')
-    } catch (err: any) {
-      // Error handled by store, we can use global error or local
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setLocalError(error.response?.data?.message || 'Gagal mengubah email.');
     }
   }
 
@@ -37,30 +51,29 @@ export const EmailForm = () => {
     try {
       await reverifyEmail()
       setSuccessMsg('Email verifikasi berhasil dikirim ulang. Silakan cek inbox Anda.')
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Error handled by store
     }
   }
 
   return (
-    <div className="hero-card" style={{ padding: '32px' }}>
-      <h3 className="section-title" style={{ fontSize: '1.6rem', marginBottom: '8px' }}>Alamat Email</h3>
-      <p className="section-body" style={{ marginBottom: '24px' }}>
+    <div className="p-[24px] rounded-[20px] border border-[var(--line)] bg-white/85 shadow-[var(--shadow-soft)] flex flex-col gap-1.5">
+      <h3 className="m-0 text-[#111] font-[family-name:var(--font-display)] font-normal tracking-normal text-[1.6rem] mb-1">Alamat Email</h3>
+      <p className="m-0 text-[0.95rem] text-[var(--ink-soft)] leading-[1.6] mb-6">
         Email ini digunakan untuk login dan menerima informasi penting.
       </p>
 
       {profile && !profile.emailVerified && (
-        <div className="location-warning" style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div className="mb-5 flex flex-col gap-2.5 p-[14px_16px] bg-[#fff8eb] border border-[#f2c26b] rounded-xl text-[#9b660e]">
           <div>
-            <strong>Email Belum Diverifikasi!</strong>
-            <p style={{ margin: '4px 0 0', fontSize: '0.85rem' }}>Anda harus memverifikasi email Anda agar bisa menggunakan seluruh fitur aplikasi.</p>
+            <strong className="text-[0.95rem]">Email Belum Diverifikasi!</strong>
+            <p className="m-0 mt-1 text-[0.85rem] leading-[1.4]">Anda harus memverifikasi email Anda agar bisa menggunakan seluruh fitur aplikasi.</p>
           </div>
           <button 
             type="button" 
-            className="button ghost" 
             onClick={handleReverify}
             disabled={isUpdating}
-            style={{ width: 'fit-content', padding: '6px 12px', fontSize: '0.85rem', borderColor: '#f2c26b' }}
+            className="w-fit mt-1 px-3 py-1.5 text-[0.85rem] font-medium bg-transparent border border-[#f2c26b] text-[#9b660e] rounded-lg cursor-pointer hover:bg-[#faebd2] transition-colors disabled:opacity-50"
           >
             {isUpdating ? 'Mengirim...' : 'Kirim Ulang Verifikasi'}
           </button>
@@ -68,31 +81,34 @@ export const EmailForm = () => {
       )}
 
       {localError && (
-        <div className="location-error" style={{ marginBottom: '20px', padding: '12px', background: '#fdf2f2', borderRadius: '12px' }}>
+        <div className="mb-5 p-3 bg-[#fdf2f2] rounded-xl text-[#dc2626]">
           {localError}
         </div>
       )}
 
       {successMsg && (
-        <div style={{ marginBottom: '20px', padding: '12px', background: '#f2fcf5', color: '#2b7a4b', border: '1px solid #c6f0d3', borderRadius: '12px', fontSize: '0.9rem' }}>
+        <div className="mb-5 p-3 bg-[#f2fcf5] text-[#2b7a4b] border border-[#c6f0d3] rounded-xl text-[0.9rem]">
           {successMsg}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '20px' }}>
-        <div className="input-group">
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>Email</label>
+      <form onSubmit={handleSubmit} className="grid gap-5">
+        <div className="flex flex-col gap-2">
+          <label className="block font-medium text-[0.9rem]">Email</label>
           <input 
-            type="email" 
+            type="text" 
             value={email} 
-            onChange={(e) => setEmail(e.target.value)} 
-            style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--surface)' }} 
-            required 
+            onChange={(e) => {
+              setEmail(e.target.value)
+              if (emailError) setEmailError('')
+            }} 
+            className={`w-full p-[12px_16px] rounded-xl border ${emailError ? 'border-[#dc2626]' : 'border-[var(--line)]'} bg-[var(--surface)] focus:outline-none focus:border-[var(--accent)] transition-colors`}
           />
+          {emailError && <span className="text-[#dc2626] text-[0.8rem] mt-1 block">{emailError}</span>}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <button type="submit" className="button primary" disabled={isUpdating || email === profile?.email}>
+        <div className="flex justify-end mt-2">
+          <button type="submit" className="px-[18px] py-[10px] bg-[var(--accent)] text-white font-semibold rounded-full border-none cursor-pointer hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(232,107,79,0.25)] transition-all disabled:opacity-70 text-[0.95rem]" disabled={isUpdating || email === profile?.email}>
             {isUpdating ? 'Menyimpan...' : 'Perbarui Email'}
           </button>
         </div>

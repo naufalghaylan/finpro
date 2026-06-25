@@ -11,17 +11,11 @@ import {
   cartItemParamsSchema,
   updateCartItemSchema,
 } from '../validations/cart.validation'
-
-const getAuthenticatedUserId = (req: Request, res: Response) => {
-  const userId = req.user?.userId
-
-  if (!userId) {
-    res.status(401).json({ message: 'Unauthorized: Login required' })
-    return null
-  }
-
-  return userId
-}
+import {
+  getAuthenticatedUserId,
+  sendInternalError,
+  sendValidationError,
+} from './controller.utils'
 
 const handleCartItemError = (error: unknown, res: Response) => {
   if (!(error instanceof Error)) {
@@ -53,7 +47,7 @@ export const addToCart = async (req: Request, res: Response): Promise<void> => {
 
     const parsed = addToCartSchema.safeParse(req.body)
     if (!parsed.success) {
-      res.status(400).json({ message: 'Validation Error', errors: parsed.error.flatten().fieldErrors })
+      sendValidationError(res, parsed.error)
       return
     }
 
@@ -70,8 +64,7 @@ export const addToCart = async (req: Request, res: Response): Promise<void> => {
   } catch (error) {
     if (handleCartItemError(error, res)) return
 
-    console.error('[addToCart]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'addToCart', error)
   }
 }
 
@@ -83,8 +76,7 @@ export const getCart = async (req: Request, res: Response): Promise<void> => {
     const cart = await getCartService(userId)
     res.json({ data: cart })
   } catch (error) {
-    console.error('[getCart]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'getCart', error)
   }
 }
 
@@ -96,8 +88,7 @@ export const getCartCount = async (req: Request, res: Response): Promise<void> =
     const count = await getCartCountService(userId)
     res.json({ count })
   } catch (error) {
-    console.error('[getCartCount]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'getCartCount', error)
   }
 }
 
@@ -132,8 +123,7 @@ export const updateCartItem = async (req: Request, res: Response): Promise<void>
   } catch (error) {
     if (handleCartItemError(error, res)) return
 
-    console.error('[updateCartItem]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'updateCartItem', error)
   }
 }
 
@@ -144,7 +134,7 @@ export const deleteCartItem = async (req: Request, res: Response): Promise<void>
 
     const parsedParams = cartItemParamsSchema.safeParse(req.params)
     if (!parsedParams.success) {
-      res.status(400).json({ message: 'Validation Error', errors: parsedParams.error.flatten().fieldErrors })
+      sendValidationError(res, parsedParams.error)
       return
     }
 
@@ -160,7 +150,6 @@ export const deleteCartItem = async (req: Request, res: Response): Promise<void>
   } catch (error) {
     if (handleCartItemError(error, res)) return
 
-    console.error('[deleteCartItem]', error)
-    res.status(500).json({ message: 'Internal server error' })
+    sendInternalError(res, 'deleteCartItem', error)
   }
 }

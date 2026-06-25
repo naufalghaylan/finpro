@@ -11,6 +11,7 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
+    "db:seed-shipping": "tsx prisma/seed-rajaongkir.ts",
     "postinstall": "prisma generate"
   },
   "prisma": {

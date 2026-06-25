@@ -1,26 +1,37 @@
 import cron from 'node-cron'
-import { autoCancelExpiredManualTransferOrders } from '../services/order.service'
+import {
+  autoCancelExpiredManualTransferOrders,
+  autoConfirmShippedOrders,
+} from '../services/order.service'
 
-let isAutoCancelRunning = false
+let isOrderCronRunning = false
 
 export const startOrderCron = () => {
   cron.schedule('* * * * *', async () => {
-    if (isAutoCancelRunning) return
+    if (isOrderCronRunning) return
 
-    isAutoCancelRunning = true
+    isOrderCronRunning = true
 
     try {
-      const result = await autoCancelExpiredManualTransferOrders()
+      const autoCancelResult = await autoCancelExpiredManualTransferOrders()
 
-      if (result.cancelledCount > 0) {
+      if (autoCancelResult.cancelledCount > 0) {
         console.log(
-          `Auto-cancelled ${result.cancelledCount} expired manual transfer order(s).`,
+          `Auto-cancelled ${autoCancelResult.cancelledCount} expired manual transfer order(s).`,
+        )
+      }
+
+      const autoConfirmResult = await autoConfirmShippedOrders()
+
+      if (autoConfirmResult.confirmedCount > 0) {
+        console.log(
+          `Auto-confirmed ${autoConfirmResult.confirmedCount} shipped order(s).`,
         )
       }
     } catch (error) {
-      console.error('Error during order auto-cancel cron job:', error)
+      console.error('Error during order cron job:', error)
     } finally {
-      isAutoCancelRunning = false
+      isOrderCronRunning = false
     }
   })
 }

@@ -1,9 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAddressStore } from '../../store/addressStore'
-import { getProvinces, getCities } from '../../api/rajaongkir'
-import type { RajaOngkirProvince, RajaOngkirCity } from '../../api/rajaongkir'
-import { MapPin, X, Target, Loader2 } from 'lucide-react'
+import { searchDestinations } from '../../api/rajaongkir'
+import type { KomerceDestination } from '../../api/rajaongkir'
+import { MapPin, X, LocateFixed, Loader2, Search } from 'lucide-react'
+import { z } from 'zod'
 import type { UserAddress, CreateUserAddressDTO } from '../../types/address'
+
+const addressSchema = z.object({
+  recipientName: z.string().min(3, "Nama penerima minimal 3 karakter"),
+  phone: z.string().min(10, "Nomor telepon minimal 10 angka").max(15, "Nomor telepon maksimal 15 angka").regex(/^[0-9]+$/, "Nomor telepon hanya boleh berisi angka"),
+  cityId: z.string().min(1, "Kecamatan / Kota harus dipilih dari opsi pencarian"),
+  address: z.string().min(10, "Detail alamat minimal 10 karakter"),
+  latitude: z.number({ error: "Titik pin pengiriman (lokasi) wajib ditentukan" }),
+  longitude: z.number({ error: "Titik pin pengiriman (lokasi) wajib ditentukan" }),
+})
 
 interface AddressFormModalProps {
   isOpen: boolean
@@ -29,16 +39,17 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
     isPrimary: false
   })
 
-  const [provinces, setProvinces] = useState<RajaOngkirProvince[]>([])
-  const [cities, setCities] = useState<RajaOngkirCity[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [destinations, setDestinations] = useState<KomerceDestination[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
   const [loadingLocation, setLoadingLocation] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (isOpen) {
-      // Fetch provinces on mount
-      getProvinces().then(setProvinces).catch(console.error)
-
       if (editData) {
         setFormData({
           recipientName: editData.recipientName,
@@ -54,10 +65,7 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
           longitude: editData.longitude || undefined,
           isPrimary: editData.isPrimary
         })
-
-        if (editData.provinceId) {
-          getCities(editData.provinceId).then(setCities).catch(console.error)
-        }
+        setSearchQuery(`${editData.city}, ${editData.province}`)
       } else {
         // Reset
         setFormData({
@@ -74,41 +82,52 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
           longitude: undefined,
           isPrimary: false
         })
-        setCities([])
+        setSearchQuery('')
       }
+      setDestinations([])
+      setShowSuggestions(false)
       setErrorMsg('')
+      setFormErrors({})
     }
   }, [isOpen, editData])
 
-  const handleProvinceChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const provinceId = e.target.value
-    const province = provinces.find(p => p.province_id === provinceId)?.province || ''
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    setSearchQuery(val)
+    setShowSuggestions(true)
     
-    setFormData(prev => ({ ...prev, provinceId, province, cityId: '', city: '' }))
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
     
-    if (provinceId) {
-      try {
-        const fetchedCities = await getCities(provinceId)
-        setCities(fetchedCities)
-      } catch (err) {
-        console.error(err)
-      }
+    if (val.length >= 3) {
+      searchTimeoutRef.current = setTimeout(async () => {
+        setIsSearching(true)
+        try {
+          const results = await searchDestinations(val)
+          setDestinations(results)
+        } catch (err) {
+          console.error(err)
+          setErrorMsg('Gagal mencari lokasi.')
+        } finally {
+          setIsSearching(false)
+        }
+      }, 500)
     } else {
-      setCities([])
+      setDestinations([])
     }
   }
 
-  const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const cityId = e.target.value
-    const cityObj = cities.find(c => c.city_id === cityId)
-    const city = cityObj ? `${cityObj.type} ${cityObj.city_name}` : ''
-    
-    setFormData(prev => ({ 
-      ...prev, 
-      cityId, 
-      city,
-      postalCode: cityObj?.postal_code || prev.postalCode 
+  const handleSelectDestination = (dest: KomerceDestination) => {
+    setSearchQuery(dest.label)
+    setFormData(prev => ({
+      ...prev,
+      cityId: dest.id.toString(),
+      city: dest.city_name,
+      province: dest.province_name,
+      district: dest.subdistrict_name || dest.district_name,
+      postalCode: dest.zip_code
     }))
+    setShowSuggestions(false)
+    setFormErrors(prev => ({...prev, cityId: ''}))
   }
 
   const handleGetLocation = () => {
@@ -125,6 +144,7 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
           latitude: position.coords.latitude,
           longitude: position.coords.longitude
         }))
+        setFormErrors(prev => ({...prev, latitude: '', longitude: ''}))
         setLoadingLocation(false)
       },
       (err) => {
@@ -139,9 +159,17 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrorMsg('')
+    setFormErrors({})
     
-    if (!formData.latitude || !formData.longitude) {
-      setErrorMsg('Mohon dapatkan koordinat lokasi untuk pengiriman akurat')
+    const result = addressSchema.safeParse(formData)
+    if (!result.success) {
+      const errors: Record<string, string> = {}
+      result.error.issues.forEach((issue: z.ZodIssue) => {
+        if (issue.path[0]) {
+          errors[issue.path[0].toString()] = issue.message
+        }
+      })
+      setFormErrors(errors)
       return
     }
 
@@ -152,245 +180,216 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
         await createAddress(formData)
       }
       onClose()
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Terjadi kesalahan saat menyimpan alamat')
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string, errors?: Array<{ message: string }> } }, message?: string };
+      const backendMessage = error.response?.data?.message;
+      const validationErrors = error.response?.data?.errors;
+      
+      if (validationErrors && Array.isArray(validationErrors)) {
+        setErrorMsg(`Validasi gagal: ${validationErrors[0].message}`);
+      } else if (backendMessage) {
+        setErrorMsg(backendMessage);
+      } else {
+        setErrorMsg(err.message || 'Terjadi kesalahan saat menyimpan alamat');
+      }
     }
   }
 
   if (!isOpen) return null
 
   return (
-    <div className="modal-overlay" style={{
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: 'rgba(31, 42, 34, 0.4)',
-      backdropFilter: 'blur(4px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      zIndex: 1000, padding: '20px'
-    }}>
-      <div className="modal-content" style={{
-        backgroundColor: 'var(--surface)',
-        borderRadius: '24px',
-        width: '100%',
-        maxWidth: '600px',
-        maxHeight: '90vh',
-        overflowY: 'auto',
-        boxShadow: 'var(--shadow-strong)',
-        animation: 'fadeUp 0.3s ease-out forwards'
-      }}>
-        <div style={{
-          padding: '24px 32px',
-          borderBottom: '1px solid var(--line)',
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          position: 'sticky', top: 0, backgroundColor: 'var(--surface)', zIndex: 10
-        }}>
-          <h2 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--ink)' }}>
+    <div className="fixed inset-0 bg-[#1f2a2266] backdrop-blur-[4px] flex items-center justify-center z-[1000] p-5">
+      <div className="bg-[var(--surface)] rounded-[24px] w-full max-w-[600px] max-h-[90vh] overflow-y-auto shadow-[var(--shadow-strong)] animate-[fadeUp_0.3s_ease-out_forwards]">
+        <div className="px-8 py-6 border-b border-[var(--line)] flex justify-between items-center sticky top-0 bg-[var(--surface)] z-10">
+          <h2 className="m-0 text-[1.25rem] text-[var(--ink)] font-semibold">
             {editData ? 'Edit Alamat' : 'Tambah Alamat Baru'}
           </h2>
-          <button onClick={onClose} style={{ 
-            background: 'none', border: 'none', cursor: 'pointer', 
-            color: 'var(--ink-soft)', padding: '8px', borderRadius: '50%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}
-          onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-muted)'}
-          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+          <button 
+            onClick={onClose} 
+            className="bg-transparent border-none cursor-pointer text-[var(--ink-soft)] p-2 rounded-full flex items-center justify-center hover:bg-[var(--surface-muted)] transition-colors"
           >
             <X size={20} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ padding: '32px' }}>
+        <form onSubmit={handleSubmit} className="p-8">
           {errorMsg && (
-            <div style={{
-              backgroundColor: '#fee2e2', color: '#dc2626', padding: '12px 16px',
-              borderRadius: '8px', marginBottom: '24px', fontSize: '0.9rem'
-            }}>
+            <div className="bg-[#fee2e2] text-[#dc2626] px-4 py-3 rounded-lg mb-6 text-[0.9rem]">
               {errorMsg}
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-            <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '0.9rem', fontWeight: 500 }}>Nama Penerima *</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+            <div className="flex flex-col gap-2">
+              <label className="text-[0.9rem] font-medium text-[var(--ink)]">Nama Penerima *</label>
               <input 
-                type="text" required
+                type="text"
                 value={formData.recipientName}
-                onChange={e => setFormData({...formData, recipientName: e.target.value})}
-                style={{
-                  padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--line)',
-                  backgroundColor: 'transparent', width: '100%', outline: 'none'
+                onChange={e => {
+                  setFormData({...formData, recipientName: e.target.value})
+                  if (formErrors.recipientName) setFormErrors({...formErrors, recipientName: ''})
                 }}
+                className={`w-full px-4 py-3 rounded-lg border ${formErrors.recipientName ? 'border-[#dc2626]' : 'border-[var(--line)]'} bg-transparent focus:outline-none focus:border-[var(--accent)] transition-colors`}
               />
+              {formErrors.recipientName && <span className="text-[#dc2626] text-[0.8rem] -mt-1">{formErrors.recipientName}</span>}
             </div>
-            <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '0.9rem', fontWeight: 500 }}>Nomor Telepon *</label>
+            <div className="flex flex-col gap-2">
+              <label className="text-[0.9rem] font-medium text-[var(--ink)]">Nomor Telepon *</label>
               <input 
-                type="tel" required
+                type="tel"
                 value={formData.phone}
-                onChange={e => setFormData({...formData, phone: e.target.value})}
-                style={{
-                  padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--line)',
-                  backgroundColor: 'transparent', width: '100%', outline: 'none'
+                onChange={e => {
+                  setFormData({...formData, phone: e.target.value})
+                  if (formErrors.phone) setFormErrors({...formErrors, phone: ''})
                 }}
+                className={`w-full px-4 py-3 rounded-lg border ${formErrors.phone ? 'border-[#dc2626]' : 'border-[var(--line)]'} bg-transparent focus:outline-none focus:border-[var(--accent)] transition-colors`}
               />
+              {formErrors.phone && <span className="text-[#dc2626] text-[0.8rem] -mt-1">{formErrors.phone}</span>}
             </div>
           </div>
 
-          <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
-            <label style={{ fontSize: '0.9rem', fontWeight: 500 }}>Provinsi *</label>
-            <select 
-              required
-              value={formData.provinceId}
-              onChange={handleProvinceChange}
-              style={{
-                padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--line)',
-                backgroundColor: 'transparent', width: '100%', outline: 'none', appearance: 'none'
-              }}
-            >
-              <option value="">Pilih Provinsi</option>
-              {provinces.map(p => (
-                <option key={p.province_id} value={p.province_id}>{p.province}</option>
-              ))}
-            </select>
+          <div className="flex flex-col gap-2 mb-5 relative">
+            <label className="text-[0.9rem] font-medium text-[var(--ink)]">Cari Kecamatan / Kota *</label>
+            <div className="relative">
+              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--ink-soft)]" />
+              <input 
+                type="text" 
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                placeholder="Ketik minimal 3 huruf..."
+                className={`w-full py-3 pr-4 pl-11 rounded-lg border ${formErrors.cityId ? 'border-[#dc2626]' : 'border-[var(--line)]'} bg-transparent focus:outline-none focus:border-[var(--accent)] transition-colors`}
+              />
+              {isSearching && (
+                <Loader2 size={16} className="animate-spin absolute right-4 top-1/2 -translate-y-1/2 text-[var(--ink-soft)]" />
+              )}
+            </div>
+            
+            {showSuggestions && destinations.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--surface)] rounded-lg border border-[var(--line)] shadow-[var(--shadow-soft)] z-50 max-h-[200px] overflow-y-auto">
+                {destinations.map(dest => (
+                  <div 
+                    key={dest.id}
+                    onClick={() => handleSelectDestination(dest)}
+                    className="px-4 py-3 cursor-pointer border-b border-[var(--line)] text-[0.9rem] hover:bg-[var(--surface-muted)] transition-colors last:border-0"
+                  >
+                    <strong>{dest.subdistrict_name}</strong> - {dest.city_name}, {dest.province_name} ({dest.zip_code})
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {!formData.cityId && searchQuery.length >= 3 && !isSearching && destinations.length === 0 && (
+              <div className="text-[0.85rem] text-[var(--accent-strong)] mt-1">
+                Pilih lokasi dari daftar yang muncul.
+              </div>
+            )}
+            {formErrors.cityId && <div className="text-[#dc2626] text-[0.8rem] mt-1">{formErrors.cityId}</div>}
           </div>
 
-          <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
-            <label style={{ fontSize: '0.9rem', fontWeight: 500 }}>Kota / Kabupaten *</label>
-            <select 
-              required disabled={!formData.provinceId}
-              value={formData.cityId}
-              onChange={handleCityChange}
-              style={{
-                padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--line)',
-                backgroundColor: formData.provinceId ? 'transparent' : 'var(--surface-muted)', 
-                width: '100%', outline: 'none', appearance: 'none',
-                opacity: formData.provinceId ? 1 : 0.6
-              }}
-            >
-              <option value="">Pilih Kota</option>
-              {cities.map(c => (
-                <option key={c.city_id} value={c.city_id}>{c.type} {c.city_name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-            <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '0.9rem', fontWeight: 500 }}>Kecamatan</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+            <div className="flex flex-col gap-2">
+              <label className="text-[0.9rem] font-medium text-[var(--ink)]">Kecamatan</label>
               <input 
                 type="text"
                 value={formData.district || ''}
                 onChange={e => setFormData({...formData, district: e.target.value})}
-                style={{
-                  padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--line)',
-                  backgroundColor: 'transparent', width: '100%', outline: 'none'
-                }}
+                className="w-full px-4 py-3 rounded-lg border border-[var(--line)] bg-transparent focus:outline-none focus:border-[var(--accent)] transition-colors"
               />
             </div>
-            <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '0.9rem', fontWeight: 500 }}>Kode Pos</label>
+            <div className="flex flex-col gap-2">
+              <label className="text-[0.9rem] font-medium text-[var(--ink)]">Kode Pos</label>
               <input 
                 type="text"
                 value={formData.postalCode || ''}
                 onChange={e => setFormData({...formData, postalCode: e.target.value})}
-                style={{
-                  padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--line)',
-                  backgroundColor: 'transparent', width: '100%', outline: 'none'
-                }}
+                className="w-full px-4 py-3 rounded-lg border border-[var(--line)] bg-transparent focus:outline-none focus:border-[var(--accent)] transition-colors"
               />
             </div>
           </div>
 
-          <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
-            <label style={{ fontSize: '0.9rem', fontWeight: 500 }}>Detail Alamat *</label>
+          <div className="flex flex-col gap-2 mb-6">
+            <label className="text-[0.9rem] font-medium text-[var(--ink)]">Detail Alamat *</label>
             <textarea 
-              required rows={3}
+              rows={3}
               value={formData.address}
-              onChange={e => setFormData({...formData, address: e.target.value})}
-              placeholder="Nama jalan, gedung, no. rumah..."
-              style={{
-                padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--line)',
-                backgroundColor: 'transparent', width: '100%', outline: 'none', resize: 'vertical'
+              onChange={e => {
+                setFormData({...formData, address: e.target.value})
+                if (formErrors.address) setFormErrors({...formErrors, address: ''})
               }}
+              placeholder="Nama jalan, gedung, no. rumah..."
+              className={`w-full px-4 py-3 rounded-lg border ${formErrors.address ? 'border-[#dc2626]' : 'border-[var(--line)]'} bg-transparent focus:outline-none focus:border-[var(--accent)] transition-colors resize-y`}
             />
+            {formErrors.address && <span className="text-[#dc2626] text-[0.8rem] -mt-1">{formErrors.address}</span>}
           </div>
 
-          <div style={{ 
-            backgroundColor: 'var(--surface-muted)', borderRadius: '12px', padding: '16px',
-            marginBottom: '32px', border: '1px dashed var(--line)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+          <div className="bg-[var(--surface-muted)] rounded-xl p-4 mb-8 border border-dashed border-[var(--line)]">
+            <div className="flex justify-between items-start mb-4 gap-4">
               <div>
-                <h4 style={{ margin: '0 0 4px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h4 className="m-0 mb-1 text-[1rem] flex items-center gap-2 text-[var(--ink)]">
                   <MapPin size={18} color="var(--accent-strong)" />
                   Titik Pin Pengiriman *
                 </h4>
-                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--ink-soft)' }}>
-                  Diperlukan untuk memvalidasi jarak ke toko terdekat.
+                <p className="m-0 text-[0.85rem] text-[var(--ink-soft)]">
+                  Klik tombol disamping. Diperlukan untuk memvalidasi jarak ke toko terdekat.
                 </p>
               </div>
               <button 
                 type="button" 
                 onClick={handleGetLocation}
                 disabled={loadingLocation}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '8px',
-                  backgroundColor: 'white', border: '1px solid var(--line)',
-                  padding: '8px 16px', borderRadius: '20px', cursor: 'pointer',
-                  fontSize: '0.9rem', fontWeight: 500, color: 'var(--ink)'
-                }}
+                title="Gunakan Lokasi Saat Ini"
+                className="flex items-center justify-center bg-white border border-[var(--line)] w-10 h-10 rounded-full cursor-pointer text-[var(--ink)] shrink-0 hover:bg-[var(--surface)] transition-colors disabled:opacity-50"
               >
-                {loadingLocation ? <Loader2 size={16} className="animate-spin" /> : <Target size={16} />}
-                Gunakan Lokasi Saat Ini
+                {loadingLocation ? <Loader2 size={18} className="animate-spin" /> : <LocateFixed size={18} />}
               </button>
             </div>
             
             {formData.latitude && formData.longitude ? (
-              <div style={{ display: 'flex', gap: '16px', fontSize: '0.85rem', color: 'var(--accent-cool)', backgroundColor: '#eef6f0', padding: '8px 12px', borderRadius: '6px' }}>
+              <div className="flex gap-4 text-[0.85rem] text-[var(--accent-cool)] bg-[#eef6f0] px-3 py-2 rounded-md">
                 <span><strong>Lat:</strong> {formData.latitude.toFixed(6)}</span>
                 <span><strong>Lng:</strong> {formData.longitude.toFixed(6)}</span>
               </div>
             ) : (
-              <div style={{ fontSize: '0.85rem', color: 'var(--accent-strong)' }}>
+              <div className="text-[0.85rem] text-[var(--accent-strong)]">
                 Belum ada titik koordinat yang dipilih.
+              </div>
+            )}
+            {formErrors.latitude && (
+              <div className="text-[0.85rem] text-[#dc2626] mt-2">
+                {formErrors.latitude}
               </div>
             )}
           </div>
 
           {!editData && (
-             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
+             <div className="flex items-center gap-3 mb-8">
               <input 
                 type="checkbox" 
                 id="isPrimary"
                 checked={formData.isPrimary}
                 onChange={e => setFormData({...formData, isPrimary: e.target.checked})}
-                style={{ width: '18px', height: '18px', accentColor: 'var(--accent-strong)', cursor: 'pointer' }}
+                className="w-[18px] h-[18px] accent-[var(--accent-strong)] cursor-pointer"
               />
-              <label htmlFor="isPrimary" style={{ cursor: 'pointer', fontSize: '0.95rem' }}>
+              <label htmlFor="isPrimary" className="cursor-pointer text-[0.95rem] text-[var(--ink)]">
                 Jadikan sebagai alamat utama
               </label>
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end' }}>
+          <div className="flex gap-4 justify-end">
             <button 
               type="button" 
               onClick={onClose}
-              style={{
-                padding: '12px 24px', borderRadius: '30px', border: '1px solid var(--line)',
-                backgroundColor: 'transparent', cursor: 'pointer', fontWeight: 500
-              }}
+              className="px-6 py-3 rounded-[30px] border border-[var(--line)] bg-transparent cursor-pointer font-medium text-[var(--ink)] hover:bg-[var(--surface-muted)] transition-colors"
             >
               Batal
             </button>
             <button 
               type="submit" 
               disabled={isLoading}
-              className="button primary"
-              style={{
-                padding: '12px 32px', borderRadius: '30px', border: 'none',
-                backgroundColor: 'var(--accent)', color: 'white', cursor: 'pointer',
-                fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px'
-              }}
+              className="px-8 py-3 rounded-[30px] border-none bg-[var(--accent)] text-white cursor-pointer font-semibold flex items-center gap-2 hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(232,107,79,0.25)] transition-all disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:shadow-none"
             >
               {isLoading && <Loader2 size={18} className="animate-spin" />}
               {editData ? 'Simpan Perubahan' : 'Tambah Alamat'}

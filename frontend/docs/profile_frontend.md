@@ -19,6 +19,11 @@ The profile feature utilizes a dedicated Zustand store (`useProfileStore`) to cl
 - `updateEmail(email: string)`: Calls `PUT /api/profile/email` to initiate an email change.
 - `reverifyEmail()`: Calls `POST /api/profile/reverify-email` to resend the verification email.
 
+### 2. Address Store (`src/store/addressStore.ts`)
+Handles the state and API calls for user addresses.
+- Uses `zustand` to manage a list of addresses (`addresses`) and the `selectedAddressId` (persisted for checkout).
+- Provides actions like `fetchAddresses`, `createAddress`, `updateAddress`, `deleteAddress`, and `setPrimaryAddress`.
+
 ---
 
 ## UI Components
@@ -49,6 +54,13 @@ The UI is built using React components styled with standard CSS classes provided
 - Displays the user's referral code with a large, clear UI.
 - Lists all active and unused vouchers belonging to the user.
 - Dynamically formats the discount value (e.g., Nominal amount in Rupiah or Percentage).
+
+### 5. Address Management
+- **`AddressManager.tsx`**: Displays a list of the user's addresses. Highlights the primary address and allows users to set an address as primary, edit, or delete it.
+- **`AddressFormModal.tsx`**: A modal used for both creating and editing an address.
+  - Implements an **Autocomplete Search Input** for locating cities/districts via Komerce API (`searchDestinations`). The component queries the backend (`/shipping/destinations?search=...`) dynamically as the user types (with a 500ms debounce).
+  - Captures `latitude` and `longitude` using HTML5 Geolocation API ("Gunakan Lokasi Saat Ini" button) which is crucial for distance-based logic.
+  - Automatically maps the selected Komerce destination ID to the `cityId` field for accurate shipping cost calculations during checkout.
 
 ---
 

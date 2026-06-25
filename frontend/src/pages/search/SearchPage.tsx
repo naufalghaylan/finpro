@@ -20,7 +20,36 @@ export default function SearchPage() {
   const { filters, changeFilter, nextPage, prevPage, getPageInfo } = useProductFilters()
   const { products, total, loading, error } = useProductSearch(keyword, filters)
   const { categories } = useCategories()
-  const { addToCart, addingProductId } = useAddToCart()
+  const { addToCart } = useAddToCart()
+
+  useEffect(() => {
+    if (!keyword) return
+    let isMounted = true
+
+    const loadSearchProducts = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await searchProducts({ keyword, ...filters })
+        if (isMounted) {
+          setProducts(res.products)
+          setTotal(res.total)
+        }
+      } catch (err: any) {
+        if (isMounted) setError(err.response?.data?.message || 'Gagal mencari produk')
+      } finally {
+        if (isMounted) setLoading(false)
+      }
+    }
+
+    void loadSearchProducts()
+
+    return () => { isMounted = false }
+  }, [keyword, JSON.stringify(filters)])
+
+  const handleFilterChange = (next: Partial<typeof filters>) => {
+    setFilters(prev => ({ ...prev, ...next, offset: 0 }))
+  }
 
   const handleAddToCart = (product: Product) => void addToCart(product)
   const { currentPage, totalPages } = getPageInfo(total)
