@@ -1,0 +1,96 @@
+.payment-deadline-card {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+  border: 1px solid rgba(232, 107, 79, 0.18);
+  border-radius: 18px;
+  padding: 16px;
+  background: #fff4ec;
+}
+
+.payment-deadline-card.expired {
+  border-color: rgba(220, 38, 38, 0.24);
+  background: #fef2f2;
+}
+
+.payment-deadline-card svg {
+  width: 28px;
+  height: 28px;
+  color: var(--accent-strong);
+  flex: 0 0 auto;
+}
+
+.payment-deadline-card.expired svg {
+  color: #dc2626;
+}
+
+.manual-payment-selector {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.manual-payment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 148px);
+  gap: 12px;
+  justify-content: start;
+}
+
+.manual-payment-option {
+  display: grid;
+  align-content: space-between;
+  gap: 16px;
+  justify-items: start;
+  width: 148px;
+  height: 112px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 18px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.manual-payment-option:hover,
+.manual-payment-option.active {
+  transform: translateY(-2px);
+  border-color: rgba(74, 124, 91, 0.42);
+  box-shadow: 0 14px 26px rgba(74, 124, 91, 0.12);
+}
+
+.manual-payment-option.active {
+  background: #f7fbf4;
+}
+
+.manual-payment-option:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+  transform: none;
+}
+
+.manual-payment-option:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.manual-payment-option.active:disabled {
+  border-color: rgba(74, 124, 91, 0.42);
+  box-shadow: 0 14px 26px rgba(74, 124, 91, 0.08);
+}
+
+.manual-payment-option svg {
+  width: 26px;
+  height: 26px;
+  color: var(--ink);
+}
+
+.manual-payment-option strong {
+  color: var(--ink);
+  font-size: 1.05rem;
+  line-height: 1.25;
+}

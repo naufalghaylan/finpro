@@ -152,21 +152,9 @@ const approveFulfillmentInTransaction = async ({
       quantityChange: -quantityToDeduct,
       type: StockJournalType.MUTATION_OUT,
       userId,
-      description: `Stok tambahan keluar untuk mutasi #${mutation.id}`,
-      notes: notes || mutation.notes || 'Mutasi disetujui dan barang dikirim',
+      description: `Keluar mutasi #${mutation.id}`,
+      notes: notes || mutation.notes || 'Barang dikirim ke toko peminta',
       insufficientStockMessage: 'Stok berubah saat mutasi diproses. Silakan coba kembali.',
-    })
-  } else if (sourceStock && shouldLogFulfillmentOut) {
-    await adjustStockWithJournal({
-      db,
-      stock: sourceStock,
-      orderId: mutation.orderId ?? undefined,
-      stockMutationId: mutation.id,
-      quantityChange: 0,
-      type: StockJournalType.MUTATION_OUT,
-      userId,
-      description: `Barang fulfillment keluar untuk mutasi #${mutation.id}`,
-      notes: notes || mutation.notes || 'Barang keluar fisik untuk fulfillment pesanan; stok jual sudah dialokasikan saat checkout',
     })
   }
 
@@ -179,8 +167,8 @@ const approveFulfillmentInTransaction = async ({
       quantityChange: quantityToRelease,
       type: StockJournalType.CANCEL_RETURN,
       userId,
-      description: `Sisa cadangan dilepas dari persetujuan parsial mutasi #${mutation.id}`,
-      notes: `Toko sumber hanya mengirim ${approvedQuantity} dari ${requestedQuantity} item`,
+      description: `Pengembalian sisa stok mutasi #${mutation.id}`,
+      notes: `Toko sumber hanya menyetujui sebagian (${approvedQuantity} dari ${requestedQuantity} item)`,
     })
   }
 
@@ -253,21 +241,20 @@ const receiveFulfillmentInTransaction = async ({
     select: stockJournalSnapshotSelect,
   })
 
-  await adjustStockWithJournal({
-    db,
-    stock: destinationStock,
-    orderId: mutation.orderId ?? undefined,
-    stockMutationId: mutation.id,
-    quantityChange: mutation.orderId ? 0 : mutation.quantity,
-    type: StockJournalType.MUTATION_IN,
-    userId,
-    description: mutation.orderId
-      ? `Barang fulfillment diterima untuk mutasi #${mutation.id}`
-      : `Stok diterima untuk mutasi #${mutation.id}`,
-    notes: notes || mutation.notes || (mutation.orderId
-      ? 'Barang masuk fisik untuk fulfillment pesanan; stok jual tetap karena barang dialokasikan ke pesanan'
-      : 'Barang mutasi diterima toko tujuan'),
-  })
+  const quantityChange = mutation.orderId ? 0 : mutation.quantity;
+  if (quantityChange > 0) {
+    await adjustStockWithJournal({
+      db,
+      stock: destinationStock,
+      orderId: mutation.orderId ?? undefined,
+      stockMutationId: mutation.id,
+      quantityChange,
+      type: StockJournalType.MUTATION_IN,
+      userId,
+      description: `Masuk mutasi #${mutation.id}`,
+      notes: notes || mutation.notes || 'Barang diterima dari toko pengirim',
+    })
+  }
 
   return db.stockMutation.update({
     where: { id: mutation.id },
@@ -364,8 +351,8 @@ const rejectFulfillmentInTransaction = async ({
         quantityChange: releasableQuantity,
         type: StockJournalType.CANCEL_RETURN,
         userId,
-        description: `Cadangan stok dilepas karena mutasi #${mutation.id} ditolak`,
-        notes: notes || 'Permintaan mutasi stok ditolak',
+        description: `Pengembalian stok mutasi #${mutation.id} ditolak`,
+        notes: notes || 'Permintaan mutasi ditolak toko pengirim',
       })
     }
   }

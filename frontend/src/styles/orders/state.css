@@ -1,0 +1,102 @@
+.orders-state-card {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 48px 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.86);
+  text-align: center;
+  box-shadow: 0 14px 30px rgba(31, 42, 34, 0.06);
+}
+
+.orders-state-card h2 {
+  margin: 0;
+  color: var(--ink);
+}
+
+.orders-state-card p {
+  max-width: 560px;
+  margin: 0;
+  color: var(--ink-soft);
+  line-height: 1.7;
+}
+
+.orders-state-icon {
+  width: 44px;
+  height: 44px;
+  color: var(--accent-strong);
+}
+
+.orders-state-icon.danger {
+  color: #b91c1c;
+}
+
+.order-card--skeleton {
+  grid-template-columns: 96px 1fr;
+}
+
+.order-skeleton-image,
+.order-skeleton-body span,
+.order-skeleton-body strong,
+.order-skeleton-body p {
+  background: linear-gradient(90deg, #edf2ed, #f8faf8, #edf2ed);
+  background-size: 220% 100%;
+  animation: ordersPulse 1.1s ease-in-out infinite;
+}
+
+.order-skeleton-image {
+  width: 96px;
+  aspect-ratio: 1;
+  border-radius: 8px;
+}
+
+.order-skeleton-body {
+  display: grid;
+  align-content: center;
+  gap: 12px;
+}
+
+.order-skeleton-body span,
+.order-skeleton-body strong,
+.order-skeleton-body p {
+  display: block;
+  height: 14px;
+  border-radius: 999px;
+}
+
+.order-skeleton-body span {
+  width: min(180px, 70%);
+}
+
+.order-skeleton-body strong {
+  width: min(320px, 92%);
+  height: 20px;
+}
+
+.order-skeleton-body p {
+  width: min(480px, 100%);
+}
+
+.orders-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+.orders-pagination span {
+  color: var(--ink-soft);
+  font-weight: 700;
+  padding: 0 8px;
+}
+
+@keyframes ordersPulse {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 220% 50%;
+  }
+}

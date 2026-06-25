@@ -5,7 +5,7 @@ import { useToast } from '../../components/common/Toast'
 import { useAuthStore } from '../../store/authStore'
 import type { AdminOrder, OrderListMeta, OrderStatus } from '../../types/order'
 import type { Store } from '../../types/store'
-import { getApiErrorMessage } from '../../utils/apiError'
+import { getApiErrorMessage, getApiFetchError, type ApiFetchError } from '../../utils/apiError'
 
 const PAGE_LIMIT = 10
 
@@ -32,6 +32,7 @@ export function useAdminOrderList(storeId?: number) {
   const [meta, setMeta] = useState<OrderListMeta>(emptyMeta)
   const [statusFilter, setStatusFilter] = useState<OrderStatus | ''>('')
   const [selectedFilterStoreId, setSelectedFilterStoreId] = useState<number | ''>('')
+  const [fetchError, setFetchError] = useState<ApiFetchError | null>(null)
   
   // Modals state
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null)
@@ -68,8 +69,11 @@ export function useAdminOrderList(storeId?: number) {
 
       setOrders(result.orders)
       setMeta(result.meta)
+      setFetchError(null)
     } catch (e) {
-      showToast(getApiErrorMessage(e, 'Gagal memuat pesanan'), 'error')
+      const nextError = getApiFetchError(e, 'Gagal memuat pesanan')
+      setFetchError(nextError)
+      showToast(nextError.message, 'error')
     } finally {
       setLoading(false)
     }
@@ -201,6 +205,7 @@ export function useAdminOrderList(storeId?: number) {
     setShipOrderTarget,
     handleShipOrder,
     closeShipDialog,
+    fetchError,
     fetchOrders,
   }
 }

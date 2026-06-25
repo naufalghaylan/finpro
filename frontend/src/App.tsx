@@ -30,6 +30,7 @@ import AdminStoreDetailPage from './pages/admin/AdminStoreDetailPage'
 import AdminOrderList from './pages/admin/AdminOrderList'
 import NotFoundPage from './pages/error/NotFoundPage'
 import './App.css'
+import './styles/index.css'
 
 function OrderPaymentRedirect() {
   const { id } = useParams()

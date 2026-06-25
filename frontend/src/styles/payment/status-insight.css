@@ -1,0 +1,151 @@
+.order-status-insight {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px 16px;
+  overflow: hidden;
+  border-color: rgba(232, 107, 79, 0.16);
+  background: linear-gradient(135deg, rgba(255, 250, 242, 0.96), rgba(255, 255, 255, 0.88));
+}
+
+.order-status-insight-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  color: var(--accent-strong);
+  background: rgba(232, 107, 79, 0.12);
+}
+
+.order-status-insight-icon svg {
+  width: 25px;
+  height: 25px;
+}
+
+.order-status-insight-copy {
+  min-width: 0;
+}
+
+.order-status-insight-copy span {
+  color: var(--accent-strong);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.order-status-insight-copy h2,
+.order-status-insight-copy p {
+  margin: 0;
+}
+
+.order-status-insight-copy h2 {
+  margin-top: 4px;
+  color: var(--ink);
+  font-size: 1.2rem;
+}
+
+.order-status-insight-copy p {
+  margin-top: 6px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+.order-status-insight-list {
+  display: grid;
+  grid-column: 2;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.order-status-insight-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  border: 1px solid rgba(232, 107, 79, 0.13);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.order-status-insight-list svg {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  color: var(--accent-strong);
+  flex: 0 0 auto;
+}
+
+.order-status-insight--review,
+.order-status-insight--processing,
+.order-status-insight--completed {
+  border-color: rgba(74, 124, 91, 0.18);
+  background: linear-gradient(135deg, rgba(247, 251, 244, 0.96), rgba(255, 255, 255, 0.9));
+}
+
+.order-status-insight--review .order-status-insight-icon,
+.order-status-insight--processing .order-status-insight-icon,
+.order-status-insight--completed .order-status-insight-icon {
+  color: var(--green);
+  background: rgba(74, 124, 91, 0.12);
+}
+
+.order-status-insight--review .order-status-insight-copy span,
+.order-status-insight--processing .order-status-insight-copy span,
+.order-status-insight--completed .order-status-insight-copy span,
+.order-status-insight--review .order-status-insight-list svg,
+.order-status-insight--processing .order-status-insight-list svg,
+.order-status-insight--completed .order-status-insight-list svg {
+  color: var(--green);
+}
+
+.order-status-insight--review .order-status-insight-list li,
+.order-status-insight--processing .order-status-insight-list li,
+.order-status-insight--completed .order-status-insight-list li {
+  border-color: rgba(74, 124, 91, 0.13);
+}
+
+.order-status-insight--shipped {
+  border-color: rgba(15, 118, 110, 0.18);
+  background: linear-gradient(135deg, rgba(240, 253, 250, 0.96), rgba(255, 255, 255, 0.9));
+}
+
+.order-status-insight--shipped .order-status-insight-icon {
+  color: #0f766e;
+  background: rgba(15, 118, 110, 0.1);
+}
+
+.order-status-insight--shipped .order-status-insight-copy span,
+.order-status-insight--shipped .order-status-insight-list svg {
+  color: #0f766e;
+}
+
+.order-status-insight--shipped .order-status-insight-list li {
+  border-color: rgba(15, 118, 110, 0.13);
+}
+
+.order-status-insight--cancelled {
+  border-color: rgba(220, 38, 38, 0.18);
+  background: linear-gradient(135deg, rgba(254, 242, 242, 0.96), rgba(255, 255, 255, 0.9));
+}
+
+.order-status-insight--cancelled .order-status-insight-icon {
+  color: #b91c1c;
+  background: rgba(220, 38, 38, 0.1);
+}
+
+.order-status-insight--cancelled .order-status-insight-copy span,
+.order-status-insight--cancelled .order-status-insight-list svg {
+  color: #b91c1c;
+}
+
+.order-status-insight--cancelled .order-status-insight-list li {
+  border-color: rgba(220, 38, 38, 0.13);
+}

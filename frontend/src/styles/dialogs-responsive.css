@@ -1,0 +1,19 @@
+@media (max-width: 720px) {
+  .dialog-backdrop {
+    align-items: end;
+    padding: 14px;
+  }
+
+  .dialog-card {
+    border-radius: 20px;
+    padding: 22px;
+  }
+
+  .dialog-actions {
+    flex-direction: column-reverse;
+  }
+
+  .dialog-actions .button {
+    width: 100%;
+  }
+}

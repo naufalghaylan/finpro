@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { getOrderDetails, syncMidtransPaymentStatus } from '../../api/order.api'
 import { useToast } from '../../components/common/toastContext'
 import type { CheckoutOrder } from '../../types/order'
+import { getApiFetchError, type ApiFetchError } from '../../utils/apiError'
 import {
   getPaymentErrorMessage,
   getRemainingPaymentSeconds,
@@ -14,13 +15,14 @@ export function usePaymentOrder(orderId: number) {
   const [remainingSeconds, setRemainingSeconds] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [isSyncingWithMidtrans, setIsSyncingWithMidtrans] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [fetchError, setFetchError] = useState<ApiFetchError | null>(null)
   const midtransSyncInFlightRef = useRef(false)
   const { showToast } = useToast()
+  const error = fetchError?.message ?? null
 
   const loadOrder = useCallback(async () => {
     if (!Number.isFinite(orderId) || orderId <= 0) {
-      setError('Order tidak valid')
+      setFetchError({ message: 'Order tidak valid', code: 400 })
       setIsLoading(false)
       return
     }
@@ -30,9 +32,9 @@ export function usePaymentOrder(orderId: number) {
       const nextOrder = await getOrderDetails(orderId)
       setOrder(nextOrder)
       setRemainingSeconds(getRemainingPaymentSeconds(nextOrder.paymentDeadline))
-      setError(null)
+      setFetchError(null)
     } catch (loadError) {
-      setError(getPaymentErrorMessage(loadError))
+      setFetchError(getApiFetchError(loadError, 'Gagal memproses pembayaran'))
     } finally {
       setIsLoading(false)
     }
@@ -57,7 +59,7 @@ export function usePaymentOrder(orderId: number) {
           const nextSeconds = getRemainingPaymentSeconds(updatedOrder.paymentDeadline)
           return currentSeconds === nextSeconds ? currentSeconds : nextSeconds
         })
-        setError(null)
+        setFetchError(null)
 
         if (!isSilentSync) {
           if (updatedOrder.status === 'PROCESSING') {

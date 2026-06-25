@@ -1,0 +1,194 @@
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(31, 42, 34, 0.38);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.16s ease;
+}
+
+.dialog-card {
+  position: relative;
+  display: grid;
+  gap: 16px;
+  width: min(100%, 480px);
+  border: 1px solid rgba(232, 107, 79, 0.18);
+  border-radius: 22px;
+  padding: 24px;
+  background: var(--surface);
+  box-shadow: 0 24px 70px rgba(31, 42, 34, 0.22);
+}
+
+.dialog-close-button {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.dialog-close-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.dialog-close-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.dialog-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+
+.dialog-icon.danger {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.dialog-icon.success {
+  background: #ecfdf5;
+  color: #3f7f5b;
+}
+
+.dialog-icon svg {
+  width: 26px;
+  height: 26px;
+}
+
+.dialog-copy {
+  display: grid;
+  gap: 8px;
+  padding-right: 28px;
+}
+
+.dialog-copy span {
+  color: var(--accent-strong);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.dialog-copy h2,
+.dialog-copy p {
+  margin: 0;
+}
+
+.dialog-copy h2 {
+  color: var(--ink);
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+
+.dialog-copy p {
+  color: var(--ink-soft);
+  line-height: 1.65;
+}
+
+.confirm-receipt-dialog {
+  gap: 18px;
+  width: min(100%, 520px);
+  border-color: rgba(74, 124, 91, 0.22);
+  background: linear-gradient(180deg, #fffdf8 0%, #f8fcf6 100%);
+}
+
+.confirm-receipt-dialog-icon {
+  width: 56px;
+  height: 56px;
+  box-shadow: 0 12px 28px rgba(74, 124, 91, 0.18);
+}
+
+.confirm-receipt-dialog-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.dialog-checklist {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dialog-checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid rgba(74, 124, 91, 0.16);
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.dialog-checklist svg {
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  color: var(--green);
+  flex: 0 0 auto;
+}
+
+.dialog-support-note {
+  border: 1px solid rgba(232, 107, 79, 0.16);
+  border-radius: 14px;
+  padding: 11px 12px;
+  background: rgba(255, 250, 242, 0.82);
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.dialog-field {
+  display: grid;
+  gap: 8px;
+}
+
+.dialog-field span {
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.dialog-field textarea {
+  width: 100%;
+  min-height: 92px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 11px 12px;
+  background: #fffaf2;
+  color: var(--ink);
+  font: inherit;
+}
+
+.dialog-field textarea:focus {
+  outline: none;
+  border-color: rgba(232, 107, 79, 0.42);
+  box-shadow: 0 0 0 3px rgba(232, 107, 79, 0.12);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}

@@ -6,9 +6,10 @@ import { getVoucherDiscountPreview } from '../../components/checkout/checkoutVou
 import { useToast } from '../../components/common/toastContext'
 import { useCartStore } from '../../store/cartStore'
 import type { CheckoutOrder, CheckoutPreview, PaymentMethod } from '../../types/order'
-import { getApiErrorMessage } from '../../utils/apiError'
+import { getApiErrorMessage, getApiFetchError, type ApiFetchError } from '../../utils/apiError'
 
 const getErrorMessage = (error: unknown) => getApiErrorMessage(error, 'Gagal memproses checkout')
+const getFetchError = (error: unknown) => getApiFetchError(error, 'Gagal memproses checkout')
 
 
 export function useCheckout() {
@@ -21,7 +22,7 @@ export function useCheckout() {
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshingPreview, setIsRefreshingPreview] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [fetchError, setFetchError] = useState<ApiFetchError | null>(null)
 
   const [selectedCourier, setSelectedCourier] = useState<string>('')
   const [courierServices, setCourierServices] = useState<Record<string, ShippingCostResult[]>>({})
@@ -30,6 +31,7 @@ export function useCheckout() {
   const { showToast } = useToast()
   const navigate = useNavigate()
   const setCartCount = useCartStore((state) => state.setCartCount)
+  const error = fetchError?.message ?? null
 
   const loadPreview = useCallback(async (addressId?: number, showInitialLoading = false) => {
     if (showInitialLoading) {
@@ -42,9 +44,9 @@ export function useCheckout() {
       const nextPreview = await getCheckoutPreview(addressId)
       setPreview(nextPreview)
       setSelectedAddressId(nextPreview.selectedAddress?.id ?? null)
-      setError(null)
+      setFetchError(null)
     } catch (loadError) {
-      setError(getErrorMessage(loadError))
+      setFetchError(getFetchError(loadError))
     } finally {
       setIsLoading(false)
       setIsRefreshingPreview(false)
@@ -159,7 +161,8 @@ export function useCheckout() {
               courier: c,
             })
             if (results && results.length > 0) {
-              newCourierServices[c] = results
+              const mappedResults = results.map(r => ({ ...r, code: c }))
+              newCourierServices[c] = mappedResults
             }
           } catch (err) {
             // Ignore individual courier errors (e.g. unsupported route)
@@ -193,7 +196,7 @@ export function useCheckout() {
     try {
       const result = await createCheckoutOrder({
         addressId: selectedAddressId,
-        shippingMethod: selectedCourier,
+        shippingMethod: selectedShippingService.code,
         shippingService: selectedShippingService.service,
         shippingCost: selectedShippingService.cost,
         paymentMethod,

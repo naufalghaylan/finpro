@@ -1,0 +1,128 @@
+/* Feature 3 checkout finalization touch-ups */
+.checkout-flow-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.checkout-flow-steps span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgba(232, 107, 79, 0.16);
+  border-radius: 8px;
+  padding: 11px 12px;
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 800;
+  box-shadow: 0 8px 20px rgba(31, 42, 34, 0.05);
+}
+
+.checkout-flow-steps svg {
+  width: 18px;
+  height: 18px;
+  color: var(--accent-strong);
+  flex: 0 0 auto;
+}
+
+.checkout-branch-panel .checkout-section-title > svg {
+  color: var(--green);
+}
+
+.checkout-branch-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.checkout-branch-location svg {
+  width: 16px;
+  height: 16px;
+  color: var(--green);
+  flex: 0 0 auto;
+}
+
+.checkout-summary-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.checkout-summary-heading h2 {
+  margin: 0;
+}
+
+.checkout-summary-heading span {
+  border-radius: 999px;
+  padding: 5px 9px;
+  color: var(--accent-strong);
+  background: rgba(232, 107, 79, 0.1);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.checkout-summary-readiness {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.checkout-summary-readiness div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid rgba(232, 107, 79, 0.16);
+  border-radius: 8px;
+  padding: 10px 11px;
+  background: #fffaf2;
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.checkout-summary-readiness div.ready {
+  border-color: rgba(74, 124, 91, 0.2);
+  background: rgba(247, 251, 244, 0.9);
+  color: var(--green);
+}
+
+.checkout-summary-readiness svg {
+  width: 18px;
+  height: 18px;
+  color: var(--accent-strong);
+  flex: 0 0 auto;
+}
+
+.checkout-summary-readiness .ready svg {
+  color: var(--green);
+}
+
+.checkout-payment-card strong,
+.checkout-voucher-card strong,
+.checkout-shipping-service-info strong {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+  .checkout-flow-steps {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: thin;
+  }
+
+  .checkout-flow-steps span {
+    min-width: 136px;
+    justify-content: flex-start;
+  }
+
+  .checkout-summary-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
