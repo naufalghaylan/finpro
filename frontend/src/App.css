@@ -3356,6 +3356,107 @@
   }
 }
 
+/* ─── Product Detail ─────────────────────────────────────────────── */
+.product-detail {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: start;
+}
+
+.product-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.product-gallery-main {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-gallery-main img {
+  width: 100%;
+  height: 100%;
+  /* contain = foto tampil utuh tanpa terpotong; sisi yang kurang diisi ruang kosong */
+  object-fit: contain;
+  display: block;
+}
+
+.product-gallery-thumbs {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.product-gallery-thumb {
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.product-gallery-thumb.is-active {
+  border: 2px solid var(--accent);
+}
+
+.product-gallery-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.product-detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Foto pada kartu katalog: persegi & utuh (tidak terpotong), selaras dengan halaman detail */
+.product-card-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+@media (max-width: 720px) {
+  .product-detail {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .product-gallery-main {
+    /* Batasi tinggi foto utama di mobile agar tidak terlalu besar */
+    max-width: 420px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}
+
 /* Feature 3 cart and checkout touch-ups */
 .cart-header {
   align-items: flex-end;

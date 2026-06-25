@@ -90,6 +90,7 @@ export const getCart = async (userId: number) => {
                 },
               },
               images: {
+                where: { deletedAt: null },
                 orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }],
                 select: {
                   id: true,

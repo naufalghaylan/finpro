@@ -1,5 +1,6 @@
 import { Eye, ShoppingCart } from 'lucide-react'
 import type { Product } from '../../types/product'
+import { getImageUrl } from '../../utils/image'
 
 type ProductCardProps = {
   product: Product
@@ -19,20 +20,11 @@ export function ProductCard({ product, onAddToCart, onClick, isAddingToCart }: P
       style={{ cursor: onClick ? 'pointer' : 'default' }}
     >
       {/* Gambar produk */}
-      <div style={{
-        borderRadius: '12px',
-        overflow: 'hidden',
-        background: 'var(--surface-muted)',
-        minHeight: '140px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
+      <div className="product-card-image">
         {primaryImage ? (
           <img
-            src={primaryImage.imageUrl}
+            src={getImageUrl(primaryImage.imageUrl)}
             alt={product.name}
-            style={{ width: '100%', height: '140px', objectFit: 'cover' }}
           />
         ) : (
           <span style={{ color: 'var(--ink-soft)', fontSize: '0.85rem' }}>Tidak ada gambar</span>

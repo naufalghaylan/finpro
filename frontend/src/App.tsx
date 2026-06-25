@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react'
 import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import { ToastProvider } from './components/common/Toast'
-import { ProtectedRoute, GuestRoute } from './components/common/RouteGuard'
+import { ProtectedRoute, GuestRoute, AdminRoute, SuperAdminRoute } from './components/common/RouteGuard'
 import { ScrollToTop } from './components/common/ScrollToTop'
 import HomePage from './pages/home/HomePage'
 import LoginPage from './pages/auth/LoginPage'
@@ -29,6 +29,7 @@ import AdminStockList from './pages/admin/AdminStockList'
 import AdminStoreDetailPage from './pages/admin/AdminStoreDetailPage'
 import AdminOrderList from './pages/admin/AdminOrderList'
 import NotFoundPage from './pages/error/NotFoundPage'
+import AdminUserPage from './pages/admin/AdminUserPage'
 import './App.css'
 
 function OrderPaymentRedirect() {
@@ -83,15 +84,16 @@ function App() {
         <Route path="/orders/:id/payment" element={<ProtectedRoute><OrderPaymentRedirect /></ProtectedRoute>} />
         
         {/* Admin Routes */}
-        <Route path="/admin/categories" element={<AdminCategoryPage />} />
-        
-        <Route path="/admin/stores" element={<AdminStoreLayout />}>
+        <Route path="/admin/users" element={<SuperAdminRoute><AdminUserPage /></SuperAdminRoute>} />
+        <Route path="/admin/categories" element={<AdminRoute><AdminCategoryPage /></AdminRoute>} />
+
+        <Route path="/admin/stores" element={<AdminRoute><AdminStoreLayout /></AdminRoute>}>
           <Route index element={<AdminStoreIndexRedirect />} />
-          <Route path="list" element={<AdminStoreList />} />
-          <Route path="admins" element={<AdminStoreAdminList />} />
-          <Route path="stocks" element={<AdminStockList />} />
-          <Route path="products" element={<AdminProductPage />} />
-          <Route path="orders" element={<AdminOrderList />} />
+          <Route path="list" element={<SuperAdminRoute><AdminStoreList /></SuperAdminRoute>} />
+          <Route path="admins" element={<SuperAdminRoute><AdminStoreAdminList /></SuperAdminRoute>} />
+          <Route path="stocks" element={<SuperAdminRoute><AdminStockList /></SuperAdminRoute>} />
+          <Route path="products" element={<SuperAdminRoute><AdminProductPage /></SuperAdminRoute>} />
+          <Route path="orders" element={<SuperAdminRoute><AdminOrderList /></SuperAdminRoute>} />
           <Route path=":id" element={<AdminStoreDetailPage />} />
         </Route>
 

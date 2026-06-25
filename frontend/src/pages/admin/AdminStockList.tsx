@@ -54,7 +54,7 @@ export default function AdminStockList({ storeId }: { storeId?: number }) {
   }, [storeId])
 
   if (selectedStockId) {
-    return <AdminStockDetail stockId={selectedStockId} onBack={() => setSelectedStockId(null)} />
+        return <AdminStockDetail stockId={selectedStockId} onBack={() => { setSelectedStockId(null); fetchStocks(); }} />;
   }
 
   return (

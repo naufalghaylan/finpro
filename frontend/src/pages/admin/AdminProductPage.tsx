@@ -6,6 +6,7 @@ import { getAllProducts, adminDeleteProduct } from '../../api/product.api'
 import ProductFormModal from '../../components/admin/ProductFormModal'
 import type { Product } from '../../types/product'
 import { Plus, Pencil, Trash2, ShoppingBag, Image, Loader2 } from 'lucide-react'
+import ConfirmationModal from '../../components/modal/ConfirmationModal';
 
 export default function AdminProductPage() {
   const { user } = useAuthStore()
@@ -17,6 +18,9 @@ export default function AdminProductPage() {
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<Product | null>(null)
   const [showModal, setShowModal] = useState(false)
+  // Produk yang sedang dikonfirmasi untuk dihapus (null = modal tertutup).
+  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const load = () => {
     setLoading(true)
@@ -36,10 +40,12 @@ export default function AdminProductPage() {
   const openCreate = () => { setEditing(null); setShowModal(true) }
   const openEdit = (p: Product) => { setEditing(p); setShowModal(true) }
 
-  const handleDelete = async (p: Product) => {
-    if (!confirm(`Hapus produk "${p.name}"?`)) return
-    try { await adminDeleteProduct(p.id); load() }
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try { await adminDeleteProduct(deleteTarget.id); setDeleteTarget(null); load() }
     catch (err) { const e = err as AxiosError<{ error?: string }>; alert(e.response?.data?.error ?? 'Gagal menghapus produk') }
+    finally { setDeleting(false) }
   }
 
   const handleSaved = () => { setShowModal(false); load() }
@@ -138,7 +144,7 @@ export default function AdminProductPage() {
                                   Edit
                                 </button>
                                 <button
-                                  onClick={() => handleDelete(p)}
+                                  onClick={() => setDeleteTarget(p)}
                                   className="inline-flex items-center justify-center w-8 h-8 rounded-lg
                                              text-admin-red bg-transparent border-none cursor-pointer
                                              hover:bg-admin-red-soft transition-all duration-150"
@@ -163,6 +169,16 @@ export default function AdminProductPage() {
           onSaved={handleSaved}
         />
       )}
+
+      <ConfirmationModal
+        open={deleteTarget !== null}
+        title="Hapus Produk"
+        message={deleteTarget ? `Hapus produk "${deleteTarget.name}"? Tindakan ini tidak bisa dibatalkan.` : ''}
+        confirmLabel="Ya, hapus"
+        loading={deleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }

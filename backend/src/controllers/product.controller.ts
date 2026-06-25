@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
+import fs from 'fs'
 import * as productService from '../lib/product.service'
 import { z } from 'zod'
 import 'multer'
@@ -238,14 +239,20 @@ export async function uploadProductImage(req: Request, res: Response, next: Next
     const { id } = req.params
     if (!req.file) return res.status(400).json({ success: false, error: 'Tidak ada file yang diupload' })
 
-    const product = await productService.getProductById(parseInt(String(id)))
-    const isPrimary = product.images.length === 0
-    const sortOrder = product.images.length
     const imageUrl = `/uploads/${req.file.filename}`
-
-    const image = await productService.addProductImage(parseInt(String(id)), imageUrl, isPrimary, sortOrder)
+    const image = await productService.addProductImage(parseInt(String(id)), imageUrl)
     res.status(201).json({ success: true, data: image })
   } catch (error) {
+    // Hapus file yatim di disk jika record gagal dibuat (mis. kena limit / produk tidak valid)
+    if (req.file?.path) {
+      fs.unlink(req.file.path, () => {})
+    }
+    if (error instanceof Error && error.message === 'Maksimal 3 foto per produk') {
+      return res.status(400).json({ success: false, error: error.message })
+    }
+    if (error instanceof Error && error.message === 'Product not found') {
+      return res.status(404).json({ success: false, error: 'Product not found' })
+    }
     next(error)
   }
 }

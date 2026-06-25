@@ -8,6 +8,7 @@ export const getProductsService = async (
   sortBy: string = 'createdAt',
   sortOrder: 'asc' | 'desc' = 'desc',
   filter?: string
+
 ) => {
   const skip = (page - 1) * limit;
 
@@ -21,6 +22,7 @@ export const getProductsService = async (
     prisma.product.findMany({
       where,
       include: {
+        discounts: true,
         category: true,
         stocks: storeId ? {
           where: { storeId: storeId }

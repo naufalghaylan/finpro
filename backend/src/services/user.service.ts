@@ -93,7 +93,7 @@ export class UserService {
 
   static async getStoreAdmins() {
     return await prisma.user.findMany({
-      where: { role: 'STORE_ADMIN' },
+      where: { role: 'STORE_ADMIN', deletedAt: null },
       select: {
         id: true,
         name: true,
@@ -144,7 +144,7 @@ export class UserService {
     }
 
     if (storeId) {
-      const store = await prisma.store.findUnique({ where: { id: storeId } });
+      const store = await prisma.store.findFirst({ where: { id: storeId, deletedAt: null } });
       if (!store) {
         throw new AppError(404, 'Store not found');
       }

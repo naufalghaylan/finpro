@@ -1,36 +1,27 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProducts } from '../../hooks/useProducts'
 import { useCategories } from '../../hooks/useCategories'
 import { useAddToCart } from '../../hooks/useAddToCart'
+import { useProductFilters } from '../../hooks/useProductFilters'
 import { Navbar } from '../../components/common/Navbar'
 import { HomeFooter } from '../../components/home/HomeFooter'
-import { ProductCard } from '../../components/product/ProductCard'
+import { CategoryFilter } from '../../components/product/CategoryFilter'
+import { SortSelect } from '../../components/product/SortSelect'
+import { Pagination } from '../../components/product/Pagination'
+import { ProductResults } from '../../components/product/ProductResults'
 import { BRAND, navLinks, footerSections } from '../../data/home/homeData'
-import type { Product, ProductFilters } from '../../types/product'
+import type { Product } from '../../types/product'
 
 export default function CatalogPage() {
   const navigate = useNavigate()
-  const [filters, setFilters] = useState<ProductFilters>({
-    limit: 20,
-    offset: 0,
-    sortBy: 'newest'
-  })
+  const { filters, changeFilter, nextPage, prevPage, getPageInfo } = useProductFilters()
 
   const { products, total, loading, error } = useProducts(filters)
   const { categories } = useCategories()
-  const { addToCart } = useAddToCart()
+  const { addToCart, addingProductId } = useAddToCart()
 
-  const handleFilterChange = (newFilters: Partial<ProductFilters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters, offset: 0 }))
-  }
-
-  const handleAddToCart = (product: Product) => {
-    void addToCart(product)
-  }
-
-  const currentPage = Math.floor((filters.offset ?? 0) / (filters.limit ?? 20)) + 1
-  const totalPages = Math.ceil(total / (filters.limit ?? 20))
+  const handleAddToCart = (product: Product) => void addToCart(product)
+  const { currentPage, totalPages } = getPageInfo(total)
 
   return (
     <div className="page">
@@ -46,35 +37,15 @@ export default function CatalogPage() {
                 <p className="section-kicker">Semua Produk</p>
                 <h2 className="section-title">Katalog Produk</h2>
               </div>
-              <select
-                value={filters.sortBy}
-                onChange={e => handleFilterChange({ sortBy: e.target.value as ProductFilters['sortBy'] })}
-                className="button ghost"
-              >
-                <option value="newest">Terbaru</option>
-                <option value="price">Harga Terendah</option>
-                <option value="name">Nama A-Z</option>
-              </select>
+              <SortSelect value={filters.sortBy} onChange={sortBy => changeFilter({ sortBy })} />
             </div>
 
             {/* Filter Kategori */}
-            <div className="category-row" style={{ marginBottom: '16px' }}>
-              <button
-                className={`category-chip ${!filters.categoryId ? 'button primary' : ''}`}
-                onClick={() => handleFilterChange({ categoryId: undefined })}
-              >
-                Semua
-              </button>
-              {categories.map(cat => (
-                <button
-                  key={cat.id}
-                  className={`category-chip ${filters.categoryId === cat.id ? 'button primary' : ''}`}
-                  onClick={() => handleFilterChange({ categoryId: cat.id })}
-                >
-                  {cat.icon} {cat.name}
-                </button>
-              ))}
-            </div>
+            <CategoryFilter
+              categories={categories}
+              selectedId={filters.categoryId}
+              onSelect={categoryId => changeFilter({ categoryId })}
+            />
 
             {/* Filter Harga */}
             <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -83,67 +54,36 @@ export default function CatalogPage() {
                 type="number"
                 placeholder="Min (Rp)"
                 style={{ padding: '8px 12px', borderRadius: '999px', border: '1px solid var(--line)', width: '130px', fontSize: '0.9rem' }}
-                onChange={e => handleFilterChange({ minPrice: e.target.value ? Number(e.target.value) : undefined })}
+                onChange={e => changeFilter({ minPrice: e.target.value ? Number(e.target.value) : undefined })}
               />
               <span style={{ color: 'var(--ink-soft)' }}>–</span>
               <input
                 type="number"
                 placeholder="Max (Rp)"
                 style={{ padding: '8px 12px', borderRadius: '999px', border: '1px solid var(--line)', width: '130px', fontSize: '0.9rem' }}
-                onChange={e => handleFilterChange({ maxPrice: e.target.value ? Number(e.target.value) : undefined })}
+                onChange={e => changeFilter({ maxPrice: e.target.value ? Number(e.target.value) : undefined })}
               />
             </div>
 
             {/* Info total */}
             <p style={{ color: 'var(--ink-soft)', marginBottom: '16px' }}>{total} produk ditemukan</p>
 
-            {/* Loading & Error */}
-            {loading && <p>Memuat produk...</p>}
-            {error && <p style={{ color: 'var(--accent)' }}>{error}</p>}
+            {/* Hasil produk */}
+            <ProductResults
+              products={products}
+              loading={loading}
+              error={error}
+              addingProductId={addingProductId ?? undefined}
+              onSelect={p => navigate(`/products/${p.id}`)}
+              onAddToCart={handleAddToCart}
+            />
 
-            {/* Empty State */}
-            {!loading && !error && products.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '64px 0', color: 'var(--ink-soft)' }}>
-                <p style={{ fontSize: '2rem' }}>🔍</p>
-                <p style={{ fontWeight: 600 }}>Produk tidak ditemukan</p>
-                <p>Coba ubah filter atau kategori</p>
-              </div>
-            )}
-
-            {/* Grid Produk */}
-            <div className="product-grid">
-              {products.map(product => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onClick={p => navigate(`/products/${p.id}`)}
-                  onAddToCart={handleAddToCart}
-                />
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '32px' }}>
-                <button
-                  className="button ghost"
-                  disabled={currentPage === 1}
-                  onClick={() => setFilters(prev => ({ ...prev, offset: (prev.offset ?? 0) - (prev.limit ?? 20) }))}
-                >
-                  ← Sebelumnya
-                </button>
-                <span style={{ padding: '10px 16px', color: 'var(--ink-soft)' }}>
-                  Halaman {currentPage} dari {totalPages}
-                </span>
-                <button
-                  className="button ghost"
-                  disabled={currentPage === totalPages}
-                  onClick={() => setFilters(prev => ({ ...prev, offset: (prev.offset ?? 0) + (prev.limit ?? 20) }))}
-                >
-                  Selanjutnya →
-                </button>
-              </div>
-            )}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPrev={prevPage}
+              onNext={nextPage}
+            />
 
           </div>
         </section>

@@ -66,3 +66,34 @@ export const GuestRoute = ({ children }: Props) => {
 
   return <>{children}</>
 }
+
+/** Hanya bisa diakses oleh SUPER_ADMIN atau STORE_ADMIN */
+export const AdminRoute = ({ children }: Props) => {
+  const { isAuthenticated, user } = useAuthStore()
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
+  }
+
+  const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'STORE_ADMIN'
+  if (!isAdmin) {
+    return <Navigate to="/" replace />
+  }
+
+  return <>{children}</>
+}
+
+/** Hanya bisa diakses oleh SUPER_ADMIN saja */
+export const SuperAdminRoute = ({ children }: Props) => {
+  const { isAuthenticated, user } = useAuthStore()
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
+  }
+
+  if (user?.role !== 'SUPER_ADMIN') {
+    return <Navigate to="/" replace />
+  }
+
+  return <>{children}</>
+}

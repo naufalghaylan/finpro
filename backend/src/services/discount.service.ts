@@ -4,7 +4,7 @@ import { Prisma } from '../generated/prisma/client';
 export const getDiscountsService = async (storeId?: number, page = 1, limit = 10) => {
   const skip = (page - 1) * limit;
 
-  const where: any = {};
+  const where: any = { deletedAt: null };
   if (storeId) {
     where.storeId = storeId;
   }
@@ -44,13 +44,14 @@ export const updateDiscountService = async (id: number, data: Prisma.DiscountUnc
 };
 
 export const deleteDiscountService = async (id: number) => {
-  return await prisma.discount.delete({
-    where: { id }
+  return await prisma.discount.update({
+    where: { id },
+    data: { deletedAt: new Date() }
   });
 };
 
 export const getDiscountByIdService = async (id: number) => {
-  return await prisma.discount.findUnique({
-    where: { id }
+  return await prisma.discount.findFirst({
+    where: { id, deletedAt: null }
   });
 };
