@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useProfileStore } from '../../store/profileStore'
 import { z } from 'zod'
 
@@ -8,16 +8,16 @@ const emailSchema = z.object({
 
 export const EmailForm = () => {
   const { profile, updateEmail, reverifyEmail, isUpdating } = useProfileStore()
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(() => profile?.email || '')
+  const [prevProfileEmail, setPrevProfileEmail] = useState(() => profile?.email || '')
   const [successMsg, setSuccessMsg] = useState('')
   const [localError, setLocalError] = useState('')
   const [emailError, setEmailError] = useState('')
 
-  useEffect(() => {
-    if (profile) {
-      setEmail(profile.email || '')
-    }
-  }, [profile])
+  if (profile?.email !== prevProfileEmail) {
+    setPrevProfileEmail(profile?.email || '')
+    setEmail(profile?.email || '')
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -51,7 +51,7 @@ export const EmailForm = () => {
     try {
       await reverifyEmail()
       setSuccessMsg('Email verifikasi berhasil dikirim ulang. Silakan cek inbox Anda.')
-    } catch (err: unknown) {
+    } catch {
       // Error handled by store
     }
   }

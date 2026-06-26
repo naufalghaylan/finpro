@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, Suspense, lazy } from 'react'
 import { Loader2 } from 'lucide-react'
 import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
@@ -23,11 +23,19 @@ import ProductDetailPage from './pages/product/ProductDetailPage'
 import AdminCategoryPage from './pages/admin/AdminCategoryPage'
 import AdminProductPage from './pages/admin/AdminProductPage'
 import AdminStoreLayout, { AdminStoreIndexRedirect } from './pages/admin/AdminStoreLayout'
-import AdminStoreList from './pages/admin/AdminStoreList'
 import AdminStoreAdminList from './pages/admin/AdminStoreAdminList'
 import AdminStockList from './pages/admin/AdminStockList'
-import AdminStoreDetailPage from './pages/admin/AdminStoreDetailPage'
 import AdminOrderList from './pages/admin/AdminOrderList'
+
+const AdminStoreList = lazy(() => import('./pages/admin/AdminStoreList'))
+const AdminStoreDetailPage = lazy(() => import('./pages/admin/AdminStoreDetailPage'))
+
+const PageLoader = () => (
+  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '50vh', gap: '16px' }}>
+    <Loader2 size={32} className="animate-spin" style={{ color: 'var(--accent)' }} />
+    <p style={{ color: 'var(--ink-soft)', fontWeight: 500 }}>Memuat halaman...</p>
+  </div>
+)
 import NotFoundPage from './pages/error/NotFoundPage'
 import AdminUserPage from './pages/admin/AdminUserPage'
 import './App.css'
@@ -89,12 +97,12 @@ function App() {
 
         <Route path="/admin/stores" element={<AdminRoute><AdminStoreLayout /></AdminRoute>}>
           <Route index element={<AdminStoreIndexRedirect />} />
-          <Route path="list" element={<SuperAdminRoute><AdminStoreList /></SuperAdminRoute>} />
+          <Route path="list" element={<SuperAdminRoute><Suspense fallback={<PageLoader />}><AdminStoreList /></Suspense></SuperAdminRoute>} />
           <Route path="admins" element={<SuperAdminRoute><AdminStoreAdminList /></SuperAdminRoute>} />
           <Route path="stocks" element={<SuperAdminRoute><AdminStockList /></SuperAdminRoute>} />
           <Route path="products" element={<SuperAdminRoute><AdminProductPage /></SuperAdminRoute>} />
           <Route path="orders" element={<SuperAdminRoute><AdminOrderList /></SuperAdminRoute>} />
-          <Route path=":id" element={<AdminStoreDetailPage />} />
+          <Route path=":id" element={<Suspense fallback={<PageLoader />}><AdminStoreDetailPage /></Suspense>} />
         </Route>
 
         {/* Catch All Route for 404 */}

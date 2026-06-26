@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef } from 'react'
 import { useProfileStore } from '../../store/profileStore'
 import { useAuthStore } from '../../store/authStore'
 import api from '../../api/axios'
 import { Eye, EyeOff } from 'lucide-react'
 import { z } from 'zod'
+import { useToast } from '../common/Toast'
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Nama lengkap minimal 2 karakter'),
@@ -29,6 +30,7 @@ const profileSchema = z.object({
 type ProfileErrors = Partial<Record<'name' | 'phone' | 'newPassword' | 'currentPassword', string>>;
 
 export const ProfileForm = () => {
+  const { showToast } = useToast()
   const { profile, updateProfile, isUpdating, error } = useProfileStore()
   const { checkAuth, logout } = useAuthStore()
   const [successMsg, setSuccessMsg] = useState('')
@@ -39,17 +41,20 @@ export const ProfileForm = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
+    name: profile?.name || '',
+    phone: profile?.phone || '',
     currentPassword: '',
     newPassword: '',
   })
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
-  const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [previewImage, setPreviewImage] = useState<string | null>(profile?.profilePicture || null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
-  useEffect(() => {
+  const [prevProfile, setPrevProfile] = useState(profile)
+
+  if (profile !== prevProfile) {
+    setPrevProfile(profile)
     if (profile) {
       setFormData((prev) => ({
         ...prev,
@@ -58,7 +63,7 @@ export const ProfileForm = () => {
       }))
       setPreviewImage(profile.profilePicture || null)
     }
-  }, [profile])
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -152,7 +157,7 @@ export const ProfileForm = () => {
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       showToast(error.response?.data?.message || 'Gagal mengubah password', 'error');
-      setLocalError(err.response?.data?.message || 'Gagal mengirim link reset password.')
+      setLocalError(error.response?.data?.message || 'Gagal mengirim link reset password.')
       setIsResetting(false)
     }
   }
