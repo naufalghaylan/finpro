@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AxiosError } from 'axios';
 import { Eye, EyeOff, Plus, UserCog, Loader2 } from 'lucide-react';
-import { getStoreAdmins, assignStoreAdmin } from '../../api/user';
+import { getStoreAdmins, assignStoreAdmin, createStoreAdmin } from '../../api/user';
 import { getStores } from '../../api/store';
 import type { Store } from '../../types/store';
 
@@ -88,17 +88,15 @@ export default function AdminStoreAdminList() {
     
     setIsCreating(true);
     try {
-      import('../../api/user').then(async ({ createStoreAdmin }) => {
-        await createStoreAdmin({
-          name: createForm.name,
-          email: createForm.email,
-          password: createForm.password,
-          storeId: createForm.storeId === '' ? null : Number(createForm.storeId)
-        });
-        setCreateModalOpen(false);
-        setCreateForm({ name: '', email: '', password: '', storeId: '' });
-        fetchAdmins();
+      await createStoreAdmin({
+        name: createForm.name,
+        email: createForm.email,
+        password: createForm.password,
+        storeId: createForm.storeId === '' ? null : Number(createForm.storeId)
       });
+      setCreateModalOpen(false);
+      setCreateForm({ name: '', email: '', password: '', storeId: '' });
+      fetchAdmins();
     } catch (e) {
       const error = e as AxiosError<{ message?: string }>;
       alert(error.response?.data?.message ?? 'Gagal membuat admin');

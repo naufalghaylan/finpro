@@ -1,5 +1,6 @@
 
 
+import type { Product } from '../../types/product'
 import { HeroCarousel } from '../../components/home/HeroCarousel'
 import { HomeFooter } from '../../components/home/HomeFooter'
 import { Navbar } from '../../components/common/Navbar'
@@ -206,7 +207,7 @@ export default function HomePage() {
           onUseMainStore={fallbackToMainStore}
         />
         <ValueStrip items={valueProps} sectionId="deals" />
-        <ProductGrid products={isManuallySelected ? undefined : data?.products} storeId={activeStore.id} />
+        <ProductGrid products={isManuallySelected ? undefined : (data?.products as unknown as Product[])} storeId={activeStore.id} />
           
         <StoreShowcase
           stores={activeStores}
