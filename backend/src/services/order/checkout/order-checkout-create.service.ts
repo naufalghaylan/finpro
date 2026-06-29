@@ -13,6 +13,7 @@ import {
 import { calculateStoreDiscountForCheckout } from '../checkout/order-discount.service'
 import { calculateVoucherDiscount, getCheckoutVoucher } from '../checkout/order-checkout-voucher.service'
 import type { CreateCheckoutOrderParams } from '../core/order.types'
+import { notifyOrderStatusChange } from '../order-notification.service'
 
 export const createCheckoutOrder = async ({
   userId,
@@ -24,7 +25,7 @@ export const createCheckoutOrder = async ({
   voucherId,
   notes,
 }: CreateCheckoutOrderParams) => {
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const address = await tx.userAddress.findFirst({
       where: {
         id: addressId,
@@ -164,4 +165,8 @@ export const createCheckoutOrder = async ({
       cartCount: 0,
     }
   })
+
+  await notifyOrderStatusChange(result.order.id, 'CHECKOUT_CREATED')
+
+  return result
 }

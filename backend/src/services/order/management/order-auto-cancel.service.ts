@@ -1,6 +1,7 @@
 import { OrderStatus, PaymentMethod, StockJournalType } from '../../../generated/prisma/client'
 import prisma from '../../../lib/prisma'
 import { restoreReservedOrderStock } from '../../order-stock.service'
+import { notifyOrderStatusChange } from '../order-notification.service'
 
 export const autoCancelExpiredManualTransferOrders = async () => {
   const now = new Date()
@@ -96,6 +97,7 @@ export const autoCancelExpiredManualTransferOrders = async () => {
     })
 
     if (cancelledOrder) {
+      await notifyOrderStatusChange(cancelledOrder.id, 'ORDER_CANCELLED')
       cancelledCount += 1
     }
   }

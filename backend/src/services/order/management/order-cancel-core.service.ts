@@ -5,6 +5,7 @@ import { ORDER_ERRORS, OrderServiceError } from '../../order.errors'
 import { restoreReservedOrderStock } from '../../order-stock.service'
 import { adminOrderSelect, orderSelect } from '../core/order.select'
 import type { CancelOrderParams } from '../core/order.types'
+import { notifyOrderStatusChange } from '../order-notification.service'
 
 export const cancelOrder = async ({
   userId,
@@ -12,7 +13,7 @@ export const cancelOrder = async ({
   reason,
   isAdmin = false,
 }: CancelOrderParams) => {
-  return prisma.$transaction(async (tx) => {
+  const cancelledOrder = await prisma.$transaction(async (tx) => {
     const order = await tx.order.findUnique({
       where: { id: orderId },
       select: {
@@ -138,4 +139,8 @@ export const cancelOrder = async ({
       select: isAdmin ? adminOrderSelect : orderSelect,
     })
   })
+
+  await notifyOrderStatusChange(cancelledOrder.id, 'ORDER_CANCELLED')
+
+  return cancelledOrder
 }

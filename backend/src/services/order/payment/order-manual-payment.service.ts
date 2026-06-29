@@ -4,6 +4,7 @@ import { assertAdminCanAccessStore } from '../../order-admin-access.service'
 import { ORDER_ERRORS, OrderServiceError } from '../../order.errors'
 import { PAYMENT_DEADLINE_IN_MS } from '../core/order.constants'
 import { adminOrderSelect, orderSelect } from '../core/order.select'
+import { notifyOrderStatusChange } from '../order-notification.service'
 import type {
   ConfirmManualPaymentParams,
   OrderPaymentParams,
@@ -98,7 +99,7 @@ export const confirmManualPayment = async ({
   orderId,
   action,
 }: ConfirmManualPaymentParams) => {
-  return prisma.$transaction(async (tx) => {
+  const order = await prisma.$transaction(async (tx) => {
     const order = await tx.order.findUnique({
       where: { id: orderId },
       select: {
@@ -147,4 +148,10 @@ export const confirmManualPayment = async ({
       select: adminOrderSelect,
     })
   })
+
+  if (action === 'approve') {
+    await notifyOrderStatusChange(order.id, 'PAYMENT_SUCCESS')
+  }
+
+  return order
 }

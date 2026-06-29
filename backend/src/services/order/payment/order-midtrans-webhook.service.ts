@@ -3,6 +3,15 @@ import { midtransCore } from '../../../lib/midtrans'
 import prisma from '../../../lib/prisma'
 import { restoreReservedOrderStock } from '../../order-stock.service'
 import type { MidtransNotificationResult, MidtransTransactionStatus } from '../core/order.types'
+import {
+  notifyOrderStatusChange,
+  type OrderNotificationEvent,
+} from '../order-notification.service'
+
+type ProcessedMidtransNotification = {
+  result: NonNullable<MidtransNotificationResult>
+  event?: OrderNotificationEvent
+} | null
 
 export const processMidtransTransactionStatus = async (
   notification: MidtransTransactionStatus,
@@ -19,7 +28,7 @@ export const processMidtransTransactionStatus = async (
     return null
   }
 
-  return prisma.$transaction(async (tx) => {
+  const processed = await prisma.$transaction(async (tx): Promise<ProcessedMidtransNotification> => {
     const order = await tx.order.findUnique({
       where: { orderNumber },
       select: {
@@ -49,10 +58,12 @@ export const processMidtransTransactionStatus = async (
     if (isSuccessfulPayment) {
       if (order.status !== OrderStatus.PENDING_PAYMENT) {
         return {
-          orderId: order.id,
-          orderNumber: order.orderNumber,
-          transactionStatus,
-          orderStatus: order.status,
+          result: {
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            transactionStatus,
+            orderStatus: order.status,
+          },
         }
       }
 
@@ -64,20 +75,25 @@ export const processMidtransTransactionStatus = async (
       })
 
       return {
-        orderId: order.id,
-        orderNumber: order.orderNumber,
-        transactionStatus,
-        orderStatus: OrderStatus.PROCESSING,
+        result: {
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          transactionStatus,
+          orderStatus: OrderStatus.PROCESSING,
+        },
+        event: 'PAYMENT_SUCCESS',
       }
     }
 
     if (isFailedPayment) {
       if (order.status !== OrderStatus.PENDING_PAYMENT) {
         return {
-          orderId: order.id,
-          orderNumber: order.orderNumber,
-          transactionStatus,
-          orderStatus: order.status,
+          result: {
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            transactionStatus,
+            orderStatus: order.status,
+          },
         }
       }
 
@@ -106,20 +122,31 @@ export const processMidtransTransactionStatus = async (
       })
 
       return {
-        orderId: order.id,
-        orderNumber: order.orderNumber,
-        transactionStatus,
-        orderStatus: OrderStatus.CANCELLED,
+        result: {
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          transactionStatus,
+          orderStatus: OrderStatus.CANCELLED,
+        },
+        event: 'ORDER_CANCELLED',
       }
     }
 
     return {
-      orderId: order.id,
-      orderNumber: order.orderNumber,
-      transactionStatus,
-      orderStatus: order.status,
+      result: {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        transactionStatus,
+        orderStatus: order.status,
+      },
     }
   })
+
+  if (processed?.event) {
+    await notifyOrderStatusChange(processed.result.orderId, processed.event)
+  }
+
+  return processed?.result ?? null
 }
 
 export const handleMidtransNotification = async (payload: unknown): Promise<MidtransNotificationResult> => {
