@@ -18,7 +18,7 @@ export function FulfillmentRequestFooter({
   if (requestCount === 0) return null
 
   return (
-    <footer className="sticky bottom-0 flex flex-col gap-3 border-t border-admin-line-soft bg-admin-surface/95 px-5 py-4 backdrop-blur md:flex-row md:items-center md:justify-between md:px-6">
+    <footer className="sticky bottom-0 z-10 flex shrink-0 flex-col gap-3 border-t border-admin-line-soft bg-admin-surface/95 px-5 py-4 backdrop-blur md:flex-row md:items-center md:justify-between md:px-6">
       <div>
         <strong className="block text-sm text-admin-ink">
           {requestCount} produk - {totalRequestQuantity} item

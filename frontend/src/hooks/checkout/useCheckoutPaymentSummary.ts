@@ -30,13 +30,5 @@ export function useCheckoutPaymentSummary(
       discountAmount,
       totalPayment: Math.max(0, subtotal - discountAmount + shippingCost),
     }
-  }, [
-    preview?.cart.summary.discountAmount,
-    preview?.cart.summary.storeDiscountAmount,
-    preview?.cart.summary.subtotal,
-    preview?.cart.summary.voucherReferralAmount,
-    preview?.cart.items,
-    selectedVoucher,
-    selectedShippingService,
-  ])
+  }, [preview, selectedVoucher, selectedShippingService])
 }

@@ -91,7 +91,7 @@ export function AdminStoreFulfillmentDetailModal({ group, onClose }: Props) {
                         <div className="min-w-0">
                           <strong className="block truncate text-sm text-admin-ink">{mutation.product.name}</strong>
                           {mutation.notes && (
-                            <p className="m-0 mt-1 break-words text-xs leading-5 text-admin-ink-muted">{mutation.notes}</p>
+                            <p className="m-0 mt-1 wrap-break-word text-xs leading-5 text-admin-ink-muted">{mutation.notes}</p>
                           )}
                         </div>
                         <div className="flex justify-between gap-2 md:block md:text-right">
