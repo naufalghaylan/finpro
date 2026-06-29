@@ -6,9 +6,10 @@ import { SHIPPED_AUTO_CONFIRM_IN_MS } from '../core/order.constants'
 import { adminOrderSelect, orderSelect } from '../core/order.select'
 import { getOrderStockFulfillment } from '../fulfillment/order-fulfillment-state.service'
 import type { OrderPaymentParams } from '../core/order.types'
+import { notifyOrderStatusChange } from '../order-notification.service'
 
 export const shipOrder = async ({ userId, orderId }: OrderPaymentParams) => {
-  return prisma.$transaction(async (tx) => {
+  const shippedOrder = await prisma.$transaction(async (tx) => {
     const order = await tx.order.findUnique({
       where: { id: orderId },
       select: {
@@ -50,6 +51,10 @@ export const shipOrder = async ({ userId, orderId }: OrderPaymentParams) => {
       select: adminOrderSelect,
     })
   })
+
+  await notifyOrderStatusChange(shippedOrder.id, 'ORDER_SHIPPED')
+
+  return shippedOrder
 }
 
 export const confirmOrderReceived = async ({ userId, orderId }: OrderPaymentParams) => {
@@ -76,7 +81,7 @@ export const confirmOrderReceived = async ({ userId, orderId }: OrderPaymentPara
     )
   }
 
-  return prisma.order.update({
+  const confirmedOrder = await prisma.order.update({
     where: { id: order.id },
     data: {
       status: OrderStatus.CONFIRMED,
@@ -84,26 +89,50 @@ export const confirmOrderReceived = async ({ userId, orderId }: OrderPaymentPara
     },
     select: orderSelect,
   })
+
+  await notifyOrderStatusChange(confirmedOrder.id, 'ORDER_CONFIRMED')
+
+  return confirmedOrder
 }
 
 export const autoConfirmShippedOrders = async () => {
   const now = new Date()
   const autoConfirmBefore = new Date(now.getTime() - SHIPPED_AUTO_CONFIRM_IN_MS)
 
-  const result = await prisma.order.updateMany({
+  const shippedOrders = await prisma.order.findMany({
     where: {
       status: OrderStatus.SHIPPED,
       shippedAt: {
         lte: autoConfirmBefore,
       },
     },
-    data: {
-      status: OrderStatus.CONFIRMED,
-      confirmedAt: now,
-    },
+    select: { id: true },
   })
 
+  let confirmedCount = 0
+
+  for (const order of shippedOrders) {
+    const result = await prisma.order.updateMany({
+      where: {
+        id: order.id,
+        status: OrderStatus.SHIPPED,
+        shippedAt: {
+          lte: autoConfirmBefore,
+        },
+      },
+      data: {
+        status: OrderStatus.CONFIRMED,
+        confirmedAt: now,
+      },
+    })
+
+    if (result.count === 1) {
+      confirmedCount += 1
+      await notifyOrderStatusChange(order.id, 'ORDER_CONFIRMED')
+    }
+  }
+
   return {
-    confirmedCount: result.count,
+    confirmedCount,
   }
 }
