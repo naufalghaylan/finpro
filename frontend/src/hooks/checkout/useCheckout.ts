@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import type { PaymentMethod } from '../../types/order'
 import { useCheckoutPreview } from './useCheckoutPreview'
 import { useCheckoutShippingOptions } from './useCheckoutShippingOptions'
@@ -36,6 +36,7 @@ export function useCheckout() {
     () => (preview?.vouchers ?? []).find((voucher) => voucher.id === selectedVoucherId) ?? null,
     [preview?.vouchers, selectedVoucherId],
   )
+  const activeSelectedVoucherId = selectedVoucher?.id ?? null
 
   const totalWeight = useMemo(() => {
     return preview?.cart.items.reduce((acc, item) => acc + (item.product.weight * item.quantity), 0) ?? 0
@@ -67,7 +68,7 @@ export function useCheckout() {
       Boolean(selectedShippingService), // isSubmitting is managed inside
     selectedShippingService,
     paymentMethod,
-    selectedVoucherId,
+    selectedVoucherId: activeSelectedVoucherId,
     notes,
   })
 
@@ -86,18 +87,12 @@ export function useCheckout() {
     void loadPreview(addressId)
   }
 
-  useEffect(() => {
-    if (selectedVoucherId && !selectedVoucher) {
-      setSelectedVoucherId(null)
-    }
-  }, [selectedVoucher, selectedVoucherId])
-
   return {
     preview,
     selectedAddressId,
     selectedAddress,
     paymentMethod,
-    selectedVoucherId,
+    selectedVoucherId: activeSelectedVoucherId,
     notes,
     createdOrder,
     isLoading,

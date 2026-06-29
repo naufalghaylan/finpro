@@ -19,6 +19,8 @@ type AdminModalProps = {
   cardClassName?: string
 }
 
+const ADMIN_MODAL_VIEWPORT_CLASS_NAME = 'fixed inset-x-0 bottom-0 top-[72px]'
+
 const getFocusableElements = (container: HTMLElement) => Array.from(
   container.querySelectorAll<HTMLElement>(
     'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
@@ -123,12 +125,12 @@ export function AdminModal({
       <div
         aria-hidden="true"
         onMouseDown={closeOnBackdrop ? closeModal : undefined}
-        className={`fixed inset-x-0 bottom-0 top-[72px] z-[40] bg-black/45 backdrop-blur-[2px]
+        className={`${ADMIN_MODAL_VIEWPORT_CLASS_NAME} z-[40] bg-black/45 backdrop-blur-[2px]
                     transition-opacity duration-200 ease-out motion-reduce:transition-none
                     ${visible ? 'opacity-100' : 'opacity-0'}`}
       />
       {/* Modal Container (Layer 4) */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 top-[72px] z-[60] flex items-center justify-center overflow-hidden p-4 md:p-8 md:py-10">
+      <div className={`${ADMIN_MODAL_VIEWPORT_CLASS_NAME} pointer-events-none z-[60] flex items-center justify-center overflow-hidden p-4 md:p-8 md:py-10`}>
         {/* Modal Card */}
         <div
           ref={cardRef}

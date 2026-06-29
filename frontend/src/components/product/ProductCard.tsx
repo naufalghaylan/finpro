@@ -34,9 +34,9 @@ export function ProductCard({ product, onAddToCart, onClick, isAddingToCart }: P
       <div className="product-meta">
         <div className="product-header">
           <h3>{product.name}</h3>
-          <span className="product-tag">{product.category?.name || (product as any).categoryName}</span>
+          <span className="product-tag">{product.category.name}</span>
         </div>
-        <p className="product-price">Rp {(product.basePrice ?? (product as any).price)?.toLocaleString('id-ID')}</p>
+        <p className="product-price">Rp {product.basePrice.toLocaleString('id-ID')}</p>
 
         {/* Stok */}
         <span className={`product-stock ${totalStock > 0 ? 'stock-ok' : 'stock-out'}`}>

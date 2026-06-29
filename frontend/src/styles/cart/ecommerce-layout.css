@@ -121,7 +121,7 @@
 .cart-list-head span:nth-child(2),
 .cart-list-head span:nth-child(3),
 .cart-list-head span:nth-child(4) {
-  text-align: right;
+  text-align: center;
 }
 
 .cart-items {

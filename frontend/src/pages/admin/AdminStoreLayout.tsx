@@ -49,9 +49,13 @@ export default function AdminStoreLayout() {
   ];
 
   return (
-    <div className="page">
-      <Navbar brandName={BRAND.name} links={navLinks} />
-      <main className="page-main">
+    <>
+      <div className="fixed inset-x-0 top-0 z-[70]">
+        <Navbar brandName={BRAND.name} links={navLinks} />
+      </div>
+      <div className="h-[72px] shrink-0" aria-hidden="true" />
+      <div className="page">
+        <main className="page-main">
         <section className="section">
           <div className="shell">
             {/* Premium Header */}
@@ -107,8 +111,9 @@ export default function AdminStoreLayout() {
             </div>
           </div>
         </section>
-      </main>
-      <HomeFooter brandName={BRAND.name} sections={footerSections} />
-    </div>
+        </main>
+        <HomeFooter brandName={BRAND.name} sections={footerSections} />
+      </div>
+    </>
   );
 }

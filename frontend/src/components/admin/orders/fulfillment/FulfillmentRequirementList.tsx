@@ -17,8 +17,8 @@ export function FulfillmentRequirementList({
   onSourceStoreChange,
 }: Props) {
   return (
-    <section className="flex min-h-0 min-w-0 flex-1 flex-col border-b border-admin-line-soft xl:border-b-0 xl:border-r xl:overflow-y-auto xl:overscroll-contain">
-      <div className="flex items-start justify-between gap-4 px-5 py-5 md:px-6">
+    <section className="flex min-h-0 min-w-0 flex-1 flex-col border-b border-admin-line-soft xl:border-b-0 xl:border-r xl:overflow-hidden">
+      <div className="flex shrink-0 items-start justify-between gap-4 px-5 py-5 md:px-6">
         <div className="flex items-start gap-3">
           <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-admin-accent-soft text-admin-accent-strong">
             <Boxes className="h-5 w-5" />
@@ -32,7 +32,7 @@ export function FulfillmentRequirementList({
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 px-5 pb-5 md:px-6">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 px-5 pb-5 md:px-6 xl:overflow-y-auto xl:overscroll-contain">
         {requestRequirements.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-2xl border border-admin-green/20 bg-admin-green-soft px-5 py-12 text-center">
             <PackageCheck className="h-10 w-10 text-admin-green" />

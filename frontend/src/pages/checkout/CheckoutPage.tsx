@@ -14,6 +14,7 @@ import { CheckoutSummaryPanel } from '../../components/checkout/CheckoutSummaryP
 import { CheckoutSuccessPanel } from '../../components/checkout/CheckoutSuccessPanel'
 import { CheckoutEmptyState, CheckoutErrorState, CheckoutLoadingState } from '../../components/checkout/CheckoutStatePanel'
 import { CheckoutVoucherPanel } from '../../components/checkout/CheckoutVoucherPanel'
+import { CheckoutDiscountPanel } from '../../components/checkout/CheckoutDiscountPanel'
 
 function CheckoutPage() {
   const {
@@ -129,6 +130,8 @@ function CheckoutPage() {
                       }}
                       onShippingServiceChange={setSelectedShippingService}
                     />
+
+                    <CheckoutDiscountPanel />
 
                     <CheckoutVoucherPanel
                       vouchers={preview.vouchers ?? []}
