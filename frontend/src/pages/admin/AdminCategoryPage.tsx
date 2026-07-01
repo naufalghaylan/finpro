@@ -4,9 +4,6 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useCategories } from '../../hooks/useCategories'
 import { adminCreateCategory, adminUpdateCategory, adminDeleteCategory } from '../../api/product.api'
-import { Navbar } from '../../components/common/Navbar'
-import { HomeFooter } from '../../components/home/HomeFooter'
-import { BRAND, navLinks, footerSections } from '../../data/home/homeData'
 import type { Category } from '../../types/product'
 import { Plus, Pencil, Trash2, Layers, Loader2 } from 'lucide-react'
 
@@ -53,12 +50,8 @@ export default function AdminCategoryPage() {
   if (!isAdminRole) { navigate('/'); return null }
 
   return (
-    <div className="page">
-      <Navbar brandName={BRAND.name} links={navLinks} />
-      <main className="page-main">
-        <section className="section">
-          <div className="shell">
-            {/* Header */}
+    <div className="shell">
+      {/* Header */}
             <div className="admin-fade-in mb-8">
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-3">
@@ -228,9 +221,5 @@ export default function AdminCategoryPage() {
               </div>
             )}
           </div>
-        </section>
-      </main>
-      <HomeFooter brandName={BRAND.name} sections={footerSections} />
-    </div>
   )
 }

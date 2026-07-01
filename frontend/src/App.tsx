@@ -26,6 +26,7 @@ import AdminStoreLayout, { AdminStoreIndexRedirect } from './pages/admin/AdminSt
 import AdminStoreAdminList from './pages/admin/AdminStoreAdminList'
 import AdminStockList from './pages/admin/AdminStockList'
 import AdminOrderList from './pages/admin/AdminOrderList'
+import AdminDashboardLayout from './components/admin/AdminDashboardLayout'
 
 const AdminStoreList = lazy(() => import('./pages/admin/AdminStoreList'))
 const AdminStoreDetailPage = lazy(() => import('./pages/admin/AdminStoreDetailPage'))
@@ -93,17 +94,19 @@ function App() {
         <Route path="/orders/:id/payment" element={<ProtectedRoute><OrderPaymentRedirect /></ProtectedRoute>} />
         
         {/* Admin Routes */}
-        <Route path="/admin/users" element={<SuperAdminRoute><AdminUserPage /></SuperAdminRoute>} />
-        <Route path="/admin/categories" element={<AdminRoute><AdminCategoryPage /></AdminRoute>} />
+        <Route path="/admin" element={<AdminDashboardLayout />}>
+          <Route path="users" element={<SuperAdminRoute><AdminUserPage /></SuperAdminRoute>} />
+          <Route path="categories" element={<AdminRoute><AdminCategoryPage /></AdminRoute>} />
 
-        <Route path="/admin/stores" element={<AdminRoute><AdminStoreLayout /></AdminRoute>}>
-          <Route index element={<AdminStoreIndexRedirect />} />
-          <Route path="list" element={<SuperAdminRoute><Suspense fallback={<PageLoader />}><AdminStoreList /></Suspense></SuperAdminRoute>} />
-          <Route path="admins" element={<SuperAdminRoute><AdminStoreAdminList /></SuperAdminRoute>} />
-          <Route path="stocks" element={<SuperAdminRoute><AdminStockList /></SuperAdminRoute>} />
-          <Route path="products" element={<SuperAdminRoute><AdminProductPage /></SuperAdminRoute>} />
-          <Route path="orders" element={<SuperAdminRoute><AdminOrderList /></SuperAdminRoute>} />
-          <Route path=":id" element={<Suspense fallback={<PageLoader />}><AdminStoreDetailPage /></Suspense>} />
+          <Route path="stores" element={<AdminRoute><AdminStoreLayout /></AdminRoute>}>
+            <Route index element={<AdminStoreIndexRedirect />} />
+            <Route path="list" element={<SuperAdminRoute><Suspense fallback={<PageLoader />}><AdminStoreList /></Suspense></SuperAdminRoute>} />
+            <Route path="admins" element={<SuperAdminRoute><AdminStoreAdminList /></SuperAdminRoute>} />
+            <Route path="stocks" element={<SuperAdminRoute><AdminStockList /></SuperAdminRoute>} />
+            <Route path="products" element={<SuperAdminRoute><AdminProductPage /></SuperAdminRoute>} />
+            <Route path="orders" element={<SuperAdminRoute><AdminOrderList /></SuperAdminRoute>} />
+            <Route path=":id" element={<Suspense fallback={<PageLoader />}><AdminStoreDetailPage /></Suspense>} />
+          </Route>
         </Route>
 
         {/* Catch All Route for 404 */}

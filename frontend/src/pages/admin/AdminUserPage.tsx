@@ -4,11 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { adminListUsers, adminDeleteUser } from '../../api/admin.api'
 import type { AdminUser } from '../../api/admin.api'
-import { Navbar } from '../../components/common/Navbar'
-import { HomeFooter } from '../../components/home/HomeFooter'
 import UserFormModal from '../../components/admin/UserFormModal'
-import { BRAND, navLinks, footerSections } from '../../data/home/homeData'
-
 const th = { textAlign: 'left' as const, padding: '10px 8px' }
 const td = { padding: '10px 8px' }
 const roleBadge = (role: string): CSSProperties => ({
@@ -58,12 +54,8 @@ export default function AdminUserPage() {
   }
 
   return (
-    <div className="page">
-      <Navbar brandName={BRAND.name} links={navLinks} />
-      <main className="page-main">
-        <section className="section">
-          <div className="shell">
-            <div className="section-head">
+    <div className="shell">
+      <div className="section-head">
               <div>
                 <p className="section-kicker">Admin</p>
                 <h2 className="section-title">Manajemen User</h2>
@@ -135,10 +127,6 @@ export default function AdminUserPage() {
                 <button className="button ghost" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>Next ›</button>
               </div>
             )}
-          </div>
-        </section>
-      </main>
-      <HomeFooter brandName={BRAND.name} sections={footerSections} />
       {showModal && <UserFormModal editing={editing} onClose={() => setShowModal(false)} onSaved={() => { setShowModal(false); load() }} />}
     </div>
   )
