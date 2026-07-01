@@ -46,7 +46,14 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       await login({ emailOrUsername: identifier, password, rememberMe });
-      navigate(from);
+      
+      const user = useAuthStore.getState().user;
+      if (user?.role === 'SUPER_ADMIN' || user?.role === 'STORE_ADMIN') {
+        // Redirect to admin dashboard
+        navigate(from === '/' ? '/admin/stores' : from);
+      } else {
+        navigate(from);
+      }
     } catch (err: unknown) {
       const error = err as { response?: { status?: number, data?: { message?: string } } };
       if (error.response?.status === 403 && error.response?.data?.message === 'Account not verified') {
