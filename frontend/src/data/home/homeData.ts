@@ -264,8 +264,8 @@ export const footerSections: FooterSection[] = [
     title: 'Layanan',
     links: [
       { label: 'Bantuan', href: '#help' },
-      { label: 'Pengembalian', href: '#help' },
-      { label: 'Status pesanan', href: '#help' },
+      { label: 'Pengembalian', href: '/orders' },
+      { label: 'Status pesanan', href: '/orders' },
     ],
   },
   {

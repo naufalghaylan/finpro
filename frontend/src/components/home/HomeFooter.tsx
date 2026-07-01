@@ -1,4 +1,7 @@
+import { useState } from 'react'
+import axios from 'axios'
 import type { FooterSection } from '../../types/home/home'
+import { subscribeNewsletter } from '../../api/homepage.api'
 
 type HomeFooterProps = {
   brandName: string
@@ -6,6 +9,33 @@ type HomeFooterProps = {
 }
 
 export const HomeFooter = ({ brandName, sections }: HomeFooterProps) => {
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email) return
+
+    setLoading(true)
+    setMessage(null)
+
+    try {
+      const resMessage = await subscribeNewsletter(email)
+      setMessage({ text: resMessage, type: 'success' })
+      setEmail('')
+    } catch (error: unknown) {
+      setMessage({ 
+        text: axios.isAxiosError(error) && error.response?.data?.message
+          ? error.response.data.message
+          : 'Gagal berlangganan. Silakan coba lagi.', 
+        type: 'error' 
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <footer className="pt-12 pb-6 border-t border-[var(--line)] bg-[var(--surface)] mt-9">
       <div className="w-full max-w-[1440px] mx-auto px-[clamp(16px,4vw,48px)] grid grid-cols-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)] gap-8 items-start">
@@ -18,20 +48,35 @@ export const HomeFooter = ({ brandName, sections }: HomeFooterProps) => {
             Belanja kebutuhan segar, stok terbaru, dan rekomendasi menu harian dari
             toko terdekat.
           </p>
-          <div className="flex flex-wrap gap-2.5 mt-4">
-            <label className="sr-only" htmlFor="footer-email">
-              Email
-            </label>
-            <input
-              id="footer-email"
-              type="email"
-              placeholder="Email untuk update promo"
-              className="flex-1 min-w-[180px] rounded-full border border-[var(--line)] px-3.5 py-2.5 bg-[var(--surface)] focus:outline-none focus:border-[var(--accent)]"
-            />
-            <button type="button" className="inline-flex items-center justify-center gap-2 rounded-full border border-transparent px-4 py-2 font-semibold cursor-pointer bg-[var(--accent)] text-white shadow-[var(--shadow-soft)] hover:-translate-y-[1px] hover:shadow-[var(--shadow-strong)] transition-all">
-              Kirim
-            </button>
-          </div>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-2 mt-4">
+            <div className="flex flex-wrap gap-2.5">
+              <label className="sr-only" htmlFor="footer-email">
+                Email
+              </label>
+              <input
+                id="footer-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="Email untuk update promo"
+                className="flex-1 min-w-[180px] rounded-full border border-[var(--line)] px-3.5 py-2.5 bg-[var(--surface)] focus:outline-none focus:border-[var(--accent)] disabled:opacity-50"
+                disabled={loading}
+              />
+              <button 
+                type="submit" 
+                disabled={loading}
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-transparent px-4 py-2 font-semibold cursor-pointer bg-[var(--accent)] text-white shadow-[var(--shadow-soft)] hover:-translate-y-[1px] hover:shadow-[var(--shadow-strong)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Mengirim...' : 'Kirim'}
+              </button>
+            </div>
+            {message && (
+              <p className={`text-[0.85rem] m-0 ${message.type === 'success' ? 'text-green-600' : 'text-red-500'}`}>
+                {message.text}
+              </p>
+            )}
+          </form>
         </div>
         <div className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-4">
           {sections.map((section) => (
