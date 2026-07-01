@@ -36,6 +36,10 @@ const orderNotificationTemplatePath = path.join(
 const orderNotificationTemplateSource = fs.readFileSync(orderNotificationTemplatePath, 'utf8')
 const compiledOrderNotificationTemplate = handlebars.compile(orderNotificationTemplateSource)
 
+const newsletterTemplatePath = path.join(process.cwd(), 'templates', 'newsletter.hbs')
+const newsletterTemplateSource = fs.readFileSync(newsletterTemplatePath, 'utf8')
+const compiledNewsletterTemplate = handlebars.compile(newsletterTemplateSource)
+
 export type OrderNotificationEmailItem = {
   name: string
   quantity: number
@@ -141,4 +145,25 @@ export const sendOrderNotificationEmail = async ({
     'MessageId:',
     info.messageId,
   )
+}
+
+export const sendNewsletterSubscriptionEmail = async (email: string) => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
+
+  const htmlToSend = compiledNewsletterTemplate({ frontendUrl })
+
+  const mailOptions = {
+    from: '"PanenMart" <noreply@panenmart.com>',
+    to: email,
+    subject: 'Terima Kasih Telah Berlangganan Promo PanenMart',
+    html: htmlToSend,
+  }
+
+  try {
+    const info = await transporter.sendMail(mailOptions)
+    console.log('[MAILER] Newsletter subscription email sent to:', email, 'MessageId:', info.messageId)
+  } catch (error) {
+    console.error('[MAILER] Error sending newsletter email:', error)
+    throw new Error('Failed to send newsletter email')
+  }
 }
