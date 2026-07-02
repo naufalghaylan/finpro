@@ -1,8 +1,4 @@
 /* Feature 3 cart ecommerce-inspired layout */
-.cart-section {
-  padding: 44px 0 56px;
-}
-
 .cart-header {
   align-items: flex-end;
   margin-bottom: 16px;
@@ -10,13 +6,6 @@
 
 .cart-header .section-title {
   font-size: clamp(2rem, 4vw, 2.65rem);
-}
-
-.cart-header-copy {
-  max-width: 540px;
-  margin: 8px 0 0;
-  color: var(--ink-soft);
-  line-height: 1.6;
 }
 
 .cart-layout {

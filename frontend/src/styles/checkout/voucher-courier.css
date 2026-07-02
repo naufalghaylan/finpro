@@ -76,6 +76,7 @@
   margin-top: 4px;
   color: var(--ink);
   font-size: 1.05rem;
+  overflow-wrap: anywhere;
 }
 
 .checkout-voucher-card.selected .checkout-voucher-name {
@@ -91,12 +92,14 @@
 
 .checkout-payment-card .checkout-voucher-meta {
   font-size: 0.85rem;
+  overflow-wrap: anywhere;
 }
 
 .checkout-payment-card .checkout-voucher-expiry {
   margin-top: auto;
   padding-top: 8px;
   font-size: 0.8rem;
+  overflow-wrap: anywhere;
 }
 
 .checkout-courier-list {
@@ -185,10 +188,28 @@
   background: rgba(74, 124, 91, 0.1);
   font-size: 0.78rem;
   font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .checkout-courier-services {
   margin-top: 4px;
   border-top: 1px dashed var(--line);
   padding: 16px;
+}
+
+@media (max-width: 420px) {
+  .checkout-voucher-card-top {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .checkout-selection-badge,
+  .checkout-courier-selected-badge {
+    white-space: normal;
+  }
+
+  .checkout-courier-trigger,
+  .checkout-courier-services {
+    padding: 14px;
+  }
 }

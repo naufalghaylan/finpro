@@ -113,3 +113,14 @@
     text-align: center;
   }
 }
+
+@media (max-width: 420px) {
+  .order-card-meta span,
+  .orders-filter-actions {
+    width: 100%;
+  }
+
+  .orders-filter-actions {
+    flex-direction: column;
+  }
+}

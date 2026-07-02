@@ -6,12 +6,18 @@
 
   .checkout-summary-panel {
     position: static;
+    max-height: none;
+    overflow: visible;
   }
 }
 
 @media (max-width: 720px) {
   .checkout-page {
     padding: 28px 0 120px;
+  }
+
+  .checkout-refresh-status {
+    white-space: normal;
   }
 
   .checkout-header,
@@ -99,6 +105,20 @@
 }
 
 @media (max-width: 420px) {
+  .checkout-mobile-bar {
+    flex-wrap: wrap;
+  }
+
+  .checkout-mobile-bar div,
+  .checkout-mobile-bar .button {
+    width: 100%;
+  }
+
+  .checkout-mobile-bar .button {
+    justify-content: center;
+    min-width: 0;
+  }
+
   .checkout-courier-selected-badge {
     white-space: normal;
   }
