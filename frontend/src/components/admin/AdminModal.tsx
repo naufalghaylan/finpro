@@ -3,6 +3,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from 'react'
@@ -19,7 +20,12 @@ type AdminModalProps = {
   cardClassName?: string
 }
 
-const ADMIN_MODAL_VIEWPORT_CLASS_NAME = 'fixed inset-x-0 bottom-0 top-[72px]'
+const ADMIN_MODAL_VIEWPORT_STYLE: CSSProperties = {
+  top: 'var(--admin-topbar-height, 72px)',
+  right: '0',
+  bottom: '0',
+  left: 'var(--admin-sidebar-width, 260px)',
+}
 
 const getFocusableElements = (container: HTMLElement) => Array.from(
   container.querySelectorAll<HTMLElement>(
@@ -121,17 +127,18 @@ export function AdminModal({
 
   return createPortal(
     <>
-      {/* Backdrop (Layer 2) */}
       <div
         aria-hidden="true"
         onMouseDown={closeOnBackdrop ? closeModal : undefined}
-        className={`${ADMIN_MODAL_VIEWPORT_CLASS_NAME} z-[40] bg-black/45 backdrop-blur-[2px]
+        style={ADMIN_MODAL_VIEWPORT_STYLE}
+        className={`fixed z-[40] bg-black/45 backdrop-blur-[2px]
                     transition-opacity duration-200 ease-out motion-reduce:transition-none
                     ${visible ? 'opacity-100' : 'opacity-0'}`}
       />
-      {/* Modal Container (Layer 4) */}
-      <div className={`${ADMIN_MODAL_VIEWPORT_CLASS_NAME} pointer-events-none z-[60] flex items-center justify-center overflow-hidden p-4 md:p-8 md:py-10`}>
-        {/* Modal Card */}
+      <div
+        style={ADMIN_MODAL_VIEWPORT_STYLE}
+        className="fixed pointer-events-none z-[45] flex items-center justify-center overflow-hidden p-4 md:p-8 md:py-10"
+      >
         <div
           ref={cardRef}
           role="dialog"
