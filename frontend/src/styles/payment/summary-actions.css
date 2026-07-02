@@ -18,6 +18,7 @@
 
 .payment-summary-meta strong {
   text-align: right;
+  overflow-wrap: anywhere;
 }
 
 .payment-cancel-panel,
@@ -94,4 +95,9 @@
 .payment-cancel-note {
   border-color: rgba(220, 38, 38, 0.16);
   color: #991b1b;
+}
+
+.payment-cancel-note strong,
+.payment-cancel-note em {
+  overflow-wrap: anywhere;
 }

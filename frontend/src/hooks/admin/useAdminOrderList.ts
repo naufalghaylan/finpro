@@ -1,29 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
 import { adminCancelOrder, confirmManualPayment, getAdminOrders, shipAdminOrder } from '../../api/order.api'
-import { getStores } from '../../api/store'
 import { useToast } from '../../components/common/Toast'
 import { useAuthStore } from '../../store/authStore'
 import type { AdminOrder, OrderListMeta, OrderStatus } from '../../types/order'
 import type { Store } from '../../types/store'
 import { getApiErrorMessage, getApiFetchError, type ApiFetchError } from '../../utils/apiError'
-
-const PAGE_LIMIT = 10
-
-type PaymentConfirmationAction = 'approve' | 'reject'
-
-const emptyMeta: OrderListMeta = {
-  page: 1,
-  limit: PAGE_LIMIT,
-  total: 0,
-  totalPages: 0,
-  hasNextPage: false,
-  hasPreviousPage: false,
-}
+import { emptyMeta, loadAdminOrderStores, PAGE_LIMIT, type PaymentConfirmationAction } from './adminOrderList.shared'
 
 export function useAdminOrderList(storeId?: number) {
   const { user } = useAuthStore()
   const { showToast } = useToast()
-  
   const [orders, setOrders] = useState<AdminOrder[]>([])
   const [stores, setStores] = useState<Store[]>([])
   const [loading, setLoading] = useState(true)
@@ -33,20 +19,15 @@ export function useAdminOrderList(storeId?: number) {
   const [statusFilter, setStatusFilter] = useState<OrderStatus | ''>('')
   const [selectedFilterStoreId, setSelectedFilterStoreId] = useState<number | ''>('')
   const [fetchError, setFetchError] = useState<ApiFetchError | null>(null)
-  
-  // Modals state
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null)
   const [pendingAction, setPendingAction] = useState<PaymentConfirmationAction | null>(null)
   const [isConfirmingPayment, setIsConfirmingPayment] = useState(false)
   const [paymentReviewShouldClose, setPaymentReviewShouldClose] = useState(false)
-  
   const [cancelOrderTarget, setCancelOrderTarget] = useState<AdminOrder | null>(null)
   const [cancelReason, setCancelReason] = useState('')
   const [isCancellingOrder, setIsCancellingOrder] = useState(false)
   const [cancelDialogShouldClose, setCancelDialogShouldClose] = useState(false)
-  
   const [fulfillmentOrder, setFulfillmentOrder] = useState<AdminOrder | null>(null)
-  
   const [shipOrderTarget, setShipOrderTarget] = useState<AdminOrder | null>(null)
   const [isShippingOrder, setIsShippingOrder] = useState(false)
   const [shipDialogShouldClose, setShipDialogShouldClose] = useState(false)
@@ -54,8 +35,8 @@ export function useAdminOrderList(storeId?: number) {
   const showStoreFilter = !storeId && user?.role === 'SUPER_ADMIN'
 
   const fetchOrders = useCallback(async () => {
-    // Avoid synchronous state updates inside useEffect
     await Promise.resolve()
+
     try {
       setLoading(true)
       const activeStoreId = storeId || (selectedFilterStoreId ? Number(selectedFilterStoreId) : undefined)
@@ -87,9 +68,7 @@ export function useAdminOrderList(storeId?: number) {
   useEffect(() => {
     if (!showStoreFilter) return
 
-    getStores(1, 100)
-      .then((response) => setStores(response.data))
-      .catch(() => setStores([]))
+    void loadAdminOrderStores().then((nextStores) => setStores(nextStores))
   }, [showStoreFilter])
 
   const handleConfirmManualPayment = async () => {

@@ -95,3 +95,16 @@
     min-height: 0;
   }
 }
+
+@media (max-width: 420px) {
+  .checkout-shipping-service-bottom {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .checkout-shipping-service-etd strong,
+  .checkout-shipping-service-cost {
+    white-space: normal;
+  }
+}

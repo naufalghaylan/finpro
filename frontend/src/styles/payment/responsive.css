@@ -1,9 +1,20 @@
+@media (max-width: 1024px) {
+  .payment-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 720px) {
   .payment-page {
     padding: 28px 0 48px;
   }
 
+  .checkout-header h1 {
+    overflow-wrap: anywhere;
+  }
+
   .payment-status {
+    align-self: flex-start;
     white-space: normal;
   }
 
@@ -47,6 +58,15 @@
   .payment-upload-dropzone {
     min-height: 160px;
     padding: 18px;
+  }
+
+  .payment-proof-result {
+    flex-direction: column;
+  }
+
+  .payment-proof-toggle {
+    justify-content: center;
+    width: 100%;
   }
 
   .payment-upload-button {
@@ -96,5 +116,26 @@
   .midtrans-embed-container,
   .midtrans-embed-container iframe {
     height: 540px;
+  }
+}
+
+@media (max-width: 420px) {
+  .manual-payment-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-deadline-card,
+  .payment-summary-meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .payment-summary-meta strong {
+    text-align: left;
+  }
+
+  .payment-gateway-retry-button {
+    justify-content: center;
+    width: 100%;
   }
 }

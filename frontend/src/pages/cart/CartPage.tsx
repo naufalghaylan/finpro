@@ -16,6 +16,18 @@ type CartItemView = CartItem & {
   displayLineTotal: number
 }
 
+const cartEmptyClassName = [
+  'cart-empty flex flex-col items-center justify-center gap-3 border rounded-lg',
+  'p-10 text-center shadow-(--shadow-soft)',
+  '[&>h3]:m-0 [&>p]:m-0 [&>p]:text-(--ink-soft)',
+].join(' ')
+
+const cartStateIconClassName = [
+  'inline-grid size-14.5 place-items-center rounded-[18px]',
+  'bg-[rgba(232,107,79,0.1)] text-(--accent-strong)',
+  '[&>svg]:size-7.5',
+].join(' ')
+
 const getDisplayUnitPrice = (item: CartItem) =>
   item.quantity > 0 ? item.lineTotal / item.quantity : item.product.basePrice
 
@@ -87,13 +99,13 @@ function CartPage() {
       <Navbar brandName={BRAND.name} links={navLinks} />
 
       <main className="page-main">
-        <section className="section cart-section">
+        <section className="pt-11 pb-14 max-[720px]:pt-8">
           <div className="shell">
             <div className="section-head cart-header">
               <div>
                 <p className="section-kicker">Keranjang</p>
                 <h2 className="section-title">Keranjang Belanja</h2>
-                <p className="cart-header-copy">
+                <p className="mt-2 mb-0 max-w-[540px] text-(--ink-soft) leading-[1.6]">
                   Periksa produk dan jumlah belanja sebelum lanjut ke checkout.
                 </p>
               </div>
@@ -104,15 +116,18 @@ function CartPage() {
             </div>
 
             {error && (
-              <div className="cart-alert error" role="alert">
+              <div
+                className="cart-alert error mb-4 flex items-start gap-2.5 rounded-2xl px-3.5 py-3 font-semibold leading-[1.5] [&>svg]:mt-0.5 [&>svg]:size-5 [&>svg]:shrink-0"
+                role="alert"
+              >
                 <AlertCircle aria-hidden="true" />
                 <span>{error}</span>
               </div>
             )}
 
             {isLoading && (
-              <div className="cart-empty cart-empty--loading" aria-live="polite">
-                <span className="cart-state-icon">
+              <div className={`${cartEmptyClassName} min-h-[260px]`} aria-live="polite">
+                <span className={cartStateIconClassName}>
                   <Loader2 className="spin" aria-hidden="true" />
                 </span>
                 <h3>Memuat keranjang</h3>
@@ -121,8 +136,8 @@ function CartPage() {
             )}
 
             {!isLoading && !hasItems && (
-              <div className="cart-empty">
-                <span className="cart-state-icon">
+              <div className={`${cartEmptyClassName} min-h-80`}>
+                <span className={cartStateIconClassName}>
                   <ShoppingBag aria-hidden="true" />
                 </span>
                 <h3>Keranjang masih kosong</h3>

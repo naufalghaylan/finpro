@@ -1,86 +1,13 @@
 import type { Prisma } from '../../../generated/prisma/client'
 import prisma from '../../../lib/prisma'
-import { ORDER_ERRORS, OrderServiceError } from '../../order.errors'
-import { orderStatusGroups } from '../core/order.constants'
 import { adminOrderSelect, orderSelect } from '../core/order.select'
-import { getOrdersStockFulfillment } from '../fulfillment/order-fulfillment-state.service'
 import type { ListAdminOrdersParams, ListOrdersParams } from '../core/order.types'
-
-const getStartOfDate = (date: string) => new Date(`${date}T00:00:00.000`)
-
-const getEndOfDate = (date: string) => new Date(`${date}T23:59:59.999`)
-
-const applyOrderListFilters = (
-  where: Prisma.OrderWhereInput,
-  {
-    startDate,
-    endDate,
-    search,
-    orderNumber,
-    status,
-    statusGroup,
-  }: Pick<ListOrdersParams, 'startDate' | 'endDate' | 'search' | 'orderNumber' | 'status' | 'statusGroup'>,
-) => {
-  if (search) {
-    where.OR = [
-      {
-        orderNumber: {
-          contains: search,
-          mode: 'insensitive',
-        },
-      },
-      {
-        items: {
-          some: {
-            product: {
-              name: {
-                contains: search,
-                mode: 'insensitive',
-              },
-            },
-          },
-        },
-      },
-      {
-        store: {
-          name: {
-            contains: search,
-            mode: 'insensitive',
-          },
-        },
-      },
-    ]
-  } else if (orderNumber) {
-    where.orderNumber = {
-      contains: orderNumber,
-      mode: 'insensitive',
-    }
-  }
-
-  if (status) {
-    where.status = status
-  } else if (statusGroup) {
-    where.status = {
-      in: orderStatusGroups[statusGroup],
-    }
-  }
-
-  if (startDate || endDate) {
-    const createdAt: Prisma.DateTimeFilter = {}
-
-    if (startDate) {
-      createdAt.gte = getStartOfDate(startDate)
-    }
-
-    if (endDate) {
-      createdAt.lte = getEndOfDate(endDate)
-    }
-
-    where.createdAt = createdAt
-  }
-
-  return where
-}
+import { getOrdersStockFulfillment } from '../fulfillment/order-fulfillment-state.service'
+import {
+  applyOrderListFilters,
+  buildAdminOrderWhere,
+  buildOrderListMeta,
+} from './order-query.helpers'
 
 export const listOrders = async ({
   userId,
@@ -115,18 +42,10 @@ export const listOrders = async ({
     }),
     prisma.order.count({ where }),
   ])
-  const totalPages = Math.ceil(total / limit)
 
   return {
     data: orders,
-    meta: {
-      page,
-      limit,
-      total,
-      totalPages,
-      hasNextPage: page < totalPages,
-      hasPreviousPage: page > 1,
-    },
+    meta: buildOrderListMeta(page, limit, total),
   }
 }
 
@@ -144,29 +63,7 @@ export const listAdminOrders = async ({
   storeId,
 }: ListAdminOrdersParams) => {
   const skip = (page - 1) * limit
-  const where: Prisma.OrderWhereInput = {}
-
-  if (actorRole === 'STORE_ADMIN') {
-    if (!actorStoreId) {
-      throw new OrderServiceError(
-        ORDER_ERRORS.FULFILLMENT_ACCESS_DENIED,
-        'Store admin is not assigned to a store',
-        403,
-      )
-    }
-
-    where.storeId = actorStoreId
-  } else if (actorRole === 'SUPER_ADMIN') {
-    if (storeId) {
-      where.storeId = storeId
-    }
-  } else {
-    throw new OrderServiceError(
-      ORDER_ERRORS.FULFILLMENT_ACCESS_DENIED,
-      'You do not have access to admin orders',
-      403,
-    )
-  }
+  const where = buildAdminOrderWhere({ actorRole, actorStoreId, storeId })
 
   applyOrderListFilters(where, {
     startDate,
@@ -188,20 +85,12 @@ export const listAdminOrders = async ({
     prisma.order.count({ where }),
   ])
   const fulfillmentStates = await getOrdersStockFulfillment(orders.map((order) => order.id))
-  const totalPages = Math.ceil(total / limit)
 
   return {
     data: orders.map((order) => ({
       ...order,
       stockFulfillment: fulfillmentStates.get(order.id),
     })),
-    meta: {
-      page,
-      limit,
-      total,
-      totalPages,
-      hasNextPage: page < totalPages,
-      hasPreviousPage: page > 1,
-    },
+    meta: buildOrderListMeta(page, limit, total),
   }
 }

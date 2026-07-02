@@ -139,6 +139,7 @@
   color: var(--ink-soft);
   font-size: 0.82rem;
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .order-card-meta svg {
@@ -165,12 +166,14 @@
 .order-card-side strong {
   color: var(--ink);
   font-size: 1.08rem;
+  overflow-wrap: anywhere;
 }
 
 .order-card-side em {
   color: var(--ink-soft);
   font-size: 0.8rem;
   font-style: normal;
+  overflow-wrap: anywhere;
 }
 
 .order-detail-link {

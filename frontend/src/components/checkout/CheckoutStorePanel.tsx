@@ -22,8 +22,8 @@ export function CheckoutStorePanel({ nearestStore }: CheckoutStorePanelProps) {
             <span className="store-chip">Cabang Terdekat</span>
             <h3>{nearestStore.name}</h3>
             <p>{nearestStore.address}</p>
-            <p className="checkout-branch-location">
-              <MapPin aria-hidden="true" />
+            <p className="inline-flex items-center gap-1.5">
+              <MapPin className="size-4 shrink-0 text-(--green)" aria-hidden="true" />
               {nearestStore.city}, {nearestStore.province}
             </p>
           </div>
