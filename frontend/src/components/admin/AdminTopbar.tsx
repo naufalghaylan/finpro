@@ -17,7 +17,10 @@ export function AdminTopbar() {
   };
 
   return (
-    <header className="h-[72px] bg-admin-surface border-b border-admin-line-soft flex items-center justify-between px-6 sticky top-0 z-[50]">
+    <header
+      className="fixed top-0 right-0 z-[55] h-[72px] border-b border-admin-line-soft bg-admin-surface flex items-center justify-between px-6"
+      style={{ left: 'var(--admin-sidebar-width, 260px)' }}
+    >
       <div>
         <h1 className="text-xl font-bold text-admin-ink m-0 font-[family-name:var(--font-admin-display)] tracking-tight">
           PanenMart Admin
@@ -61,3 +64,4 @@ export function AdminTopbar() {
     </header>
   );
 }
+
