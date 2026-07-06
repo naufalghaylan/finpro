@@ -28,6 +28,8 @@ import AdminStoreAdminList from './pages/admin/AdminStoreAdminList'
 import AdminStockList from './pages/admin/AdminStockList'
 import AdminStoreDetailPage from './pages/admin/AdminStoreDetailPage'
 import AdminOrderList from './pages/admin/AdminOrderList'
+import AdminSalesReport from './pages/admin/AdminSalesReport'
+import AdminStockReport from './pages/admin/AdminStockReport'
 import NotFoundPage from './pages/error/NotFoundPage'
 import AdminUserPage from './pages/admin/AdminUserPage'
 import './App.css'
@@ -94,6 +96,8 @@ function App() {
           <Route path="stocks" element={<SuperAdminRoute><AdminStockList /></SuperAdminRoute>} />
           <Route path="products" element={<SuperAdminRoute><AdminProductPage /></SuperAdminRoute>} />
           <Route path="orders" element={<SuperAdminRoute><AdminOrderList /></SuperAdminRoute>} />
+          <Route path="sales-report" element={<SuperAdminRoute><AdminSalesReport /></SuperAdminRoute>} />
+          <Route path="stock-report" element={<SuperAdminRoute><AdminStockReport /></SuperAdminRoute>} />
           <Route path=":id" element={<AdminStoreDetailPage />} />
         </Route>
 

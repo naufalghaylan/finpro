@@ -14,6 +14,8 @@ import {
   Repeat2,
   Tag,
   Users,
+  LineChart,
+  BarChart3,
 } from 'lucide-react'
 import { getStoreById, updateStore } from '../../api/store'
 import { AdminStoreDetailsForm, type StoreDetailFormData } from '../../components/admin/AdminStoreDetailsForm'
@@ -24,8 +26,10 @@ import AdminDiscountList from './AdminDiscountList'
 import AdminOrderList from './AdminOrderList'
 import AdminStockList from './AdminStockList'
 import AdminStoreFulfillmentPage from './AdminStoreFulfillmentPage'
+import AdminSalesReport from './AdminSalesReport'
+import AdminStockReport from './AdminStockReport'
 
-type StoreDetailTabKey = 'details' | 'stocks' | 'discounts' | 'orders' | 'fulfillment'
+type StoreDetailTabKey = 'details' | 'stocks' | 'discounts' | 'orders' | 'fulfillment' | 'sales-report' | 'stock-report'
 
 const fallbackPosition: [number, number] = [-6.2088, 106.8456]
 
@@ -124,6 +128,8 @@ export default function AdminStoreDetailPage() {
     { key: 'discounts', label: 'Manajemen Diskon', icon: Tag },
     { key: 'orders', label: 'Pesanan Toko', icon: ClipboardList },
     { key: 'fulfillment', label: 'Mutasi Stok', icon: Repeat2 },
+    { key: 'sales-report', label: 'Laporan Penjualan', icon: LineChart },
+    { key: 'stock-report', label: 'Laporan Stok', icon: BarChart3 },
   ]
 
   if (loading) {
@@ -250,6 +256,8 @@ export default function AdminStoreDetailPage() {
         {activeTab === 'fulfillment' && (
           <AdminStoreFulfillmentPage storeId={Number(id)} onOpenOrders={() => setActiveTab('orders')} />
         )}
+        {activeTab === 'sales-report' && <AdminSalesReport storeId={Number(id)} />}
+        {activeTab === 'stock-report' && <AdminStockReport storeId={Number(id)} />}
       </div>
     </div>
   )
