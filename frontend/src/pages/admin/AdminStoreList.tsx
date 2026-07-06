@@ -6,6 +6,7 @@ import { getStores, deleteStore } from '../../api/store';
 import type { Store } from '../../types/store';
 import StoreFormModal from '../../components/admin/StoreFormModal';
 import ManageStoreAdminModal from '../../components/admin/ManageStoreAdminModal';
+import ConfirmationModal from '../../components/modal/ConfirmationModal';
 import { Plus, Pencil, Users, Trash2, MapPin, Radio, Loader2, Settings } from 'lucide-react';
 
 export default function AdminStoreList() {
@@ -21,6 +22,8 @@ export default function AdminStoreList() {
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [editingStore, setEditingStore] = useState<Store | null>(null);
   const [selectedStoreForAdmin, setSelectedStoreForAdmin] = useState<Store | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Store | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchStores = async () => {
     setLoading(true);
@@ -62,14 +65,18 @@ export default function AdminStoreList() {
     setAdminModalOpen(true);
   };
 
-  const handleDelete = async (store: Store) => {
-    if (!confirm(`Hapus toko "${store.name}"?`)) return;
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await deleteStore(store.id);
+      await deleteStore(deleteTarget.id);
+      setDeleteTarget(null);
       fetchStores();
     } catch (e) {
       const err = e as AxiosError<{ message?: string }>;
       alert(err.response?.data?.message ?? 'Gagal menghapus');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -186,7 +193,7 @@ export default function AdminStoreList() {
                             Admin
                           </button>
                           <button
-                            onClick={() => handleDelete(store)}
+                            onClick={() => setDeleteTarget(store)}
                             className="inline-flex items-center justify-center w-8 h-8 rounded-lg
                                        text-admin-red bg-transparent border-none cursor-pointer
                                        hover:bg-admin-red-soft transition-all duration-150"
@@ -241,12 +248,22 @@ export default function AdminStoreList() {
       )}
 
       {adminModalOpen && selectedStoreForAdmin && (
-        <ManageStoreAdminModal 
-          store={selectedStoreForAdmin} 
-          onClose={() => setAdminModalOpen(false)} 
-          onSuccess={fetchStores} 
+        <ManageStoreAdminModal
+          store={selectedStoreForAdmin}
+          onClose={() => setAdminModalOpen(false)}
+          onSuccess={fetchStores}
         />
       )}
+
+      <ConfirmationModal
+        open={deleteTarget !== null}
+        title="Hapus Toko"
+        message={deleteTarget ? `Hapus toko "${deleteTarget.name}"? Tindakan ini tidak bisa dibatalkan.` : ''}
+        confirmLabel="Ya, hapus"
+        loading={deleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }
