@@ -12,6 +12,7 @@ import orderRouter from './order.routes'
 import rajaongkirRouter from './rajaongkir.routes'
 import userRouter from './user.routes'
 import paymentRouter from './payment.routes'
+import reportRouter from './report.routes'
 
 import userAddressRouter from './user-address.routes'
 
@@ -30,6 +31,7 @@ router.use('/addresses', userAddressRouter)
 router.use('/orders', orderRouter)
 router.use('/shipping', rajaongkirRouter)
 router.use('/payments', paymentRouter)
+router.use('/reports', reportRouter)
 
 // ── Placeholder for future routes ──────────────────────────────────────────
 router.use('/users', userRouter)
