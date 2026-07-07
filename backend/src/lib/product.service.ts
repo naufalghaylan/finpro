@@ -53,6 +53,7 @@ export async function getAllProducts(filters: ProductFilters) {
 
   // Stok yang ditampilkan: toko terdekat (jika ada lokasi) atau semua toko.
   const stockStoreId = await resolveStockStoreId(storeId, lat, lng)
+  const now = new Date()
 
   const orderBy: any = {}
   switch (sortBy) {
@@ -76,6 +77,17 @@ export async function getAllProducts(filters: ProductFilters) {
         stocks: {
           where: stockStoreId ? { storeId: stockStoreId, deletedAt: null } : { deletedAt: null },
           select: { id: true, quantity: true }
+        },
+        // Diskon produk yang sedang berlaku, untuk menampilkan harga coret di kartu.
+        discounts: {
+          where: {
+            ...(stockStoreId ? { storeId: stockStoreId } : {}),
+            isActive: true,
+            deletedAt: null,
+            startDate: { lte: now },
+            endDate: { gte: now },
+          },
+          select: { id: true, discountType: true, discountValue: true, isActive: true },
         }
       },
       orderBy,
@@ -109,6 +121,7 @@ export async function searchProducts(keyword: string, filters: SearchFilters) {
 
   // Stok yang ditampilkan: toko terdekat (jika ada lokasi) atau semua toko.
   const stockStoreId = await resolveStockStoreId(otherFilters.storeId, otherFilters.lat, otherFilters.lng)
+  const now = new Date()
 
   const orderBy: any = {}
   switch (sortBy) {
@@ -133,6 +146,17 @@ export async function searchProducts(keyword: string, filters: SearchFilters) {
             ? { storeId: stockStoreId, deletedAt: null }
             : { deletedAt: null },
           select: { id: true, quantity: true }
+        },
+        // Diskon produk yang sedang berlaku, untuk menampilkan harga coret di kartu.
+        discounts: {
+          where: {
+            ...(stockStoreId ? { storeId: stockStoreId } : {}),
+            isActive: true,
+            deletedAt: null,
+            startDate: { lte: now },
+            endDate: { gte: now },
+          },
+          select: { id: true, discountType: true, discountValue: true, isActive: true },
         }
       },
       orderBy,

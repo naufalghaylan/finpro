@@ -47,6 +47,8 @@ function CheckoutPage() {
     canCreateOrder,
     isCartEmpty,
     hasSelectedAddressCoordinates,
+    useStoreDiscount,
+    setUseStoreDiscount,
     setPaymentMethod,
     setSelectedVoucherId,
     setNotes,
@@ -144,7 +146,11 @@ function CheckoutPage() {
                       onShippingServiceChange={setSelectedShippingService}
                     />
 
-                    <CheckoutDiscountPanel />
+                    <CheckoutDiscountPanel
+                      availableDiscountAmount={paymentSummary.availableStoreDiscount}
+                      isApplied={useStoreDiscount}
+                      onToggleApply={setUseStoreDiscount}
+                    />
 
                     <CheckoutVoucherPanel
                       vouchers={preview.vouchers ?? []}

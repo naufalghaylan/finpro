@@ -56,6 +56,7 @@ export function AdminSidebar({ isCollapsed, toggleCollapse }: AdminSidebarProps)
   const feature3MenuItems: AdminMenuItem[] = scopedStoreId
     ? [
         { to: `/admin/stores/${scopedStoreId}/stocks`, label: 'Stok Toko', icon: Package },
+        { to: `/admin/stores/${scopedStoreId}/discounts`, label: 'Diskon', icon: Tag },
         { to: `/admin/stores/${scopedStoreId}/orders`, label: 'Pesanan Toko', icon: ClipboardList },
         { to: `/admin/stores/${scopedStoreId}/fulfillment`, label: 'Mutasi Stok', icon: Repeat2 },
         { to: `/admin/stores/${scopedStoreId}/sales-report`, label: 'Laporan Penjualan', icon: LineChart },
@@ -85,17 +86,6 @@ export function AdminSidebar({ isCollapsed, toggleCollapse }: AdminSidebarProps)
           exact: true,
         },
       ];
-
-  const feature3MenuItems: AdminMenuItem[] = scopedStoreId
-    ? [
-        { to: `/admin/stores/${scopedStoreId}/stocks`, label: 'Stok Toko', icon: Package },
-        { to: `/admin/stores/${scopedStoreId}/discounts`, label: 'Diskon', icon: Tag },
-        { to: `/admin/stores/${scopedStoreId}/orders`, label: 'Pesanan Toko', icon: ClipboardList },
-        { to: `/admin/stores/${scopedStoreId}/fulfillment`, label: 'Mutasi Stok', icon: Repeat2 },
-        { to: `/admin/stores/${scopedStoreId}/sales-report`, label: 'Laporan Penjualan', icon: LineChart },
-        { to: `/admin/stores/${scopedStoreId}/stock-report`, label: 'Laporan Stok', icon: BarChart3 },
-      ]
-    : [];
 
   const commonMenuItems: AdminMenuItem[] = [
     { to: '/admin/stores/stocks', label: 'Daftar Stok', icon: Package },

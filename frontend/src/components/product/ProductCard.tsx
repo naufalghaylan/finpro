@@ -13,6 +13,18 @@ export function ProductCard({ product, onAddToCart, onClick, isAddingToCart }: P
   const primaryImage = product.images?.find(img => img.isPrimary) ?? product.images?.[0]
   const totalStock = product.stocks?.reduce((sum, s) => sum + s.quantity, 0) ?? 0
 
+  // Diskon (khusus tampilan): ambil potongan harga terbesar dari diskon aktif produk, bila ada.
+  const activeDiscounts = product.discounts?.filter(d => d.isActive) ?? []
+  const priceCutAmount = activeDiscounts.reduce((best, d) => {
+    let amount = 0
+    if (d.discountType === 'PERCENTAGE') amount = (product.basePrice * d.discountValue) / 100
+    else if (d.discountType === 'NOMINAL') amount = d.discountValue
+    return Math.max(best, Math.min(amount, product.basePrice))
+  }, 0)
+  const hasBogo = activeDiscounts.some(d => d.discountType === 'BUY_ONE_GET_ONE')
+  const discountedPrice = product.basePrice - priceCutAmount
+  const discountPercent = priceCutAmount > 0 ? Math.round((priceCutAmount / product.basePrice) * 100) : 0
+
   return (
     <article
       className="product-card"
@@ -36,7 +48,20 @@ export function ProductCard({ product, onAddToCart, onClick, isAddingToCart }: P
           <h3>{product.name}</h3>
           <span className="product-tag">{product.category.name}</span>
         </div>
-        <p className="product-price">Rp {product.basePrice.toLocaleString('id-ID')}</p>
+        {priceCutAmount > 0 ? (
+          <div className="product-price-group">
+            <div className="product-price-row">
+              <span className="product-discount-badge">{discountPercent}%</span>
+              <span className="product-price-original">Rp {product.basePrice.toLocaleString('id-ID')}</span>
+            </div>
+            <p className="product-price">Rp {discountedPrice.toLocaleString('id-ID')}</p>
+          </div>
+        ) : (
+          <div className="product-price-row">
+            <p className="product-price">Rp {product.basePrice.toLocaleString('id-ID')}</p>
+            {hasBogo && <span className="product-discount-badge product-badge-bogo">Beli 1 Gratis 1</span>}
+          </div>
+        )}
 
         {/* Stok */}
         <span className={`product-stock ${totalStock > 0 ? 'stock-ok' : 'stock-out'}`}>

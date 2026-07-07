@@ -39,7 +39,12 @@ export const getCheckoutPreview = async ({ userId, addressId }: CheckoutPreviewP
   }
 
   return {
-    cart,
+    // Sisipkan diskon-toko ke dalam summary keranjang, karena di situlah frontend
+    // (useCheckoutPaymentSummary & CheckoutSummaryPanel) membacanya.
+    cart: {
+      ...cart,
+      summary: { ...cart.summary, storeDiscountAmount },
+    },
     addresses,
     vouchers,
     selectedAddress,

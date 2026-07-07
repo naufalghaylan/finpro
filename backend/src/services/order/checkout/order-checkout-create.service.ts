@@ -24,6 +24,7 @@ export const createCheckoutOrder = async ({
   paymentMethod,
   voucherId,
   notes,
+  applyStoreDiscount = false,
 }: CreateCheckoutOrderParams) => {
   const result = await prisma.$transaction(async (tx) => {
     const address = await tx.userAddress.findFirst({
@@ -52,13 +53,15 @@ export const createCheckoutOrder = async ({
       (total, item) => total + item.quantity * item.product.basePrice,
       0,
     )
-    // Diskon toko otomatis (fitur Discount Management)
-    const storeDiscount = await calculateStoreDiscountForCheckout(
-      nearestStore.id,
-      cart.items,
-      totalProductAmount,
-      tx,
-    )
+    // Diskon toko bersifat opt-in: hanya diterapkan bila user memilih memakainya.
+    const storeDiscount = applyStoreDiscount
+      ? await calculateStoreDiscountForCheckout(
+          nearestStore.id,
+          cart.items,
+          totalProductAmount,
+          tx,
+        )
+      : 0
 
     // Diskon voucher user (fitur Voucher)
     const selectedVoucher = voucherId ? await getCheckoutVoucher(userId, voucherId, tx) : null
