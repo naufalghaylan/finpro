@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { useAddressStore } from '../../store/addressStore'
 import { searchDestinations } from '../../api/rajaongkir'
 import type { KomerceDestination } from '../../api/rajaongkir'
@@ -48,7 +48,12 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useEffect(() => {
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen)
+  const [prevEditData, setPrevEditData] = useState(editData)
+
+  if (isOpen !== prevIsOpen || editData !== prevEditData) {
+    setPrevIsOpen(isOpen)
+    setPrevEditData(editData)
     if (isOpen) {
       if (editData) {
         setFormData({
@@ -89,7 +94,7 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
       setErrorMsg('')
       setFormErrors({})
     }
-  }, [isOpen, editData])
+  }
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value
@@ -190,7 +195,7 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
       } else if (backendMessage) {
         setErrorMsg(backendMessage);
       } else {
-        setErrorMsg(err.message || 'Terjadi kesalahan saat menyimpan alamat');
+        setErrorMsg(error.message || 'Terjadi kesalahan saat menyimpan alamat');
       }
     }
   }

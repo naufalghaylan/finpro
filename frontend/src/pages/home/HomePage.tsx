@@ -1,5 +1,6 @@
 
 
+import type { Product } from '../../types/product'
 import { HeroCarousel } from '../../components/home/HeroCarousel'
 import { HomeFooter } from '../../components/home/HomeFooter'
 import { Navbar } from '../../components/common/Navbar'
@@ -206,7 +207,7 @@ export default function HomePage() {
           onUseMainStore={fallbackToMainStore}
         />
         <ValueStrip items={valueProps} sectionId="deals" />
-        <ProductGrid products={isManuallySelected ? undefined : data?.products} storeId={activeStore.id} />
+        <ProductGrid products={isManuallySelected ? undefined : (data?.products as unknown as Product[])} storeId={activeStore.id} />
           
         <StoreShowcase
           stores={activeStores}
@@ -214,30 +215,6 @@ export default function HomePage() {
           onSelectStore={setSelectedStoreId}
           error={apiError}
         />
-        <section className="py-7 md:py-[28px]" id="help">
-          <div className="w-full max-w-[1440px] mx-auto px-[clamp(16px,4vw,48px)]">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-8 md:p-[48px] rounded-[24px] bg-[var(--ink)] text-white shadow-[var(--shadow-soft)]">
-              <div className="flex flex-col gap-2">
-                <p className="m-0 text-[#f1b884] uppercase tracking-[0.12em] text-xs font-semibold">Butuh bantuan</p>
-                <h2 className="m-0 font-[family-name:var(--font-display)] text-[clamp(1.6rem,2.4vw,2.2rem)] text-white leading-tight">
-                  Tim customer care siap bantu pilihan belanja kamu.
-                </h2>
-                <p className="m-0 text-white/90 max-w-[520px]">
-                  Dapatkan saran menu harian, info stok, dan rekomendasi store
-                  alternatif dengan cepat.
-                </p>
-              </div>
-              <div className="flex gap-3 flex-wrap md:flex-nowrap">
-                <button type="button" className="inline-flex items-center justify-center gap-2 rounded-full border border-transparent px-[18px] py-2.5 font-semibold cursor-pointer bg-white text-[var(--ink)] shadow-[var(--shadow-soft)] hover:-translate-y-[1px] hover:shadow-[var(--shadow-strong)] transition-all whitespace-nowrap">
-                  Hubungi kami
-                </button>
-                <button type="button" className="inline-flex items-center justify-center gap-2 rounded-full border border-white/40 bg-transparent px-[18px] py-2.5 font-semibold cursor-pointer text-white transition-all hover:-translate-y-[1px] hover:shadow-[var(--shadow-strong)] hover:border-white whitespace-nowrap">
-                  Lihat pusat bantuan
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
         </>
         )}
       </main>

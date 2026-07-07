@@ -4,14 +4,12 @@ import { useNavigate, useParams } from 'react-router-dom'
 import {
   CircleCheck,
   CircleX,
-  ClipboardList,
   Info,
   Loader2,
   MapPin,
   Package,
   Phone,
   Radar,
-  Repeat2,
   Tag,
   Users,
   LineChart,
@@ -23,7 +21,6 @@ import { useToast } from '../../components/common/Toast'
 import type { Store } from '../../types/store'
 import ErrorPage from '../error/ErrorPage'
 import AdminDiscountList from './AdminDiscountList'
-import AdminOrderList from './AdminOrderList'
 import AdminStockList from './AdminStockList'
 import AdminStoreFulfillmentPage from './AdminStoreFulfillmentPage'
 import AdminSalesReport from './AdminSalesReport'
@@ -42,7 +39,7 @@ export default function AdminStoreDetailPage() {
   const [store, setStore] = useState<Store | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [fetchError, setFetchError] = useState<{message: string, code: number} | null>(null)
+  const [fetchError, setFetchError] = useState<{ message: string; code: number } | null>(null)
   const [formData, setFormData] = useState<StoreDetailFormData>({
     name: '',
     address: '',
@@ -55,7 +52,6 @@ export default function AdminStoreDetailPage() {
   const [position, setPosition] = useState<[number, number]>(fallbackPosition)
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFormData((currentFormData) => ({
       ...currentFormData,
       latitude: position[0],
@@ -89,10 +85,9 @@ export default function AdminStoreDetailPage() {
       const error = e as AxiosError<{ message?: string }>
       setFetchError({
         message: error.response?.data?.message || 'Gagal mengambil data toko',
-        code: error.response?.status || 500
+        code: error.response?.status || 500,
       })
       showToast(error.response?.data?.message || 'Gagal mengambil data toko', 'error')
-      // Only redirect if unauthorized for the entire stores section, otherwise show error
       if (error.response?.status === 403) navigate('/admin/stores')
     } finally {
       setLoading(false)
@@ -101,10 +96,7 @@ export default function AdminStoreDetailPage() {
 
   useEffect(() => {
     if (!id) return
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchStore()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
   const handleUpdateStore = async (event: FormEvent<HTMLFormElement>) => {
@@ -144,13 +136,9 @@ export default function AdminStoreDetailPage() {
   if (fetchError) {
     return (
       <div className="py-10">
-        <ErrorPage 
-          title="Toko Tidak Ditemukan" 
-          message={fetchError.message} 
-          code={fetchError.code} 
-        />
+        <ErrorPage title="Toko Tidak Ditemukan" message={fetchError.message} code={fetchError.code} />
       </div>
-    );
+    )
   }
 
   if (!store) {
@@ -184,18 +172,24 @@ export default function AdminStoreDetailPage() {
       <section className="mb-5 rounded-3xl border border-admin-line-soft bg-admin-surface p-5 shadow-sm md:p-6">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0">
-            <span className={`mb-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${store.status ? 'bg-admin-green-soft text-admin-green' : 'bg-admin-red-soft text-admin-red'}`}>
+            <span
+              className={`mb-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${
+                store.status ? 'bg-admin-green-soft text-admin-green' : 'bg-admin-red-soft text-admin-red'
+              }`}
+            >
               {store.status ? <CircleCheck className="h-3.5 w-3.5" /> : <CircleX className="h-3.5 w-3.5" />}
               {store.status ? 'Aktif' : 'Nonaktif'}
             </span>
             <h3 className="m-0 truncate text-2xl font-bold text-admin-ink">{store.name}</h3>
             <p className="m-0 mt-2 flex max-w-3xl items-start gap-2 text-sm leading-6 text-admin-ink-muted">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-admin-accent-strong" />
-              <span className="wrap-break-word">{store.address}, {store.city}, {store.province}</span>
+              <span className="wrap-break-word">
+                {store.address}, {store.city}, {store.province}
+              </span>
             </p>
           </div>
 
-          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3 xl:w-[560px]">
+          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3 xl:w-140">
             {storeMetrics.map((metric) => {
               const Icon = metric.Icon
 

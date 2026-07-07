@@ -1,0 +1,49 @@
+.payment-page {
+  padding: 48px 0 72px;
+}
+
+.payment-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.payment-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+  gap: 24px;
+  align-items: start;
+}
+
+.payment-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(232, 107, 79, 0.24);
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: #fff4ec;
+  color: var(--accent-strong);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.payment-status--waiting_confirmation,
+.payment-status--processing,
+.payment-status--confirmed {
+  border-color: rgba(74, 124, 91, 0.24);
+  background: #eef4e9;
+  color: var(--green);
+}
+
+.payment-status--cancelled {
+  border-color: rgba(220, 38, 38, 0.2);
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.payment-status--shipped {
+  border-color: rgba(15, 118, 110, 0.2);
+  background: #f0fdfa;
+  color: #0f766e;
+}

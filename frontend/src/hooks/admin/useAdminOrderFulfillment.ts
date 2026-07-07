@@ -11,41 +11,26 @@ import type {
   AdminOrder,
   FulfillmentRequirement,
 } from '../../types/order'
-import { getApiErrorMessage } from '../../utils/apiError'
+import {
+  createFulfillmentRequests,
+  createRequestDrafts,
+  isFulfillmentDraftValid,
+  type FulfillmentDraft,
+} from './adminFulfillmentDraft'
+import {
+  createApproveFulfillmentConfirmation,
+  createReceiveFulfillmentConfirmation,
+  type FulfillmentConfirmation,
+} from './adminFulfillmentConfirmation'
+import { useAdminFulfillmentActions } from './useAdminFulfillmentActions'
 
-type FulfillmentDraft = {
-  sourceStoreId: number | ''
-  quantity: number
-  notes: string
-}
-
-export type FulfillmentConfirmation = {
-  type: 'approve' | 'receive'
-  mutationId: number
-  title: string
-  message: string
-  confirmLabel: string
-  tone: 'success' | 'info'
-}
+export type { FulfillmentConfirmation } from './adminFulfillmentConfirmation'
 
 type UseAdminOrderFulfillmentParams = {
   order: AdminOrder
   onClose: () => void
   onUpdated: () => Promise<void> | void
 }
-
-const createRequestDrafts = (requirements: FulfillmentRequirement[]) => Object.fromEntries(
-  requirements
-    .filter((requirement) => requirement.remainingQuantity > 0)
-    .map((requirement) => [
-      requirement.productId,
-      {
-        sourceStoreId: '' as const,
-        quantity: requirement.remainingQuantity,
-        notes: '',
-      },
-    ]),
-) as Record<number, FulfillmentDraft>
 
 export function useAdminOrderFulfillment({ order, onClose, onUpdated }: UseAdminOrderFulfillmentParams) {
   const { showToast } = useToast()
@@ -60,6 +45,13 @@ export function useAdminOrderFulfillment({ order, onClose, onUpdated }: UseAdmin
   const [submittingKey, setSubmittingKey] = useState<string | null>(null)
   const [isClosingDisabled, setIsClosingDisabled] = useState(false)
   const [pendingConfirmation, setPendingConfirmation] = useState<FulfillmentConfirmation | null>(null)
+  const { runAction } = useAdminFulfillmentActions({
+    onClose,
+    onUpdated,
+    setSubmittingKey,
+    setIsClosingDisabled,
+    setPendingConfirmation,
+  })
 
   const canActForStore = (storeId: number) => (
     user?.role === 'SUPER_ADMIN' || user?.storeId === storeId
@@ -85,47 +77,16 @@ export function useAdminOrderFulfillment({ order, onClose, onUpdated }: UseAdmin
     })
   }
 
-  const isDraftValid = (requirement: FulfillmentRequirement) => {
-    const draft = requestDrafts[requirement.productId]
-    if (!draft || !draft.sourceStoreId || draft.quantity < 1) return false
-
-    const source = requirement.sources.find((option) => option.storeId === draft.sourceStoreId)
-    return Boolean(
-      source &&
-      draft.quantity <= requirement.remainingQuantity &&
-      draft.quantity <= source.availableQuantity,
-    )
-  }
-
   const canSubmitRequests = (
     requestRequirements.length > 0 &&
-    requestRequirements.every(isDraftValid)
+    requestRequirements.every((requirement) => (
+      isFulfillmentDraftValid(requirement, requestDrafts[requirement.productId])
+    ))
   )
   const totalRequestQuantity = requestRequirements.reduce(
     (total, requirement) => total + (requestDrafts[requirement.productId]?.quantity ?? 0),
     0,
   )
-
-  const runAction = async (
-    actionKey: string,
-    action: () => Promise<unknown>,
-    successMessage: string,
-  ) => {
-    try {
-      setSubmittingKey(actionKey)
-      setIsClosingDisabled(true)
-      await action()
-      showToast(successMessage, 'success')
-      await onUpdated()
-      onClose()
-    } catch (error) {
-      showToast(getApiErrorMessage(error, 'Gagal memproses mutasi stok'), 'error')
-    } finally {
-      setSubmittingKey(null)
-      setIsClosingDisabled(false)
-      setPendingConfirmation(null)
-    }
-  }
 
   const handleRequestFulfillments = async () => {
     if (!canSubmitRequests) {
@@ -133,16 +94,7 @@ export function useAdminOrderFulfillment({ order, onClose, onUpdated }: UseAdmin
       return
     }
 
-    const requests = requestRequirements.map((requirement) => {
-      const draft = requestDrafts[requirement.productId]
-      return {
-        sourceStoreId: Number(draft.sourceStoreId),
-        productId: requirement.productId,
-        quantity: Math.floor(draft.quantity),
-        notes: draft.notes.trim() || undefined,
-      }
-    })
-
+    const requests = createFulfillmentRequests(requestRequirements, requestDrafts)
     await runAction(
       'request-batch',
       () => requestOrderFulfillments(order.id, requests),
@@ -151,17 +103,7 @@ export function useAdminOrderFulfillment({ order, onClose, onUpdated }: UseAdmin
   }
 
   const handleApproveFulfillment = (mutationId: number) => {
-    const mutation = order.stockMutations.find((item) => item.id === mutationId)
-    setPendingConfirmation({
-      type: 'approve',
-      mutationId,
-      title: 'Setujui mutasi stok?',
-      message: mutation
-        ? `Pastikan ${mutation.quantity} ${mutation.product.name} siap dikirim dari ${mutation.sourceStore.name} ke ${mutation.destinationStore.name}.`
-        : 'Pastikan jumlah dan kondisi stok siap dikirim ke toko tujuan.',
-      confirmLabel: 'Setujui & Kirim',
-      tone: 'success',
-    })
+    setPendingConfirmation(createApproveFulfillmentConfirmation(order, mutationId))
   }
 
   const handleRejectFulfillment = (mutationId: number) => {
@@ -173,17 +115,7 @@ export function useAdminOrderFulfillment({ order, onClose, onUpdated }: UseAdmin
   }
 
   const handleReceiveFulfillment = (mutationId: number) => {
-    const mutation = order.stockMutations.find((item) => item.id === mutationId)
-    setPendingConfirmation({
-      type: 'receive',
-      mutationId,
-      title: 'Barang mutasi sudah diterima?',
-      message: mutation
-        ? `Konfirmasi jika ${mutation.quantity} ${mutation.product.name} sudah tiba dan diperiksa di ${mutation.destinationStore.name}.`
-        : 'Konfirmasi hanya jika barang sudah benar-benar tiba dan diperiksa di gudang tujuan.',
-      confirmLabel: 'Terima Barang',
-      tone: 'info',
-    })
+    setPendingConfirmation(createReceiveFulfillmentConfirmation(order, mutationId))
   }
 
   const handleConfirmFulfillmentAction = () => {

@@ -1,0 +1,52 @@
+<div style='background:#f7f1e6;font-family:Arial,sans-serif;padding:32px 16px;color:#1f2a22;line-height:1.6'>
+  <div style='max-width:600px;margin:auto;background:#fffaf2;border:1px solid #d8d1c5;border-radius:14px;overflow:hidden'>
+    <div style='background:#315c3b;padding:24px;text-align:center'>
+      <h1 style='font-family:Georgia,serif;font-size:28px;color:#fff;margin:0'>PanenMart</h1>
+    </div>
+    <div style='padding:30px'>
+      <p style='color:#546055;margin:0 0 8px'>Halo, {{customerName}}!</p>
+      <h2 style='font-family:Georgia,serif;font-size:24px;margin:0 0 10px'>{{title}}</h2>
+      <p style='color:#546055;margin:0 0 22px'>{{message}}</p>
+
+      <div style='background:#f1ece2;border-radius:12px;padding:16px;margin-bottom:22px'>
+        <table role='presentation' style='width:100%;border-collapse:collapse'>
+          <tr><td style='color:#6d756e'>Nomor pesanan</td><td style='font-weight:700;text-align:right'>{{orderNumber}}</td></tr>
+          <tr><td style='color:#6d756e;padding-top:7px'>Status</td><td style='color:#c55139;font-weight:700;text-align:right;padding-top:7px'>{{statusLabel}}</td></tr>
+          {{#if paymentMethod}}<tr><td style='color:#6d756e;padding-top:7px'>Pembayaran</td><td style='text-align:right;padding-top:7px'>{{paymentMethod}}</td></tr>{{/if}}
+          {{#if paymentDeadline}}<tr><td style='color:#6d756e;padding-top:7px'>Batas bayar</td><td style='text-align:right;padding-top:7px'>{{paymentDeadline}}</td></tr>{{/if}}
+          {{#if shippingInfo}}<tr><td style='color:#6d756e;padding-top:7px'>Pengiriman</td><td style='text-align:right;padding-top:7px'>{{shippingInfo}}</td></tr>{{/if}}
+        </table>
+      </div>
+
+      <h3 style='font-size:16px;margin:0 0 8px'>Ringkasan produk</h3>
+      <table role='presentation' style='width:100%;border-collapse:collapse;margin-bottom:20px'>
+        {{#each items}}
+        <tr>
+          <td style='border-bottom:1px solid #e2dbcf;padding:9px 0'>{{name}} <span style='color:#6d756e'>&times; {{quantity}}</span></td>
+          <td style='border-bottom:1px solid #e2dbcf;font-weight:600;padding:9px 0;text-align:right'>{{subtotal}}</td>
+        </tr>
+        {{/each}}
+        <tr><td style='font-weight:700;padding-top:12px'>Total</td><td style='color:#315c3b;font-weight:700;padding-top:12px;text-align:right'>{{totalAmount}}</td></tr>
+      </table>
+
+      {{#if recipientAddress}}
+      <div style='border-left:4px solid #315c3b;padding-left:12px;margin-bottom:22px'>
+        <strong style='color:#6d756e;font-size:12px'>ALAMAT PENERIMA</strong>
+        <p style='margin:3px 0 0'>{{recipientAddress}}</p>
+      </div>
+      {{/if}}
+
+      {{#if cancelReason}}
+      <div style='background:#fff0ec;border:1px solid #efc4b9;border-radius:12px;padding:14px;margin-bottom:22px'>
+        <strong style='color:#8b3e2f'>Alasan pembatalan</strong>
+        <p style='color:#6b352b;margin:3px 0 0'>{{cancelReason}}</p>
+      </div>
+      {{/if}}
+
+      <div style='text-align:center;margin:26px 0 8px'>
+        <a href='{{actionUrl}}' style='background:#e86b4f;color:#fff;padding:13px 25px;text-decoration:none;border-radius:12px;font-weight:700;display:inline-block'>{{actionLabel}}</a>
+      </div>
+      <p style='color:#7a817b;font-size:12px;margin:26px 0 0;border-top:1px solid #d8d1c5;padding-top:18px;text-align:center'>Email otomatis terkait aktivitas pesanan Anda di PanenMart.</p>
+    </div>
+  </div>
+</div>

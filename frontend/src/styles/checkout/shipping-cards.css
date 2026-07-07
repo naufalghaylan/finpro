@@ -1,0 +1,66 @@
+.checkout-shipping-service-card.selected {
+  background: rgba(232, 107, 79, 0.04);
+}
+
+.checkout-shipping-service-content {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checkout-shipping-service-top,
+.checkout-shipping-service-bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.checkout-shipping-service-top {
+  align-items: flex-start;
+}
+
+.checkout-shipping-selected-icon {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  color: var(--accent-strong);
+  flex: 0 0 auto;
+}
+
+.checkout-shipping-service-info strong {
+  color: var(--ink);
+  font-size: 1.1rem;
+}
+
+.checkout-shipping-service-card.selected .checkout-shipping-service-info strong {
+  color: var(--accent-strong);
+}
+
+.checkout-shipping-service-bottom {
+  align-items: flex-end;
+  margin-top: auto;
+  border-top: 1px dashed var(--line);
+  padding-top: 12px;
+}
+
+.checkout-shipping-service-etd {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.checkout-shipping-service-etd span {
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+}
+
+.checkout-shipping-service-etd strong {
+  color: var(--ink);
+  font-size: 0.85rem;
+}
+
+.checkout-shipping-service-cost {
+  color: var(--accent-strong);
+  font-size: 1.15rem;
+}

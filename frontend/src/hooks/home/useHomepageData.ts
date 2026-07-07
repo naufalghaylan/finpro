@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { getPublicStores, getNearestStore } from '../../api/store';
+import type { HomepageData, HomepageStoreInfo } from '../../types/home/homepage';
 
 export function useHomepageData(lat?: number, lng?: number) {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<Partial<HomepageData> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,10 +21,10 @@ export function useHomepageData(lat?: number, lng?: number) {
         if (mounted) {
           setData({
             stores: storesRes.data,
-            storeInfo: nearestRes ? nearestRes.data : null,
-            banners: null,
-            categories: null,
-            footer: null,
+            storeInfo: nearestRes ? (nearestRes.data as unknown as HomepageStoreInfo) : undefined,
+            banners: undefined,
+            categories: undefined,
+            footer: undefined,
             products: undefined
           });
           setError(null);

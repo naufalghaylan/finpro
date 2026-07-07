@@ -1,0 +1,141 @@
+@media (max-width: 1024px) {
+  .cart-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .cart-summary-panel {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .cart-list-head {
+    display: none;
+  }
+
+  .cart-item {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .cart-item-product {
+    grid-column: 1 / -1;
+  }
+
+  .cart-item-price-block,
+  .cart-item-quantity-block,
+  .cart-line-total-block {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .cart-item-price-block span,
+  .cart-item-quantity-block > span,
+  .cart-line-total-block span {
+    display: block;
+  }
+
+  .cart-item-price-block {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .cart-item-quantity-block {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+    align-items: flex-end;
+  }
+
+  .cart-line-total-block {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .cart-remove-button {
+    grid-column: 2;
+    grid-row: 3;
+    align-self: end;
+  }
+}
+
+@media (max-width: 720px) {
+  .cart-header {
+    align-items: flex-start;
+  }
+
+  .cart-store-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .cart-item {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 14px;
+  }
+
+  .cart-item-product {
+    grid-template-columns: 82px minmax(0, 1fr);
+  }
+
+  .cart-item-image {
+    width: 82px;
+    height: 82px;
+  }
+
+  .cart-line-total-block {
+    display: flex;
+  }
+
+  .cart-mobile-checkout-bar {
+    border-radius: 8px;
+  }
+}
+
+@media (max-width: 420px) {
+  .cart-item {
+    grid-template-columns: 1fr;
+  }
+
+  .cart-mobile-checkout-bar {
+    flex-wrap: wrap;
+  }
+
+  .cart-mobile-checkout-bar > div,
+  .cart-mobile-checkout-bar .button {
+    width: 100%;
+  }
+
+  .cart-mobile-checkout-bar .button {
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .cart-item-price-block,
+  .cart-item-quantity-block,
+  .cart-line-total-block,
+  .cart-remove-button {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .cart-item-product {
+    grid-template-columns: 74px minmax(0, 1fr);
+  }
+
+  .cart-item-image {
+    width: 74px;
+    height: 74px;
+  }
+
+  .cart-item-quantity-block {
+    justify-self: stretch;
+    align-items: flex-start;
+  }
+
+  .cart-remove-button {
+    grid-column: auto;
+    grid-row: auto;
+    justify-self: start;
+  }
+}

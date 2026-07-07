@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, Suspense, lazy } from 'react'
 import { Loader2 } from 'lucide-react'
 import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
@@ -23,25 +23,34 @@ import ProductDetailPage from './pages/product/ProductDetailPage'
 import AdminCategoryPage from './pages/admin/AdminCategoryPage'
 import AdminProductPage from './pages/admin/AdminProductPage'
 import AdminStoreLayout, { AdminStoreIndexRedirect } from './pages/admin/AdminStoreLayout'
-import AdminStoreList from './pages/admin/AdminStoreList'
 import AdminStoreAdminList from './pages/admin/AdminStoreAdminList'
 import AdminStockList from './pages/admin/AdminStockList'
-import AdminStoreDetailPage from './pages/admin/AdminStoreDetailPage'
 import AdminOrderList from './pages/admin/AdminOrderList'
+import AdminDashboardLayout from './components/admin/AdminDashboardLayout'
+
+const AdminStoreList = lazy(() => import('./pages/admin/AdminStoreList'))
+const AdminStoreDetailPage = lazy(() => import('./pages/admin/AdminStoreDetailPage'))
+const AdminStoreOrdersPage = lazy(() => import('./pages/admin/AdminStoreOrdersPage'))
+const AdminStoreMutationsPage = lazy(() => import('./pages/admin/AdminStoreMutationsPage'))
+
+const PageLoader = () => (
+  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '50vh', gap: '16px' }}>
+    <Loader2 size={32} className="animate-spin" style={{ color: 'var(--accent)' }} />
+    <p style={{ color: 'var(--ink-soft)', fontWeight: 500 }}>Memuat halaman...</p>
+  </div>
+)
 import AdminSalesReport from './pages/admin/AdminSalesReport'
 import AdminStockReport from './pages/admin/AdminStockReport'
 import NotFoundPage from './pages/error/NotFoundPage'
 import AdminUserPage from './pages/admin/AdminUserPage'
 import './App.css'
+import './styles/index.css'
 
 function OrderPaymentRedirect() {
   const { id } = useParams()
 
   return <Navigate to={`/orders/${id}`} replace />
 }
-
-
-
 
 function App() {
   const { checkAuth, isLoading } = useAuthStore()
@@ -68,15 +77,13 @@ function App() {
         <Route path="/catalog" element={<CatalogPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
-        
-        {/* Guest Routes */}
+
         <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
         <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
         <Route path="/verify" element={<VerifyAccountPage />} />
         <Route path="/forgot-password" element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
         <Route path="/reset-password" element={<GuestRoute><ResetPasswordPage /></GuestRoute>} />
-        
-        {/* Protected Routes */}
+
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/onboarding" element={<ProtectedRoute><SocialOnboardingPage /></ProtectedRoute>} />
         <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
@@ -84,29 +91,30 @@ function App() {
         <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
         <Route path="/orders/:id" element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
         <Route path="/orders/:id/payment" element={<ProtectedRoute><OrderPaymentRedirect /></ProtectedRoute>} />
-        
-        {/* Admin Routes */}
-        <Route path="/admin/users" element={<SuperAdminRoute><AdminUserPage /></SuperAdminRoute>} />
-        <Route path="/admin/categories" element={<AdminRoute><AdminCategoryPage /></AdminRoute>} />
 
-        <Route path="/admin/stores" element={<AdminRoute><AdminStoreLayout /></AdminRoute>}>
-          <Route index element={<AdminStoreIndexRedirect />} />
-          <Route path="list" element={<SuperAdminRoute><AdminStoreList /></SuperAdminRoute>} />
-          <Route path="admins" element={<SuperAdminRoute><AdminStoreAdminList /></SuperAdminRoute>} />
-          <Route path="stocks" element={<SuperAdminRoute><AdminStockList /></SuperAdminRoute>} />
-          <Route path="products" element={<SuperAdminRoute><AdminProductPage /></SuperAdminRoute>} />
-          <Route path="orders" element={<SuperAdminRoute><AdminOrderList /></SuperAdminRoute>} />
-          <Route path="sales-report" element={<SuperAdminRoute><AdminSalesReport /></SuperAdminRoute>} />
+        <Route path="/admin" element={<AdminDashboardLayout />}>
+          <Route path="users" element={<SuperAdminRoute><AdminUserPage /></SuperAdminRoute>} />
+          <Route path="categories" element={<AdminRoute><AdminCategoryPage /></AdminRoute>} />
+
+          <Route path="stores" element={<AdminRoute><AdminStoreLayout /></AdminRoute>}>
+            <Route index element={<AdminStoreIndexRedirect />} />
+            <Route path="list" element={<SuperAdminRoute><Suspense fallback={<PageLoader />}><AdminStoreList /></Suspense></SuperAdminRoute>} />
+            <Route path="admins" element={<SuperAdminRoute><AdminStoreAdminList /></SuperAdminRoute>} />
+            <Route path="stocks" element={<SuperAdminRoute><AdminStockList /></SuperAdminRoute>} />
+            <Route path="products" element={<SuperAdminRoute><AdminProductPage /></SuperAdminRoute>} />
+            <Route path="orders" element={<SuperAdminRoute><AdminOrderList /></SuperAdminRoute>} />
+            <Route path=":id/orders" element={<Suspense fallback={<PageLoader />}><AdminStoreOrdersPage /></Suspense>} />
+            <Route path=":id/fulfillment" element={<Suspense fallback={<PageLoader />}><AdminStoreMutationsPage /></Suspense>} />
+            <Route path="sales-report" element={<SuperAdminRoute><AdminSalesReport /></SuperAdminRoute>} />
           <Route path="stock-report" element={<SuperAdminRoute><AdminStockReport /></SuperAdminRoute>} />
-          <Route path=":id" element={<AdminStoreDetailPage />} />
+          <Route path=":id" element={<Suspense fallback={<PageLoader />}><AdminStoreDetailPage /></Suspense>} />
+          </Route>
         </Route>
 
-        {/* Catch All Route for 404 */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </ToastProvider>
   )
-
 }
 
 export default App

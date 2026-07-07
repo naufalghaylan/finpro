@@ -1,5 +1,4 @@
 import { Request, Response } from 'express'
-import cloudinary from '../lib/cloudinary'
 import {
   confirmManualPayment as confirmManualPaymentService,
   createMidtransSnapToken as createMidtransSnapTokenService,
@@ -7,36 +6,10 @@ import {
   syncMidtransPaymentStatus as syncMidtransPaymentStatusService,
   uploadManualPaymentProof as uploadManualPaymentProofService,
 } from '../services/order.service'
-import {
-  confirmManualPaymentSchema,
-  orderParamsSchema,
-} from '../validations/order.validation'
-import {
-  getAuthenticatedUserId,
-  sendInternalError,
-  sendValidationError,
-} from './controller.utils'
+import { confirmManualPaymentSchema, orderParamsSchema } from '../validations/order.validation'
+import { getAuthenticatedUserId, sendInternalError, sendValidationError } from './controller.utils'
 import { handleOrderError } from './order-error.util'
-
-const uploadPaymentProofToCloudinary = async (file: Express.Multer.File) => {
-  const base64File = Buffer.from(file.buffer).toString('base64')
-  const dataUri = `data:${file.mimetype};base64,${base64File}`
-
-  return cloudinary.uploader.upload(dataUri, {
-    folder: 'finpro/payment-proofs',
-    resource_type: 'image',
-  })
-}
-
-const removeCloudinaryAsset = async (publicId?: string) => {
-  if (!publicId) return
-
-  try {
-    await cloudinary.uploader.destroy(publicId)
-  } catch (error) {
-    console.error('[removeCloudinaryAsset]', error)
-  }
-}
+import { removeCloudinaryAsset, uploadPaymentProofToCloudinary } from './order-payment-upload.util'
 
 export const getOrderPaymentDetails = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -193,9 +166,10 @@ export const confirmManualPayment = async (req: Request, res: Response): Promise
     })
 
     res.json({
-      message: parsedBody.data.action === 'approve'
-        ? 'Manual payment approved successfully'
-        : 'Manual payment rejected successfully',
+      message:
+        parsedBody.data.action === 'approve'
+          ? 'Manual payment approved successfully'
+          : 'Manual payment rejected successfully',
       data: order,
     })
   } catch (error) {

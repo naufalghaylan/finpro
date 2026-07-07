@@ -6,25 +6,25 @@ export {
   receiveFulfillments,
   rejectFulfillment,
   rejectFulfillments,
-} from './order/order-fulfillment-action.service'
+} from './order/fulfillment/order-fulfillment-action.service'
 export {
   requestOrderFulfillment,
   requestOrderFulfillments,
-} from './order/order-fulfillment-request.service'
-export { listStoreFulfillments } from './order/order-fulfillment-query.service'
-export { createCheckoutOrder, getCheckoutPreview } from './order/order-checkout.service'
+} from './order/fulfillment/order-fulfillment-request.service'
+export { listStoreFulfillments } from './order/fulfillment/order-fulfillment-query.service'
+export { createCheckoutOrder, getCheckoutPreview } from './order/checkout/order-checkout.service'
 export {
   calculateOrderDiscount,
   calculateStoreDiscountForCheckout,
   getActiveStoreDiscounts,
-} from './order/order-discount.service'
-export type { CheckoutDiscount } from './order/order-discount.service'
-export { autoCancelExpiredManualTransferOrders, cancelOrder } from './order/order-cancellation.service'
-export { autoConfirmShippedOrders, confirmOrderReceived, shipOrder } from './order/order-completion.service'
-export * from './order/order-manual-payment.service'
-export * from './order/order-midtrans-api.service'
-export * from './order/order-midtrans-webhook.service'
-export { listAdminOrders, listOrders } from './order/order-query.service'
+} from './order/checkout/order-discount.service'
+export type { CheckoutDiscount } from './order/checkout/order-discount.service'
+export { autoCancelExpiredManualTransferOrders, cancelOrder } from './order/management/order-cancellation.service'
+export { autoConfirmShippedOrders, confirmOrderReceived, shipOrder } from './order/management/order-completion.service'
+export * from './order/payment/order-manual-payment.service'
+export * from './order/payment/order-midtrans-api.service'
+export * from './order/payment/order-midtrans-webhook.service'
+export { listAdminOrders, listOrders } from './order/management/order-query.service'
 export type {
   CancelOrderParams,
   CheckoutPreviewParams,
@@ -37,4 +37,4 @@ export type {
   OrderPaymentParams,
   OrderStatusGroup,
   UploadPaymentProofParams,
-} from './order/order.types'
+} from './order/core/order.types'

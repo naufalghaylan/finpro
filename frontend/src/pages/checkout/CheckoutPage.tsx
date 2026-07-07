@@ -14,6 +14,17 @@ import { CheckoutSummaryPanel } from '../../components/checkout/CheckoutSummaryP
 import { CheckoutSuccessPanel } from '../../components/checkout/CheckoutSuccessPanel'
 import { CheckoutEmptyState, CheckoutErrorState, CheckoutLoadingState } from '../../components/checkout/CheckoutStatePanel'
 import { CheckoutVoucherPanel } from '../../components/checkout/CheckoutVoucherPanel'
+import { CheckoutDiscountPanel } from '../../components/checkout/CheckoutDiscountPanel'
+
+const checkoutFlowStepClassName = [
+  'inline-flex items-center justify-center gap-2 rounded-lg border',
+  'border-[rgba(232,107,79,0.16)] bg-[rgba(255,255,255,0.76)]',
+  'px-3 py-2.75 text-[0.9rem] font-extrabold text-(--ink)',
+  'shadow-[0_8px_20px_rgba(31,42,34,0.05)]',
+  'max-[720px]:min-w-[136px] max-[720px]:justify-start',
+].join(' ')
+
+const checkoutFlowIconClassName = 'size-4.5 shrink-0 text-(--accent-strong)'
 
 function CheckoutPage() {
   const {
@@ -83,17 +94,20 @@ function CheckoutPage() {
               </div>
 
               {!isCartEmpty && (
-                <div className="checkout-flow-steps" aria-label="Urutan checkout">
-                  <span>
-                    <MapPin aria-hidden="true" />
+                <div
+                  className="grid grid-cols-3 gap-2.5 max-[720px]:flex max-[720px]:overflow-x-auto max-[720px]:pb-0.5 max-[720px]:[scrollbar-width:thin]"
+                  aria-label="Urutan checkout"
+                >
+                  <span className={checkoutFlowStepClassName}>
+                    <MapPin className={checkoutFlowIconClassName} aria-hidden="true" />
                     Alamat
                   </span>
-                  <span>
-                    <Truck aria-hidden="true" />
+                  <span className={checkoutFlowStepClassName}>
+                    <Truck className={checkoutFlowIconClassName} aria-hidden="true" />
                     Pengiriman
                   </span>
-                  <span>
-                    <CreditCard aria-hidden="true" />
+                  <span className={checkoutFlowStepClassName}>
+                    <CreditCard className={checkoutFlowIconClassName} aria-hidden="true" />
                     Pembayaran
                   </span>
                 </div>
@@ -129,6 +143,8 @@ function CheckoutPage() {
                       }}
                       onShippingServiceChange={setSelectedShippingService}
                     />
+
+                    <CheckoutDiscountPanel />
 
                     <CheckoutVoucherPanel
                       vouchers={preview.vouchers ?? []}

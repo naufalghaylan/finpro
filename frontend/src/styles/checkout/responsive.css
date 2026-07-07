@@ -1,0 +1,125 @@
+@media (max-width: 1024px) {
+  .checkout-layout,
+  .payment-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .checkout-summary-panel {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 720px) {
+  .checkout-page {
+    padding: 28px 0 120px;
+  }
+
+  .checkout-refresh-status {
+    white-space: normal;
+  }
+
+  .checkout-header,
+  .checkout-store-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .checkout-panel,
+  .checkout-summary-panel,
+  .checkout-state-card,
+  .checkout-success-card {
+    border-radius: 18px;
+    padding: 18px;
+  }
+
+  .checkout-product-item {
+    grid-template-columns: 46px minmax(0, 1fr);
+  }
+
+  .checkout-product-item > strong {
+    grid-column: 2;
+  }
+
+  .checkout-summary-image {
+    width: 46px;
+    height: 46px;
+  }
+
+  .checkout-summary-panel .checkout-create-button {
+    display: none;
+  }
+
+  .checkout-mobile-bar {
+    position: fixed;
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 12px;
+    background: rgba(255, 250, 242, 0.96);
+    box-shadow: var(--shadow-strong);
+    backdrop-filter: blur(10px);
+  }
+
+  .checkout-mobile-bar div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .checkout-mobile-bar span {
+    color: var(--ink-soft);
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .checkout-mobile-bar strong {
+    color: var(--accent-strong);
+    font-size: 1.15rem;
+  }
+
+  .checkout-mobile-bar .button {
+    min-width: 132px;
+    padding: 12px 14px;
+  }
+}
+
+@media (max-width: 720px) {
+  .checkout-courier-trigger,
+  .checkout-shipping-service-bottom {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .checkout-courier-actions {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 420px) {
+  .checkout-mobile-bar {
+    flex-wrap: wrap;
+  }
+
+  .checkout-mobile-bar div,
+  .checkout-mobile-bar .button {
+    width: 100%;
+  }
+
+  .checkout-mobile-bar .button {
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .checkout-courier-selected-badge {
+    white-space: normal;
+  }
+}

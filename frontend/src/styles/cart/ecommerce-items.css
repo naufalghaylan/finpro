@@ -1,0 +1,117 @@
+.cart-item {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(100px, 0.32fr) minmax(132px, 0.38fr) minmax(112px, 0.34fr) 42px;
+  gap: 16px;
+  align-items: center;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  padding: 16px 18px;
+  background: transparent;
+  box-shadow: none;
+  transition: background 0.2s ease;
+}
+
+.cart-item:last-child {
+  border-bottom: 0;
+}
+
+.cart-item:hover {
+  transform: none;
+  border-color: var(--line);
+  background: rgba(255, 250, 242, 0.58);
+  box-shadow: none;
+}
+
+.cart-item.out-of-stock {
+  border-color: var(--line);
+  background: linear-gradient(90deg, rgba(254, 242, 242, 0.55), transparent);
+}
+
+.cart-item-product {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.cart-item-image {
+  width: 96px;
+  height: 96px;
+  border-radius: 8px;
+}
+
+.cart-item-heading {
+  min-width: 0;
+}
+
+.cart-item h3 {
+  margin: 8px 0 4px;
+  font-size: 1.05rem;
+}
+
+.cart-item-price-block,
+.cart-item-quantity-block,
+.cart-line-total-block {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cart-item-price-block,
+.cart-item-quantity-block,
+.cart-line-total-block {
+  align-items: center;
+  text-align: center;
+}
+
+.cart-quantity-control {
+  justify-content: center;
+}
+
+.cart-item-price-block span,
+.cart-item-quantity-block > span,
+.cart-line-total-block span {
+  display: none;
+}
+
+.cart-item-price {
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.cart-line-total {
+  color: var(--accent-strong);
+  font-weight: 900;
+}
+
+.cart-quantity-control {
+  grid-template-columns: 38px 58px 38px;
+}
+
+.cart-quantity-control .button,
+.cart-quantity-control input {
+  height: 38px;
+}
+
+.cart-quantity-control .button {
+  width: 38px;
+}
+
+.cart-quantity-control input {
+  width: 58px;
+}
+
+.cart-remove-button {
+  justify-self: end;
+  color: var(--ink-soft);
+  background: #fff;
+}
+
+.cart-remove-button:hover {
+  color: var(--accent-strong);
+  border-color: rgba(232, 107, 79, 0.28);
+  background: #fff8f2;
+}
