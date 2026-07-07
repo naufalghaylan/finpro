@@ -31,7 +31,7 @@ export default function AboutPage() {
             </p>
           </div>
           <div className="order-1 md:order-2 aspect-4/3 rounded-3xl overflow-hidden shadow-[var(--shadow-strong)] relative">
-            <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=800" alt="Sayuran segar" className="w-full h-full object-cover" />
+            <img src="/fresh_vegetables.png" alt="Sayuran segar" className="w-full h-full object-cover" />
           </div>
         </div>
 

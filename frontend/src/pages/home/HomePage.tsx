@@ -142,9 +142,22 @@ export default function HomePage() {
   const activeFooter = data?.footer 
     ? [
         {
-          id: 'about',
-          title: 'Tentang Kami',
-          links: [{ label: data.footer.about, href: '#' }]
+          id: 'perusahaan',
+          title: 'Perusahaan',
+          links: [
+            { label: 'Tentang PanenMart', href: '/about' },
+            { label: 'Mitra petani', href: '/partners' },
+            { label: 'Karir', href: '/careers' },
+          ],
+        },
+        {
+          id: 'layanan',
+          title: 'Layanan',
+          links: [
+            { label: 'Bantuan', href: '/help' },
+            { label: 'Pengembalian', href: '/orders' },
+            { label: 'Status pesanan', href: '/orders' },
+          ],
         },
         {
           id: 'contact',

@@ -272,9 +272,9 @@ export const footerSections: FooterSection[] = [
     id: 'perusahaan',
     title: 'Perusahaan',
     links: [
-      { label: 'Tentang PanenMart', href: '/help' },
-      { label: 'Mitra petani', href: '/help' },
-      { label: 'Karir', href: '/help' },
+      { label: 'Tentang PanenMart', href: '/about' },
+      { label: 'Mitra petani', href: '/partners' },
+      { label: 'Karir', href: '/careers' },
     ],
   },
   {
