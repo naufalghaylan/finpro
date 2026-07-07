@@ -7,12 +7,12 @@ export const getStocksService = async (storeId?: number, search?: string, page =
   if (storeId) {
     where.storeId = storeId;
   }
+  // Selalu sembunyikan barang (produk) yang sudah di-soft delete
+  where.product = { deletedAt: null };
   if (search) {
-    where.product = {
-      name: {
-        contains: search,
-        mode: 'insensitive'
-      }
+    where.product.name = {
+      contains: search,
+      mode: 'insensitive'
     };
   }
 

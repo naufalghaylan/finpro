@@ -30,6 +30,8 @@ export async function getAllProducts(req: Request, res: Response, next: NextFunc
       minPrice,
       maxPrice,
       storeId,
+      lat,
+      lng,
       limit = 20,
       offset = 0,
       sortBy = 'newest'
@@ -40,6 +42,8 @@ export async function getAllProducts(req: Request, res: Response, next: NextFunc
       minPrice: minPrice ? parseFloat(String(minPrice)) : undefined,
       maxPrice: maxPrice ? parseFloat(String(maxPrice)) : undefined,
       storeId: storeId ? parseInt(String(storeId)) : undefined,
+      lat: lat !== undefined ? parseFloat(String(lat)) : undefined,
+      lng: lng !== undefined ? parseFloat(String(lng)) : undefined,
       limit: Math.min(parseInt(String(limit)) || 20, 100),
       offset: parseInt(String(offset)) || 0,
       sortBy: (sortBy as any) || 'newest'
@@ -54,7 +58,7 @@ export async function getAllProducts(req: Request, res: Response, next: NextFunc
 
 export async function searchProducts(req: Request, res: Response, next: NextFunction) {
   try {
-    const { keyword, categoryId, minPrice, maxPrice, storeId, limit = 20, offset = 0 } = req.query
+    const { keyword, categoryId, minPrice, maxPrice, storeId, lat, lng, limit = 20, offset = 0 } = req.query
 
     if (!keyword) {
       return res.status(400).json({ success: false, error: 'Keyword is required' })
@@ -66,6 +70,8 @@ export async function searchProducts(req: Request, res: Response, next: NextFunc
       minPrice: minPrice ? parseFloat(String(minPrice)) : undefined,
       maxPrice: maxPrice ? parseFloat(String(maxPrice)) : undefined,
       storeId: storeId ? parseInt(String(storeId)) : undefined,
+      lat: lat !== undefined ? parseFloat(String(lat)) : undefined,
+      lng: lng !== undefined ? parseFloat(String(lng)) : undefined,
       limit: Math.min(parseInt(String(limit)) || 20, 100),
       offset: parseInt(String(offset)) || 0
     }
