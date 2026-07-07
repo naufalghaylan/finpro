@@ -50,7 +50,7 @@ export default function LoginPage() {
       const user = useAuthStore.getState().user;
       if (user?.role === 'SUPER_ADMIN' || user?.role === 'STORE_ADMIN') {
         // Redirect to admin dashboard
-        navigate(from === '/' ? '/admin/stores' : from);
+        navigate('/admin/stores');
       } else {
         navigate(from);
       }

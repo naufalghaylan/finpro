@@ -58,9 +58,12 @@ export const VerifiedRoute = ({ children }: Props) => {
 
 /** Hanya bisa diakses oleh user yang belum login (guest) */
 export const GuestRoute = ({ children }: Props) => {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, user } = useAuthStore()
 
   if (isAuthenticated) {
+    if (user?.role === 'SUPER_ADMIN' || user?.role === 'STORE_ADMIN') {
+      return <Navigate to="/admin/stores" replace />
+    }
     return <Navigate to="/" replace />
   }
 
