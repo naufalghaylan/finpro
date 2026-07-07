@@ -13,6 +13,7 @@ import {
   Repeat2,
   LineChart,
   BarChart3,
+  Tag,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -62,6 +63,7 @@ export function AdminSidebar({ isCollapsed, toggleCollapse }: AdminSidebarProps)
   const feature3MenuItems: AdminMenuItem[] = scopedStoreId
     ? [
         { to: `/admin/stores/${scopedStoreId}/stocks`, label: 'Stok Toko', icon: Package },
+        { to: `/admin/stores/${scopedStoreId}/discounts`, label: 'Diskon', icon: Tag },
         { to: `/admin/stores/${scopedStoreId}/orders`, label: 'Pesanan Toko', icon: ClipboardList },
         { to: `/admin/stores/${scopedStoreId}/fulfillment`, label: 'Mutasi Stok', icon: Repeat2 },
         { to: `/admin/stores/${scopedStoreId}/sales-report`, label: 'Laporan Penjualan', icon: LineChart },

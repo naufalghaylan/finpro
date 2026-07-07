@@ -33,6 +33,7 @@ const AdminStoreDetailPage = lazy(() => import('./pages/admin/AdminStoreDetailPa
 const AdminStoreOrdersPage = lazy(() => import('./pages/admin/AdminStoreOrdersPage'))
 const AdminStoreMutationsPage = lazy(() => import('./pages/admin/AdminStoreMutationsPage'))
 const AdminStoreStocksPage = lazy(() => import('./pages/admin/AdminStoreStocksPage'))
+const AdminStoreDiscountsPage = lazy(() => import('./pages/admin/AdminStoreDiscountsPage'))
 
 const PageLoader = () => (
   <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '50vh', gap: '16px' }}>
@@ -111,6 +112,7 @@ function App() {
             <Route path=":id/sales-report" element={<AdminStoreSalesReportPage />} />
             <Route path=":id/stock-report" element={<AdminStoreStockReportPage />} />
             <Route path=":id/stocks" element={<Suspense fallback={<PageLoader />}><AdminStoreStocksPage /></Suspense>} />
+            <Route path=":id/discounts" element={<Suspense fallback={<PageLoader />}><AdminStoreDiscountsPage /></Suspense>} />
             <Route path="sales-report" element={<SuperAdminRoute><AdminSalesReport /></SuperAdminRoute>} />
           <Route path="stock-report" element={<SuperAdminRoute><AdminStockReport /></SuperAdminRoute>} />
           <Route path=":id" element={<Suspense fallback={<PageLoader />}><AdminStoreDetailPage /></Suspense>} />
