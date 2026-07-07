@@ -1,0 +1,54 @@
+﻿@media (max-width: 640px) {
+  .payment-gateway-card--embedded {
+    gap: 12px;
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .payment-gateway-intro {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .payment-gateway-intro > svg,
+  .payment-gateway-card > svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .payment-gateway-card h3 {
+    font-size: 0.98rem;
+  }
+
+  .payment-gateway-card p {
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+  .payment-gateway-status-card {
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 9px;
+    border-radius: 12px;
+    padding: 11px;
+  }
+
+  .payment-gateway-status-card > svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .payment-gateway-status-card h3 {
+    font-size: 0.94rem;
+  }
+
+  .payment-gateway-status-card p {
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+
+  .midtrans-embed-shell,
+  .midtrans-embed-container,
+  .midtrans-embed-container iframe {
+    height: 540px;
+  }
+}

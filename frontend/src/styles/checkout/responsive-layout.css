@@ -1,0 +1,89 @@
+﻿@media (max-width: 1024px) {
+  .checkout-layout,
+  .payment-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .checkout-summary-panel {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 720px) {
+  .checkout-page {
+    padding: 24px 0 calc(136px + env(safe-area-inset-bottom));
+  }
+
+  .checkout-shell {
+    gap: 16px;
+  }
+
+  .checkout-back-link {
+    min-height: 40px;
+    padding: 9px 12px;
+    font-size: 0.9rem;
+  }
+
+  .checkout-header {
+    gap: 8px;
+  }
+
+  .checkout-header h1 {
+    margin: 4px 0;
+    font-size: 1.72rem;
+    line-height: 1.15;
+  }
+
+  .checkout-header p {
+    font-size: 0.92rem;
+    line-height: 1.55;
+  }
+
+  .checkout-refresh-status {
+    gap: 6px;
+    font-size: 0.86rem;
+    white-space: normal;
+  }
+
+  .checkout-header,
+  .checkout-store-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .checkout-panel,
+  .checkout-summary-panel,
+  .checkout-state-card,
+  .checkout-success-card {
+    border-radius: 12px;
+    padding: 14px;
+  }
+
+  .checkout-main-column {
+    gap: 14px;
+  }
+
+  .checkout-section-title {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .checkout-section-title > svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .checkout-section-title h2 {
+    margin-bottom: 2px;
+    font-size: 1rem;
+    line-height: 1.25;
+  }
+
+  .checkout-section-title p {
+    font-size: 0.88rem;
+    line-height: 1.45;
+  }
+
+}

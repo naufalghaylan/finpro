@@ -6,4 +6,11 @@
 @import './payment/upload-proof.css';
 @import './payment/gateway.css';
 @import './payment/summary-actions.css';
-@import './payment/responsive.css';
+@import './payment/responsive-layout.css';
+@import './payment/responsive-tracking.css';
+@import './payment/responsive-upload-proof.css';
+@import './payment/responsive-summary.css';
+@import './payment/responsive-manual-transfer.css';
+@import './payment/responsive-bank-card.css';
+@import './payment/responsive-gateway.css';
+@import './payment/responsive-small.css';

@@ -1,0 +1,85 @@
+﻿.checkout-voucher-empty {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  padding: 32px 16px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+.checkout-voucher-empty > svg {
+  width: 48px;
+  height: 48px;
+  color: var(--accent-strong);
+  opacity: 0.22;
+}
+
+.checkout-voucher-empty h3,
+.checkout-voucher-empty p {
+  margin: 0;
+}
+
+.checkout-voucher-empty h3 {
+  color: var(--ink);
+  font-size: 1.1rem;
+}
+
+.checkout-voucher-empty p {
+  font-size: 0.9rem;
+}
+
+.checkout-voucher-card-top,
+.checkout-selection-badge {
+  display: flex;
+  align-items: center;
+}
+
+.checkout-voucher-card-top {
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.checkout-selection-badge {
+  gap: 4px;
+  border-radius: 999px;
+  padding: 4px 8px;
+  color: var(--accent-strong);
+  background: rgba(232, 107, 79, 0.1);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.checkout-selection-badge svg {
+  width: 14px;
+  height: 14px;
+}
+
+.checkout-voucher-name {
+  margin-top: 4px;
+  color: var(--ink);
+  font-size: 1.05rem;
+  overflow-wrap: anywhere;
+}
+
+.checkout-voucher-card.selected .checkout-voucher-name {
+  color: var(--accent-strong);
+}
+
+.checkout-payment-card .checkout-voucher-discount {
+  margin: 4px 0;
+  color: var(--accent-strong);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.checkout-payment-card .checkout-voucher-meta {
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.checkout-payment-card .checkout-voucher-expiry {
+  margin-top: auto;
+  padding-top: 8px;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
