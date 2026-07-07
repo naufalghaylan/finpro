@@ -22,6 +22,8 @@ import {
 interface AdminSidebarProps {
   isCollapsed: boolean;
   toggleCollapse: () => void;
+  isMobileOpen: boolean;
+  setIsMobileOpen: (open: boolean) => void;
 }
 
 type AdminMenuItem = {
@@ -37,7 +39,7 @@ const matchesMenuItem = (currentPath: string, item: { to: string; exact?: boolea
   return currentPath === item.to || currentPath.startsWith(`${item.to}/`);
 };
 
-export function AdminSidebar({ isCollapsed, toggleCollapse }: AdminSidebarProps) {
+export function AdminSidebar({ isCollapsed, toggleCollapse, isMobileOpen, setIsMobileOpen }: AdminSidebarProps) {
   const { user } = useAuthStore();
   const location = useLocation();
   const currentPath = location.pathname;
@@ -100,7 +102,9 @@ export function AdminSidebar({ isCollapsed, toggleCollapse }: AdminSidebarProps)
 
   return (
     <aside
-      className="fixed top-0 left-0 h-[100svh] bg-admin-surface border-r border-admin-line-soft transition-all duration-300 z-[60] flex flex-col font-[family-name:var(--font-admin)]"
+      className={`fixed top-0 left-0 h-[100svh] bg-admin-surface border-r border-admin-line-soft transition-all duration-300 z-[60] flex flex-col font-[family-name:var(--font-admin)] admin-sidebar-mobile ${
+        isMobileOpen ? 'translate-x-0' : 'max-lg:-translate-x-full'
+      }`}
       style={{ width: isCollapsed ? '80px' : '260px' }}
     >
       <div className="h-[72px] flex items-center justify-between px-4 border-b border-admin-line-soft shrink-0">
@@ -182,7 +186,7 @@ export function AdminSidebar({ isCollapsed, toggleCollapse }: AdminSidebarProps)
         })}
       </div>
 
-      <div className="p-4 border-t border-admin-line-soft">
+      <div className="p-4 border-t border-admin-line-soft max-lg:hidden">
         <button
           onClick={toggleCollapse}
           className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-admin-surface-2 hover:bg-admin-line-soft rounded-lg text-admin-ink transition-colors border-none cursor-pointer font-[family-name:var(--font-admin)]"
