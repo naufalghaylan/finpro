@@ -78,7 +78,7 @@ export const HomeFooter = ({ brandName, sections }: HomeFooterProps) => {
             )}
           </form>
         </div>
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-8 w-full">
           {sections.map((section) => (
             <div key={section.id}>
               <h4 className="m-0 mb-2.5 text-[0.95rem] text-[var(--ink)] font-semibold">{section.title}</h4>

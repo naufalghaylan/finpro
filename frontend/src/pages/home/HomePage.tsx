@@ -207,14 +207,14 @@ export default function HomePage() {
           onUseMainStore={fallbackToMainStore}
         />
         <ValueStrip items={valueProps} sectionId="deals" />
-        <ProductGrid products={isManuallySelected ? undefined : (data?.products as unknown as Product[])} storeId={activeStore.id} />
-          
         <StoreShowcase
           stores={activeStores}
           activeStoreId={activeStore.id}
           onSelectStore={setSelectedStoreId}
           error={apiError}
         />
+        
+        <ProductGrid products={isManuallySelected ? undefined : (data?.products as unknown as Product[])} storeId={activeStore.id} />
         </>
         )}
       </main>
