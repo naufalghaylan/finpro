@@ -48,7 +48,7 @@ export default function PartnersPage() {
               </ul>
             </div>
             <div className="aspect-square rounded-2xl overflow-hidden">
-              <img src="https://images.unsplash.com/photo-1595844730298-b960fad9722a?auto=format&fit=crop&q=80&w=800" alt="Petani memanen" className="w-full h-full object-cover" />
+              <img src="/farmers_harvesting.png" alt="Petani memanen" className="w-full h-full object-cover" />
             </div>
           </div>
         </div>

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Navbar } from '../../components/common/Navbar'
 import { HomeFooter } from '../../components/home/HomeFooter'
 import {
@@ -7,28 +8,38 @@ import {
 } from '../../data/home/homeData'
 
 export default function CareersPage() {
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null)
+
   const jobOpenings = [
     {
       title: 'Store Operations Manager',
       location: 'Jakarta Selatan',
-      type: 'Full-time'
+      type: 'Full-time',
+      description: 'Bertanggung jawab atas operasional harian toko, memastikan ketersediaan stok, memimpin tim staf toko, dan menjaga standar layanan pelanggan PanenMart.'
     },
     {
       title: 'Supply Chain Analyst',
       location: 'Jakarta Pusat',
-      type: 'Full-time'
+      type: 'Full-time',
+      description: 'Menganalisis dan mengoptimalkan rantai pasok dari mitra petani hingga ke toko. Membutuhkan kemampuan analisis data yang kuat.'
     },
     {
       title: 'Frontend Engineer (React)',
       location: 'Remote',
-      type: 'Full-time'
+      type: 'Full-time',
+      description: 'Mengembangkan antarmuka pengguna web responsif menggunakan React dan Tailwind CSS. Berkolaborasi dengan tim desain dan backend.'
     },
     {
       title: 'Quality Control Specialist',
       location: 'Tangerang',
-      type: 'Contract'
+      type: 'Contract',
+      description: 'Memeriksa kualitas sayuran dan buah segar yang masuk ke gudang, memastikan semua produk memenuhi standar kualitas ketat PanenMart.'
     }
   ]
+
+  const toggleExpand = (index: number) => {
+    setExpandedIndex(expandedIndex === index ? null : index)
+  }
 
   return (
     <div className="min-h-[100svh] flex flex-col relative overflow-clip before:content-[''] before:fixed before:inset-0 before:bg-[radial-gradient(circle_at_12%_18%,rgba(241,184,132,0.22),transparent_45%),radial-gradient(circle_at_80%_8%,rgba(95,149,123,0.18),transparent_48%),radial-gradient(circle_at_92%_75%,rgba(232,107,79,0.18),transparent_48%)] before:pointer-events-none before:-z-10 bg-[var(--bg)]">
@@ -47,17 +58,30 @@ export default function CareersPage() {
           
           <div className="flex flex-col gap-4">
             {jobOpenings.map((job, index) => (
-              <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between p-6 rounded-2xl border border-[var(--line)] bg-[var(--surface)] hover:border-[var(--accent)] hover:shadow-[var(--shadow-soft)] transition-all">
-                <div className="mb-4 sm:mb-0">
-                  <h3 className="text-lg font-bold text-[var(--ink)] mb-1">{job.title}</h3>
-                  <div className="flex items-center gap-3 text-[var(--ink-soft)] text-sm">
-                    <span className="flex items-center gap-1">📍 {job.location}</span>
-                    <span className="flex items-center gap-1">⏱️ {job.type}</span>
+              <div key={index} className="flex flex-col p-6 rounded-2xl border border-[var(--line)] bg-[var(--surface)] hover:border-[var(--accent)] hover:shadow-[var(--shadow-soft)] transition-all">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between">
+                  <div className="mb-4 sm:mb-0">
+                    <h3 className="text-lg font-bold text-[var(--ink)] mb-1">{job.title}</h3>
+                    <div className="flex items-center gap-3 text-[var(--ink-soft)] text-sm">
+                      <span className="flex items-center gap-1">📍 {job.location}</span>
+                      <span className="flex items-center gap-1">⏱️ {job.type}</span>
+                    </div>
                   </div>
+                  <button 
+                    onClick={() => toggleExpand(index)}
+                    className="inline-flex items-center justify-center rounded-full border border-[var(--line)] bg-transparent px-5 py-2 font-semibold text-[var(--ink)] hover:text-[var(--accent-strong)] hover:border-[var(--accent)] transition-all shrink-0"
+                  >
+                    {expandedIndex === index ? 'Tutup Detail' : 'Lihat Detail'}
+                  </button>
                 </div>
-                <button className="inline-flex items-center justify-center rounded-full border border-[var(--line)] bg-transparent px-5 py-2 font-semibold text-[var(--ink)] hover:text-[var(--accent-strong)] hover:border-[var(--accent)] transition-all shrink-0">
-                  Lihat Detail
-                </button>
+                {expandedIndex === index && (
+                  <div className="mt-6 pt-4 border-t border-[var(--line)]">
+                    <p className="text-[var(--ink-soft)] leading-relaxed mb-4">{job.description}</p>
+                    <a href="mailto:careers@panenmart.com" className="inline-flex items-center justify-center rounded-full bg-[var(--surface)] text-[var(--ink)] border border-[var(--line)] px-5 py-2 font-semibold hover:border-[var(--accent)] hover:text-[var(--accent-strong)] transition-all text-sm shadow-[var(--shadow-soft)]">
+                      Lamar Sekarang
+                    </a>
+                  </div>
+                )}
               </div>
             ))}
           </div>
