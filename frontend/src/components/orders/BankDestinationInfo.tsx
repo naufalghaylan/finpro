@@ -51,7 +51,7 @@ export function BankDestinationInfo({
         </div>
       </div>
 
-      <div className="payment-bank-info-block">
+      <div className="payment-bank-info-block payment-bank-account-block">
         <span>Atas Nama</span>
         <strong className="payment-bank-account-name">{selectedChannel.accountHolder}</strong>
       </div>

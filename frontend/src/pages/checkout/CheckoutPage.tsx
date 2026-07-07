@@ -21,10 +21,12 @@ const checkoutFlowStepClassName = [
   'border-[rgba(232,107,79,0.16)] bg-[rgba(255,255,255,0.76)]',
   'px-3 py-2.75 text-[0.9rem] font-extrabold text-(--ink)',
   'shadow-[0_8px_20px_rgba(31,42,34,0.05)]',
-  'max-[720px]:min-w-[136px] max-[720px]:justify-start',
+  'max-[720px]:gap-1.5 max-[720px]:px-2 max-[720px]:py-2',
+  'max-[720px]:text-[0.78rem] max-[720px]:leading-tight',
+  'max-[420px]:gap-1 max-[420px]:px-1.5 max-[420px]:text-[0.72rem]',
 ].join(' ')
 
-const checkoutFlowIconClassName = 'size-4.5 shrink-0 text-(--accent-strong)'
+const checkoutFlowIconClassName = 'size-4.5 shrink-0 text-(--accent-strong) max-[720px]:size-4 max-[420px]:size-3.5'
 
 function CheckoutPage() {
   const {
@@ -97,7 +99,7 @@ function CheckoutPage() {
 
               {!isCartEmpty && (
                 <div
-                  className="grid grid-cols-3 gap-2.5 max-[720px]:flex max-[720px]:overflow-x-auto max-[720px]:pb-0.5 max-[720px]:[scrollbar-width:thin]"
+                  className="grid grid-cols-3 gap-2.5 max-[420px]:gap-1.5"
                   aria-label="Urutan checkout"
                 >
                   <span className={checkoutFlowStepClassName}>
@@ -148,6 +150,7 @@ function CheckoutPage() {
 
                     <CheckoutDiscountPanel
                       availableDiscountAmount={paymentSummary.availableStoreDiscount}
+                      discounts={preview.storeDiscounts ?? []}
                       isApplied={useStoreDiscount}
                       onToggleApply={setUseStoreDiscount}
                     />

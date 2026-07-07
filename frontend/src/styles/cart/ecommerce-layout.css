@@ -113,6 +113,10 @@
   text-align: center;
 }
 
+.cart-list-head span:first-child {
+  text-align: center;
+}
+
 .cart-items {
   gap: 0;
 }

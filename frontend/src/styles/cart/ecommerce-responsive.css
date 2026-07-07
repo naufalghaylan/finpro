@@ -71,10 +71,12 @@
 
   .cart-item {
     grid-template-columns: minmax(0, 1fr) auto;
+    gap: 14px 12px;
     padding: 14px;
   }
 
   .cart-item-product {
+    grid-column: 1 / -1;
     grid-template-columns: 82px minmax(0, 1fr);
   }
 
@@ -83,8 +85,57 @@
     height: 82px;
   }
 
+  .cart-item-price-block,
+  .cart-line-total-block {
+    border-radius: 8px;
+    padding: 10px;
+    background: rgba(255, 250, 242, 0.72);
+  }
+
+  .cart-item-price-block span,
+  .cart-item-quantity-block > span,
+  .cart-line-total-block span {
+    color: var(--ink-soft);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .cart-item-price,
+  .cart-line-total {
+    margin: 0;
+    line-height: 1.25;
+  }
+
+  .cart-item-price-block {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
   .cart-line-total-block {
     display: flex;
+    grid-column: 2;
+    grid-row: 2;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .cart-line-total {
+    display: block;
+  }
+
+  .cart-item-quantity-block {
+    grid-column: 1;
+    grid-row: 3;
+    justify-self: start;
+    align-items: flex-start;
+  }
+
+  .cart-remove-button {
+    grid-column: 2;
+    grid-row: 3;
+    align-self: end;
+    justify-self: end;
   }
 
   .cart-mobile-checkout-bar {
@@ -94,7 +145,8 @@
 
 @media (max-width: 420px) {
   .cart-item {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px 10px;
   }
 
   .cart-mobile-checkout-bar {
@@ -115,11 +167,24 @@
   .cart-item-quantity-block,
   .cart-line-total-block,
   .cart-remove-button {
-    grid-column: 1;
     grid-row: auto;
   }
 
+  .cart-item-price-block {
+    grid-column: 1;
+  }
+
+  .cart-line-total-block {
+    grid-column: 2;
+    min-width: 112px;
+  }
+
+  .cart-item-quantity-block {
+    grid-column: 1;
+  }
+
   .cart-item-product {
+    grid-column: 1 / -1;
     grid-template-columns: 74px minmax(0, 1fr);
   }
 
@@ -134,8 +199,7 @@
   }
 
   .cart-remove-button {
-    grid-column: auto;
-    grid-row: auto;
-    justify-self: start;
+    grid-column: 2;
+    justify-self: end;
   }
 }

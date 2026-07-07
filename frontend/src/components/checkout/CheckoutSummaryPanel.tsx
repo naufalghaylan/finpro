@@ -44,29 +44,23 @@ export function CheckoutSummaryPanel({
 
   return (
     <aside className="checkout-summary-panel">
-      <div className="mb-3.5 flex items-center justify-between gap-3 max-[720px]:flex-col max-[720px]:items-start">
-        <h2 className="m-0 font-(family-name:--font-display)">Rincian Pembayaran</h2>
-        <span className="rounded-full bg-[rgba(232,107,79,0.1)] px-2.25 py-1.25 text-[0.78rem] font-extrabold text-(--accent-strong)">
+      <div className="checkout-summary-header">
+        <h2>Rincian Pembayaran</h2>
+        <span>
           {totalQuantity} item
         </span>
       </div>
 
-      <div className="mb-3.5 grid gap-2" aria-label="Kelengkapan checkout">
+      <div className="checkout-readiness-list" aria-label="Kelengkapan checkout">
         {readinessItems.map((item) => (
           <div
             key={item.label}
-            className={[
-              'flex items-center gap-2.25 rounded-lg border px-2.75 py-2.5',
-              'text-[0.86rem] font-extrabold leading-[1.35]',
-              item.ready
-                ? 'border-[rgba(74,124,91,0.2)] bg-[rgba(247,251,244,0.9)] text-(--green)'
-                : 'border-[rgba(232,107,79,0.16)] bg-(--surface) text-(--ink-soft)',
-            ].join(' ')}
+            className={`checkout-readiness-item ${item.ready ? 'ready' : ''}`}
           >
             {item.ready ? (
-              <CheckCircle2 className="size-4.5 shrink-0 text-(--green)" aria-hidden="true" />
+              <CheckCircle2 aria-hidden="true" />
             ) : (
-              <AlertCircle className="size-4.5 shrink-0 text-(--accent-strong)" aria-hidden="true" />
+              <AlertCircle aria-hidden="true" />
             )}
             <span>{item.label}</span>
           </div>

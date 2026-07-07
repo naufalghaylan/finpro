@@ -3,7 +3,7 @@ import { getCart } from '../../cart.service'
 import { ORDER_ERRORS, OrderServiceError } from '../../order.errors'
 import { getNearestActiveStore, getUserAddresses } from '../checkout/order-checkout-validation.service'
 import { getAvailableCheckoutVouchers } from '../checkout/order-checkout-voucher.service'
-import { calculateStoreDiscountForCheckout } from '../checkout/order-discount.service'
+import { getStoreDiscountBreakdownForCheckout, type AppliedCheckoutDiscount } from '../checkout/order-discount.service'
 import type { CheckoutPreviewParams } from '../core/order.types'
 
 export const getCheckoutPreview = async ({ userId, addressId }: CheckoutPreviewParams) => {
@@ -26,16 +26,19 @@ export const getCheckoutPreview = async ({ userId, addressId }: CheckoutPreviewP
       : null
 
   let storeDiscountAmount = 0
+  let storeDiscounts: AppliedCheckoutDiscount[] = []
   if (nearestStore && cart && cart.items.length > 0) {
     const totalProductAmount = cart.items.reduce(
       (total, item) => total + item.quantity * item.product.basePrice,
       0,
     )
-    storeDiscountAmount = await calculateStoreDiscountForCheckout(
+    const storeDiscountBreakdown = await getStoreDiscountBreakdownForCheckout(
       nearestStore.id,
       cart.items,
       totalProductAmount,
     )
+    storeDiscountAmount = storeDiscountBreakdown.totalDiscount
+    storeDiscounts = storeDiscountBreakdown.appliedDiscounts
   }
 
   return {
@@ -49,6 +52,7 @@ export const getCheckoutPreview = async ({ userId, addressId }: CheckoutPreviewP
     vouchers,
     selectedAddress,
     nearestStore,
+    storeDiscounts,
     discountAmount: storeDiscountAmount,
     paymentMethods: [
       {
