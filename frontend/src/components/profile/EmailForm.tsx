@@ -8,15 +8,18 @@ const emailSchema = z.object({
 
 export const EmailForm = () => {
   const { profile, updateEmail, reverifyEmail, isUpdating } = useProfileStore()
-  const [email, setEmail] = useState(() => profile?.email || '')
-  const [prevProfileEmail, setPrevProfileEmail] = useState(() => profile?.email || '')
+  
+  const currentProfileEmail = profile?.email || ''
+  const [email, setEmail] = useState(currentProfileEmail)
+  const [prevProfileEmail, setPrevProfileEmail] = useState(currentProfileEmail)
+  
   const [successMsg, setSuccessMsg] = useState('')
   const [localError, setLocalError] = useState('')
   const [emailError, setEmailError] = useState('')
 
-  if (profile?.email !== prevProfileEmail) {
-    setPrevProfileEmail(profile?.email || '')
-    setEmail(profile?.email || '')
+  if (currentProfileEmail !== prevProfileEmail) {
+    setPrevProfileEmail(currentProfileEmail)
+    setEmail(currentProfileEmail)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
