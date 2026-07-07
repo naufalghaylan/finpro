@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react'
 import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import { ToastProvider } from './components/common/Toast'
-import { ProtectedRoute, GuestRoute, AdminRoute, SuperAdminRoute } from './components/common/RouteGuard'
+import { ProtectedRoute, GuestRoute, AdminRoute, SuperAdminRoute, StoreAdminScopedRoute } from './components/common/RouteGuard'
 import { ScrollToTop } from './components/common/ScrollToTop'
 import HomePage from './pages/home/HomePage'
 import LoginPage from './pages/auth/LoginPage'
@@ -117,15 +117,15 @@ function App() {
             <Route path="stocks" element={<SuperAdminRoute><Suspense fallback={<PageLoader />}><AdminStockList /></Suspense></SuperAdminRoute>} />
             <Route path="products" element={<SuperAdminRoute><Suspense fallback={<PageLoader />}><AdminProductPage /></Suspense></SuperAdminRoute>} />
             <Route path="orders" element={<SuperAdminRoute><Suspense fallback={<PageLoader />}><AdminOrderList /></Suspense></SuperAdminRoute>} />
-            <Route path=":id/orders" element={<Suspense fallback={<PageLoader />}><AdminStoreOrdersPage /></Suspense>} />
-            <Route path=":id/fulfillment" element={<Suspense fallback={<PageLoader />}><AdminStoreMutationsPage /></Suspense>} />
-            <Route path=":id/sales-report" element={<AdminStoreSalesReportPage />} />
-            <Route path=":id/stock-report" element={<AdminStoreStockReportPage />} />
-            <Route path=":id/stocks" element={<Suspense fallback={<PageLoader />}><AdminStoreStocksPage /></Suspense>} />
-            <Route path=":id/admins" element={<Suspense fallback={<PageLoader />}><AdminStoreScopedAdminsPage /></Suspense>} />
+            <Route path=":id/orders" element={<StoreAdminScopedRoute><Suspense fallback={<PageLoader />}><AdminStoreOrdersPage /></Suspense></StoreAdminScopedRoute>} />
+            <Route path=":id/fulfillment" element={<StoreAdminScopedRoute><Suspense fallback={<PageLoader />}><AdminStoreMutationsPage /></Suspense></StoreAdminScopedRoute>} />
+            <Route path=":id/sales-report" element={<StoreAdminScopedRoute><AdminStoreSalesReportPage /></StoreAdminScopedRoute>} />
+            <Route path=":id/stock-report" element={<StoreAdminScopedRoute><AdminStoreStockReportPage /></StoreAdminScopedRoute>} />
+            <Route path=":id/stocks" element={<StoreAdminScopedRoute><Suspense fallback={<PageLoader />}><AdminStoreStocksPage /></Suspense></StoreAdminScopedRoute>} />
+            <Route path=":id/admins" element={<SuperAdminRoute><Suspense fallback={<PageLoader />}><AdminStoreScopedAdminsPage /></Suspense></SuperAdminRoute>} />
             <Route path="sales-report" element={<SuperAdminRoute><Suspense fallback={<PageLoader />}><AdminSalesReport /></Suspense></SuperAdminRoute>} />
             <Route path="stock-report" element={<SuperAdminRoute><Suspense fallback={<PageLoader />}><AdminStockReport /></Suspense></SuperAdminRoute>} />
-            <Route path=":id" element={<Suspense fallback={<PageLoader />}><AdminStoreDetailPage /></Suspense>} />
+            <Route path=":id" element={<StoreAdminScopedRoute><Suspense fallback={<PageLoader />}><AdminStoreDetailPage /></Suspense></StoreAdminScopedRoute>} />
           </Route>
         </Route>
 
