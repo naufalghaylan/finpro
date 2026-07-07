@@ -1,0 +1,91 @@
+﻿@media (max-width: 720px) {
+  .checkout-address-grid,
+  .checkout-payment-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .checkout-address-list-meta {
+    align-items: flex-start;
+    margin: -2px 0 10px;
+    font-size: 0.8rem;
+  }
+
+  .checkout-address-list-meta strong {
+    padding: 4px 7px;
+    font-size: 0.72rem;
+  }
+
+  .checkout-address-desktop-meta,
+  .checkout-address-desktop-grid {
+    display: none;
+  }
+
+  .checkout-address-mobile-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .checkout-address-card,
+  .checkout-payment-card,
+  .checkout-shipping-service-card {
+    border-radius: 12px;
+    padding: 12px;
+  }
+
+  .checkout-address-card {
+    gap: 6px;
+    padding: 10px 11px;
+  }
+
+  .checkout-address-card:hover,
+  .checkout-payment-card:hover,
+  .checkout-shipping-service-card:hover {
+    transform: none;
+  }
+
+  .checkout-address-topline {
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .checkout-address-topline strong {
+    font-size: 0.94rem;
+    line-height: 1.25;
+  }
+
+  .checkout-address-topline em {
+    padding: 3px 7px;
+    font-size: 0.68rem;
+  }
+
+  .checkout-address-card span:not(.checkout-address-topline) {
+    font-size: 0.82rem;
+    line-height: 1.35;
+  }
+
+  .checkout-address-change-button {
+    width: 100%;
+  }
+
+  .checkout-address-picker {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: flex-end;
+    padding: 0 10px calc(96px + env(safe-area-inset-bottom));
+  }
+
+  .checkout-address-picker-card {
+    min-height: auto;
+  }
+
+  .checkout-coordinate-ok,
+  .checkout-coordinate-missing {
+    padding: 4px 8px;
+    font-size: 0.78rem;
+  }
+
+}

@@ -1,0 +1,35 @@
+﻿@media (max-width: 720px) {
+  .checkout-payment-card:not(.checkout-voucher-card) {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 4px 9px;
+    align-items: center;
+    min-height: 0;
+  }
+
+  .checkout-payment-card:not(.checkout-voucher-card) svg {
+    grid-row: 1 / span 2;
+    width: 22px;
+    height: 22px;
+  }
+
+  .checkout-payment-card:not(.checkout-voucher-card) strong {
+    font-size: 0.94rem;
+    line-height: 1.2;
+  }
+
+  .checkout-payment-card:not(.checkout-voucher-card) span {
+    font-size: 0.78rem;
+    line-height: 1.3;
+  }
+
+  .checkout-notes {
+    min-height: 84px;
+    max-height: 132px;
+    border-radius: 12px;
+    padding: 10px 11px;
+    font-size: 0.88rem;
+    line-height: 1.45;
+  }
+
+}

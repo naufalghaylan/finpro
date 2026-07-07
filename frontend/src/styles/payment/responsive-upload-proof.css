@@ -1,0 +1,61 @@
+﻿@media (max-width: 720px) {
+  .payment-upload-dropzone {
+    min-height: 104px;
+    border-radius: 12px;
+    padding: 14px;
+  }
+
+  .payment-upload-dropzone svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .payment-upload-dropzone strong {
+    font-size: 0.9rem;
+    line-height: 1.25;
+  }
+
+  .payment-upload-dropzone span {
+    font-size: 0.78rem;
+    line-height: 1.32;
+  }
+
+  .payment-upload-form {
+    gap: 12px;
+  }
+
+  .payment-proof-preview img {
+    max-height: 240px;
+  }
+
+  .payment-proof-result {
+    gap: 10px;
+    flex-direction: column;
+    border-radius: 12px;
+    padding: 12px;
+  }
+
+  .payment-proof-result > svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .payment-proof-result h3 {
+    font-size: 0.95rem;
+  }
+
+  .payment-proof-result p {
+    font-size: 0.82rem;
+    line-height: 1.4;
+  }
+
+  .payment-proof-toggle {
+    min-height: 38px;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .payment-upload-button {
+    width: 100%;
+  }
+}

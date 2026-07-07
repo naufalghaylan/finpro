@@ -1,0 +1,16 @@
+﻿@media (max-width: 420px) {
+  .checkout-voucher-card-top {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .checkout-selection-badge,
+  .checkout-courier-selected-badge {
+    white-space: normal;
+  }
+
+  .checkout-courier-trigger,
+  .checkout-courier-services {
+    padding: 14px;
+  }
+}

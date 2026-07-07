@@ -6,4 +6,6 @@
 @import './cart/touchups-responsive.css';
 @import './cart/ecommerce-layout.css';
 @import './cart/ecommerce-items.css';
-@import './cart/ecommerce-responsive.css';
+@import './cart/ecommerce-responsive-layout.css';
+@import './cart/ecommerce-responsive-items.css';
+@import './cart/ecommerce-responsive-summary.css';

@@ -1,0 +1,131 @@
+﻿@media (max-width: 420px) {
+  .checkout-page {
+    padding-bottom: calc(164px + env(safe-area-inset-bottom));
+  }
+
+  .checkout-panel,
+  .checkout-summary-panel,
+  .checkout-state-card,
+  .checkout-success-card {
+    padding: 12px;
+  }
+
+  .checkout-product-item {
+    grid-template-columns: 50px minmax(0, 1fr);
+  }
+
+  .checkout-summary-image {
+    width: 50px;
+    height: 50px;
+  }
+
+  .checkout-address-list-meta {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .checkout-address-topline {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .checkout-address-picker {
+    padding-right: 8px;
+    padding-bottom: calc(150px + env(safe-area-inset-bottom));
+    padding-left: 8px;
+  }
+
+  .checkout-address-picker-sheet {
+    max-height: min(68vh, 620px);
+  }
+
+  .checkout-store-card {
+    padding: 11px;
+  }
+
+  .checkout-store-card h3 {
+    font-size: 0.94rem;
+  }
+
+  .checkout-store-card p {
+    font-size: 0.8rem;
+  }
+
+  .checkout-courier-list {
+    gap: 8px;
+  }
+
+  .checkout-courier-trigger {
+    min-height: 46px;
+    padding: 9px 10px;
+  }
+
+  .checkout-courier-main {
+    grid-template-columns: 17px minmax(0, 1fr);
+    gap: 3px 7px;
+  }
+
+  .checkout-courier-main strong {
+    font-size: 0.88rem;
+  }
+
+  .checkout-courier-icon,
+  .checkout-courier-actions svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .checkout-courier-services {
+    padding: 9px;
+  }
+
+  .checkout-shipping-service-grid {
+    gap: 8px;
+  }
+
+  .checkout-shipping-service-card {
+    padding: 9px 10px;
+  }
+
+  .checkout-shipping-service-bottom {
+    align-items: end;
+    flex-direction: row;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 7px;
+  }
+
+  .checkout-shipping-service-info strong {
+    font-size: 0.86rem;
+  }
+
+  .checkout-shipping-service-info span,
+  .checkout-shipping-service-etd strong {
+    font-size: 0.75rem;
+  }
+
+  .checkout-shipping-service-cost {
+    font-size: 0.9rem;
+  }
+
+  .checkout-mobile-bar {
+    flex-wrap: wrap;
+    right: 8px;
+    left: 8px;
+    gap: 10px;
+  }
+
+  .checkout-mobile-bar div,
+  .checkout-mobile-bar .button {
+    width: 100%;
+  }
+
+  .checkout-mobile-bar .button {
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .checkout-courier-selected-badge {
+    white-space: normal;
+  }
+}
