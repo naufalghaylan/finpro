@@ -10,6 +10,7 @@
   padding: 16px;
   background: #fffaf2;
   cursor: pointer;
+  font-family: var(--font-body);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 

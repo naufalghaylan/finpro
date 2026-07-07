@@ -2,6 +2,10 @@
   padding: 48px 0 72px;
 }
 
+.checkout-flow-page {
+  font-family: var(--font-body);
+}
+
 .checkout-shell {
   display: flex;
   flex-direction: column;
@@ -84,12 +88,17 @@
 
 .checkout-section-title h2 {
   margin: 0 0 4px;
+  font-family: var(--font-body);
   font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.25;
 }
 
 .checkout-section-title p {
   margin: 0;
   color: var(--ink-soft);
+  font-size: 0.94rem;
+  line-height: 1.5;
 }
 
 .checkout-address-grid,

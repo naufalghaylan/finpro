@@ -40,24 +40,26 @@
 }
 
 .checkout-selection-badge {
-  gap: 4px;
+  gap: 3px;
   border-radius: 999px;
-  padding: 4px 8px;
+  padding: 3px 7px;
   color: var(--accent-strong);
   background: rgba(232, 107, 79, 0.1);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 800;
+  line-height: 1.15;
 }
 
 .checkout-selection-badge svg {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
 }
 
 .checkout-voucher-name {
   margin-top: 4px;
   color: var(--ink);
-  font-size: 1.05rem;
+  font-size: 1rem;
+  line-height: 1.32;
   overflow-wrap: anywhere;
 }
 
@@ -68,12 +70,14 @@
 .checkout-payment-card .checkout-voucher-discount {
   margin: 4px 0;
   color: var(--accent-strong);
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 800;
+  line-height: 1.25;
 }
 
 .checkout-payment-card .checkout-voucher-meta {
-  font-size: 0.85rem;
+  font-size: 0.84rem;
+  line-height: 1.42;
   overflow-wrap: anywhere;
 }
 
@@ -81,5 +85,6 @@
   margin-top: auto;
   padding-top: 8px;
   font-size: 0.8rem;
+  line-height: 1.42;
   overflow-wrap: anywhere;
 }
