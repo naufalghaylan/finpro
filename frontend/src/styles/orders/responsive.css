@@ -9,7 +9,8 @@
   }
 
   .order-card {
-    grid-template-columns: 96px minmax(0, 1fr);
+    --order-card-image-size: 96px;
+    grid-template-columns: var(--order-card-image-size) minmax(0, 1fr);
   }
 
   .order-card-side {
@@ -60,7 +61,8 @@
   }
 
   .order-card {
-    grid-template-columns: 76px minmax(0, 1fr);
+    --order-card-image-size: 76px;
+    grid-template-columns: var(--order-card-image-size) minmax(0, 1fr);
     gap: 12px;
     padding: 12px;
     border-radius: 8px;
@@ -68,7 +70,7 @@
 
   .order-card-image,
   .order-skeleton-image {
-    width: 76px;
+    width: var(--order-card-image-size);
     border-radius: 8px;
   }
 
@@ -96,7 +98,7 @@
   }
 
   .order-card--skeleton {
-    grid-template-columns: 76px 1fr;
+    grid-template-columns: var(--order-card-image-size) 1fr;
   }
 
   .orders-pagination {

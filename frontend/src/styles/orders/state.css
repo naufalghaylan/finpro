@@ -33,7 +33,7 @@
 }
 
 .order-card--skeleton {
-  grid-template-columns: 96px 1fr;
+  grid-template-columns: var(--order-card-image-size) 1fr;
 }
 
 .order-skeleton-image,
@@ -46,7 +46,7 @@
 }
 
 .order-skeleton-image {
-  width: 96px;
+  width: var(--order-card-image-size);
   aspect-ratio: 1;
   border-radius: 8px;
 }

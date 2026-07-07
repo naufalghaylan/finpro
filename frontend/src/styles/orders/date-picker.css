@@ -1,0 +1,174 @@
+.orders-date-field {
+  position: relative;
+}
+
+.orders-date-trigger {
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.orders-date-trigger:hover,
+.orders-date-trigger[aria-expanded='true'] {
+  border-color: rgba(232, 107, 79, 0.38);
+  box-shadow: 0 0 0 3px rgba(232, 107, 79, 0.1);
+}
+
+.orders-date-trigger .orders-date-trigger-text {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.orders-date-trigger.has-value .orders-date-trigger-text {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.orders-date-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 40;
+  width: 316px;
+  max-width: min(316px, calc(100vw - 32px));
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 20px 44px rgba(31, 42, 34, 0.14);
+}
+
+.orders-filter-panel > .orders-date-field:nth-child(3) .orders-date-popover {
+  right: 0;
+  left: auto;
+}
+
+.orders-date-header {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  gap: 8px;
+  align-items: center;
+}
+
+.orders-date-header strong {
+  color: var(--ink);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.orders-date-nav {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.orders-date-nav:hover {
+  border-color: rgba(232, 107, 79, 0.32);
+  color: var(--accent-strong);
+}
+
+.orders-date-nav svg {
+  width: 17px;
+  height: 17px;
+}
+
+.orders-date-weekdays,
+.orders-date-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.orders-date-weekdays {
+  margin-top: 12px;
+}
+
+.orders-date-weekdays span {
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.orders-date-grid {
+  margin-top: 6px;
+}
+
+.orders-date-day {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.orders-date-day:hover {
+  border-color: rgba(232, 107, 79, 0.26);
+  background: rgba(232, 107, 79, 0.08);
+}
+
+.orders-date-day.muted {
+  color: rgba(60, 73, 62, 0.42);
+}
+
+.orders-date-day.today {
+  border-color: rgba(232, 107, 79, 0.36);
+}
+
+.orders-date-day.selected {
+  border-color: var(--accent-strong);
+  background: var(--accent-strong);
+  color: #fff;
+}
+
+.orders-date-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.orders-date-link {
+  border: none;
+  background: transparent;
+  color: var(--accent-strong);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.orders-date-link:disabled {
+  color: rgba(60, 73, 62, 0.38);
+  cursor: not-allowed;
+}
+
+@media (max-width: 720px) {
+  .orders-date-popover,
+  .orders-filter-panel > .orders-date-field:nth-child(3) .orders-date-popover {
+    right: auto;
+    left: 0;
+    width: min(316px, calc(100vw - 56px));
+  }
+}
