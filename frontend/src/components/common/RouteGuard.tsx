@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
+import { Navigate, useLocation, useParams } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useToast } from './Toast'
 
@@ -99,4 +99,30 @@ export const SuperAdminRoute = ({ children }: Props) => {
   }
 
   return <>{children}</>
+}
+
+/** 
+ * Hanya bisa diakses oleh SUPER_ADMIN atau STORE_ADMIN yang sesuai dengan parameter id di URL.
+ * Mencegah STORE_ADMIN untuk mengakses halaman admin toko lain.
+ */
+export const StoreAdminScopedRoute = ({ children }: Props) => {
+  const { isAuthenticated, user } = useAuthStore()
+  const { id } = useParams()
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
+  }
+
+  if (user?.role === 'SUPER_ADMIN') {
+    return <>{children}</>
+  }
+
+  if (user?.role === 'STORE_ADMIN') {
+    if (user.storeId && String(user.storeId) === id) {
+      return <>{children}</>
+    }
+    return <Navigate to={`/admin/stores/${user.storeId || ''}`} replace />
+  }
+
+  return <Navigate to="/" replace />
 }

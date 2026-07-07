@@ -24,7 +24,7 @@ export function useCheckoutShippingOptions(
   const [fetchingCouriers, setFetchingCouriers] = useState<Record<string, boolean>>({})
 
   const fetchShippingForCourier = useCallback(async (courierCode: string) => {
-    if (!selectedAddressId || !preview?.nearestStore || totalWeight === 0) return
+    if (!selectedAddressId || !preview?.nearestStore) return
 
     setFetchingCouriers(prev => ({ ...prev, [courierCode]: true }))
     
@@ -47,7 +47,7 @@ export function useCheckoutShippingOptions(
   }, [selectedAddressId, preview, totalWeight])
 
   useEffect(() => {
-    if (!selectedAddressId || !preview?.nearestStore || totalWeight === 0) {
+    if (!selectedAddressId || !preview?.nearestStore) {
       window.setTimeout(() => {
         setCourierServices({})
         setSelectedCourier('')
