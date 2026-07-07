@@ -52,6 +52,8 @@ interface AddressFormModalProps {
   editData?: UserAddress | null
 }
 
+import { createPortal } from 'react-dom'
+
 export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModalProps) => {
   const { createAddress, updateAddress, isLoading } = useAddressStore()
   
@@ -233,14 +235,15 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
 
   if (!isOpen) return null
 
-  return (
-    <div className="fixed inset-0 bg-[#1f2a2266] backdrop-blur-[4px] flex items-center justify-center z-[1000] p-5">
-      <div className="bg-[var(--surface)] rounded-[24px] w-full max-w-[600px] max-h-[90vh] overflow-y-auto shadow-[var(--shadow-strong)] animate-[fadeUp_0.3s_ease-out_forwards]">
-        <div className="px-8 py-6 border-b border-[var(--line)] flex justify-between items-center sticky top-0 bg-[var(--surface)] z-10">
+  return createPortal(
+    <div className="fixed inset-0 bg-[#1f2a2266] backdrop-blur-[4px] flex items-center justify-center z-[1000] sm:p-6 lg:p-8">
+      <div className="bg-[var(--surface)] w-full h-full sm:rounded-[24px] sm:max-w-[1000px] sm:max-h-[95vh] flex flex-col shadow-[var(--shadow-strong)] animate-[fadeUp_0.3s_ease-out_forwards]">
+        <div className="px-6 sm:px-8 py-5 sm:py-6 border-b border-[var(--line)] flex justify-between items-center sticky top-0 bg-[var(--surface)] z-10 shrink-0">
           <h2 className="m-0 text-[1.25rem] text-[var(--ink)] font-semibold">
             {editData ? 'Edit Alamat' : 'Tambah Alamat Baru'}
           </h2>
           <button 
+            type="button"
             onClick={onClose} 
             className="bg-transparent border-none cursor-pointer text-[var(--ink-soft)] p-2 rounded-full flex items-center justify-center hover:bg-[var(--surface-muted)] transition-colors"
           >
@@ -248,7 +251,7 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8">
+        <form onSubmit={handleSubmit} className="p-6 sm:p-8 flex-1 overflow-y-auto">
           {errorMsg && (
             <div className="bg-[#fee2e2] text-[#dc2626] px-4 py-3 rounded-lg mb-6 text-[0.9rem]">
               {errorMsg}
@@ -457,6 +460,7 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
