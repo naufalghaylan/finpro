@@ -245,15 +245,33 @@ export default function AdminStockList({ storeId }: { storeId?: number }) {
           storeId={storeId}
           existingStocks={stocks}
           onClose={() => setShowAddModal(false)}
-          onSubmit={async (data) => {
-            try {
-              await addStock({ storeId, productId: data.productId, quantity: data.quantity })
-              await fetchStocks()
-              showToast('Produk berhasil ditambahkan ke cabang', 'success')
-            } catch (err: unknown) {
-              const error = err as AxiosError<{ message?: string }>
-              showToast(error.response?.data?.message || 'Gagal menambahkan produk', 'error')
-              throw err
+          onSubmit={async ({ items }) => {
+            const results = await Promise.allSettled(
+              items.map(({ productId, quantity }) => addStock({ storeId, productId, quantity })),
+            )
+            await fetchStocks()
+
+            const failed = results.filter((r) => r.status === 'rejected').length
+            const succeeded = items.length - failed
+
+            if (succeeded === 0) {
+              const firstError = results.find((r) => r.status === 'rejected') as
+                | PromiseRejectedResult
+                | undefined
+              const error = firstError?.reason as AxiosError<{ message?: string }> | undefined
+              showToast(error?.response?.data?.message || 'Gagal menambahkan produk', 'error')
+              throw new Error('Gagal menambahkan produk')
+            }
+
+            if (failed > 0) {
+              showToast(`${succeeded} produk ditambahkan, ${failed} gagal`, 'error')
+            } else {
+              showToast(
+                succeeded === 1
+                  ? 'Produk berhasil ditambahkan ke cabang'
+                  : `${succeeded} produk berhasil ditambahkan ke cabang`,
+                'success',
+              )
             }
           }}
         />

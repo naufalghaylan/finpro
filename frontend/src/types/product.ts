@@ -70,6 +70,9 @@ export type ProductFilters = {
   offset?: number
   sortBy?: 'name' | 'price' | 'newest'
   storeId?: string
+  // Lokasi user (opsional). Jika dikirim, stok diambil dari toko terdekat.
+  lat?: number
+  lng?: number
 }
 
 export type SearchFilters = ProductFilters & {
