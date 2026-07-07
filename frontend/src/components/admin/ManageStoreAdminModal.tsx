@@ -73,7 +73,7 @@ export default function ManageStoreAdminModal({ store, onClose, onSuccess }: Pro
 
   const modalContent = (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-admin-ink/40 backdrop-blur-sm animate-in fade-in duration-200 font-[family-name:var(--font-admin)]">
-      <div className="bg-admin-surface rounded-2xl w-full max-w-lg p-8 shadow-xl border border-admin-line-soft max-h-[90vh] overflow-y-auto">
+      <div className="bg-admin-surface rounded-2xl w-full max-w-lg mx-auto p-6 sm:p-8 shadow-xl border border-admin-line-soft max-h-[90vh] overflow-y-auto">
         <h3 className="text-xl font-bold text-admin-ink mb-1">Kelola Admin Toko</h3>
         <p className="text-sm text-admin-ink-muted mb-6">Toko: <strong className="text-admin-ink">{store.name}</strong></p>
         
@@ -104,11 +104,11 @@ export default function ManageStoreAdminModal({ store, onClose, onSuccess }: Pro
               <option key={admin.id} value={admin.id}>{admin.name} ({admin.email}) {admin.storeId ? '- Sudah di toko lain' : ''}</option>
             ))}
           </select>
-          <div className="flex justify-end">
+          <div className="flex justify-end mt-2">
             <button 
               onClick={handleAssign}
               disabled={!selectedAdminId || assignLoading}
-              className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-admin-accent hover:bg-admin-accent-strong transition-all cursor-pointer border-none disabled:opacity-50 disabled:cursor-not-allowed shadow-sm whitespace-nowrap"
+              className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-admin-accent hover:bg-admin-accent-strong transition-all cursor-pointer border-none disabled:opacity-50 disabled:cursor-not-allowed shadow-sm w-full sm:w-auto whitespace-nowrap"
             >
               {assignLoading ? 'Menyimpan...' : 'Assign Admin'}
             </button>
@@ -152,9 +152,9 @@ export default function ManageStoreAdminModal({ store, onClose, onSuccess }: Pro
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 mt-8">
-          <button className="px-5 py-2.5 rounded-xl text-sm font-medium text-admin-ink-soft bg-admin-surface border border-admin-line hover:bg-admin-line-soft hover:text-admin-ink transition-all cursor-pointer" onClick={onClose}>Tutup</button>
-          <button className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-admin-accent hover:bg-admin-accent-strong transition-all cursor-pointer border-none disabled:opacity-50 disabled:cursor-not-allowed shadow-sm" onClick={handleSubmit} disabled={loading}>{loading ? 'Menyimpan...' : 'Daftarkan Admin'}</button>
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-8">
+          <button className="px-5 py-2.5 rounded-xl text-sm font-medium text-admin-ink-soft bg-admin-surface border border-admin-line hover:bg-admin-line-soft hover:text-admin-ink transition-all cursor-pointer w-full sm:w-auto text-center" onClick={onClose}>Tutup</button>
+          <button className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-admin-accent hover:bg-admin-accent-strong transition-all cursor-pointer border-none disabled:opacity-50 disabled:cursor-not-allowed shadow-sm w-full sm:w-auto" onClick={handleSubmit} disabled={loading}>{loading ? 'Menyimpan...' : 'Daftarkan Admin'}</button>
         </div>
       </div>
     </div>

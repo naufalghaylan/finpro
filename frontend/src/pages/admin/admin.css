@@ -106,3 +106,17 @@
     border-radius: 999px;
   }
 }
+
+/* --- Responsive Overrides --- */
+@media (max-width: 1023px) {
+  .admin-mobile-ml-0 {
+    margin-left: 0 !important;
+  }
+  .admin-mobile-left-0 {
+    left: 0 !important;
+  }
+  .admin-sidebar-mobile {
+    width: 260px !important;
+  }
+}
+
