@@ -32,6 +32,7 @@ const AdminStoreList = lazy(() => import('./pages/admin/AdminStoreList'))
 const AdminStoreDetailPage = lazy(() => import('./pages/admin/AdminStoreDetailPage'))
 const AdminStoreOrdersPage = lazy(() => import('./pages/admin/AdminStoreOrdersPage'))
 const AdminStoreMutationsPage = lazy(() => import('./pages/admin/AdminStoreMutationsPage'))
+const AdminStoreStocksPage = lazy(() => import('./pages/admin/AdminStoreStocksPage'))
 
 const PageLoader = () => (
   <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '50vh', gap: '16px' }}>
@@ -100,11 +101,12 @@ function App() {
             <Route index element={<AdminStoreIndexRedirect />} />
             <Route path="list" element={<SuperAdminRoute><Suspense fallback={<PageLoader />}><AdminStoreList /></Suspense></SuperAdminRoute>} />
             <Route path="admins" element={<SuperAdminRoute><AdminStoreAdminList /></SuperAdminRoute>} />
-            <Route path="stocks" element={<SuperAdminRoute><AdminStockList /></SuperAdminRoute>} />
-            <Route path="products" element={<SuperAdminRoute><AdminProductPage /></SuperAdminRoute>} />
-            <Route path="orders" element={<SuperAdminRoute><AdminOrderList /></SuperAdminRoute>} />
+            <Route path="stocks" element={<SuperAdminRoute><Suspense fallback={<PageLoader />}><AdminStockList /></Suspense></SuperAdminRoute>} />
+            <Route path="products" element={<SuperAdminRoute><Suspense fallback={<PageLoader />}><AdminProductPage /></Suspense></SuperAdminRoute>} />
+            <Route path="orders" element={<SuperAdminRoute><Suspense fallback={<PageLoader />}><AdminOrderList /></Suspense></SuperAdminRoute>} />
             <Route path=":id/orders" element={<Suspense fallback={<PageLoader />}><AdminStoreOrdersPage /></Suspense>} />
             <Route path=":id/fulfillment" element={<Suspense fallback={<PageLoader />}><AdminStoreMutationsPage /></Suspense>} />
+            <Route path=":id/stocks" element={<Suspense fallback={<PageLoader />}><AdminStoreStocksPage /></Suspense>} />
             <Route path="sales-report" element={<SuperAdminRoute><AdminSalesReport /></SuperAdminRoute>} />
           <Route path="stock-report" element={<SuperAdminRoute><AdminStockReport /></SuperAdminRoute>} />
           <Route path=":id" element={<Suspense fallback={<PageLoader />}><AdminStoreDetailPage /></Suspense>} />

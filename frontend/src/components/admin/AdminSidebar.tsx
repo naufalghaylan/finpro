@@ -57,6 +57,7 @@ export function AdminSidebar({ isCollapsed, toggleCollapse }: AdminSidebarProps)
 
   const feature3MenuItems: AdminMenuItem[] = scopedStoreId
     ? [
+        { to: `/admin/stores/${scopedStoreId}/stocks`, label: 'Stok Toko', icon: Package },
         { to: `/admin/stores/${scopedStoreId}/orders`, label: 'Pesanan Toko', icon: ClipboardList },
         { to: `/admin/stores/${scopedStoreId}/fulfillment`, label: 'Mutasi Stok', icon: Repeat2 },
       ]
@@ -69,7 +70,9 @@ export function AdminSidebar({ isCollapsed, toggleCollapse }: AdminSidebarProps)
     { to: '/admin/stores/orders', label: 'Pesanan', icon: ClipboardList },
   ];
 
-  const menuItems = [...roleMenuItems, ...feature3MenuItems, ...commonMenuItems];
+  const menuItems = isSuperAdmin
+    ? [...roleMenuItems, ...feature3MenuItems, ...commonMenuItems]
+    : [...roleMenuItems, ...feature3MenuItems];
 
   return (
     <aside
