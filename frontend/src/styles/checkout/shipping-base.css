@@ -72,6 +72,22 @@
   background: linear-gradient(135deg, rgba(224, 234, 190, 0.35), rgba(255, 250, 242, 0.92));
 }
 
+.checkout-store-card-main {
+  min-width: 0;
+}
+
+.store-chip {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 5px 9px;
+  color: var(--green);
+  background: rgba(74, 124, 91, 0.12);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
 .checkout-store-card h3,
 .checkout-store-card p {
   margin: 8px 0 0;
@@ -79,6 +95,17 @@
 
 .checkout-store-card p {
   color: var(--ink-soft);
+}
+
+.checkout-store-address,
+.checkout-store-location {
+  overflow-wrap: anywhere;
+}
+
+.checkout-store-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .checkout-distance-badge {

@@ -1,5 +1,5 @@
 import type { Cart } from './cart'
-import type { PaymentMethod, OrderStatus } from './order-status.types'
+import type { DiscountType, PaymentMethod, OrderStatus } from './order-status.types'
 import type { CheckoutVoucher, OrderVoucher } from './voucher.types'
 
 export type CheckoutAddress = {
@@ -37,12 +37,26 @@ export type CheckoutPaymentMethod = {
   description: string
 }
 
+export type CheckoutStoreDiscount = {
+  id: number
+  name: string
+  productId: number | null
+  discountType: DiscountType
+  discountValue: number
+  minPurchase: number
+  maxDiscount: number | null
+  startDate: string
+  endDate: string
+  amount: number
+}
+
 export type CheckoutPreview = {
   cart: Cart
   addresses: CheckoutAddress[]
   vouchers: CheckoutVoucher[]
   selectedAddress: CheckoutAddress | null
   nearestStore: CheckoutStore | null
+  storeDiscounts: CheckoutStoreDiscount[]
   paymentMethods: CheckoutPaymentMethod[]
 }
 

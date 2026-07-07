@@ -1,9 +1,11 @@
 import { BadgePercent, CheckCircle2 } from 'lucide-react'
-import { formatCurrency } from '../../utils/format'
+import type { CheckoutStoreDiscount } from '../../types/order'
+import { formatCurrency, formatDateTime } from '../../utils/format'
 
 type CheckoutDiscountPanelProps = {
   /** Diskon toko yang tersedia untuk pesanan ini (dihitung backend). */
   availableDiscountAmount?: number
+  discounts?: CheckoutStoreDiscount[]
   /** Apakah user memilih memakai diskon. */
   isApplied?: boolean
   onToggleApply?: (apply: boolean) => void
@@ -11,10 +13,27 @@ type CheckoutDiscountPanelProps = {
 
 export function CheckoutDiscountPanel({
   availableDiscountAmount = 0,
+  discounts = [],
   isApplied = false,
   onToggleApply,
 }: CheckoutDiscountPanelProps) {
   const hasDiscount = availableDiscountAmount > 0
+  const displayedDiscounts = discounts.length > 0
+    ? discounts
+    : hasDiscount
+      ? [{
+        id: 0,
+        name: 'Diskon Toko',
+        productId: null,
+        discountType: 'NOMINAL' as const,
+        discountValue: availableDiscountAmount,
+        minPurchase: 0,
+        maxDiscount: null,
+        startDate: '',
+        endDate: null,
+        amount: availableDiscountAmount,
+      }]
+      : []
 
   return (
     <section className='checkout-panel'>
@@ -33,29 +52,38 @@ export function CheckoutDiscountPanel({
           <p>Tidak ada diskon toko yang berlaku untuk produk di keranjang ini.</p>
         </div>
       ) : (
-        <button
-          type='button'
-          className={`checkout-payment-card checkout-voucher-card${isApplied ? ' selected' : ''}`}
-          onClick={() => onToggleApply?.(!isApplied)}
-          aria-pressed={isApplied}
-        >
-          <div className='checkout-voucher-card-top'>
-            <BadgePercent aria-hidden='true' />
-            {isApplied && (
-              <span className='checkout-selection-badge'>
-                <CheckCircle2 aria-hidden='true' />
-                Dipakai
+        <div className='checkout-payment-grid'>
+          {displayedDiscounts.map((discount) => (
+            <button
+              key={discount.id}
+              type='button'
+              className={`checkout-payment-card checkout-voucher-card${isApplied ? ' selected' : ''}`}
+              onClick={() => onToggleApply?.(!isApplied)}
+              aria-pressed={isApplied}
+            >
+              <div className='checkout-voucher-card-top'>
+                <BadgePercent aria-hidden='true' />
+                {isApplied && (
+                  <span className='checkout-selection-badge'>
+                    <CheckCircle2 aria-hidden='true' />
+                    Terpasang
+                  </span>
+                )}
+              </div>
+              <strong className='checkout-voucher-name'>{discount.name}</strong>
+              <span className='checkout-voucher-discount'>Hemat {formatCurrency(discount.amount)}</span>
+              <span className='checkout-voucher-meta'>
+                <strong>Berlaku untuk:</strong> {discount.productId ? 'Produk tertentu' : 'Semua produk'}
               </span>
-            )}
-          </div>
-          <strong className='checkout-voucher-name'>Diskon Toko</strong>
-          <span className='checkout-voucher-discount'>Hemat {formatCurrency(availableDiscountAmount)}</span>
-          <span className='checkout-voucher-meta'>
-            {isApplied
-              ? 'Diskon dipakai untuk pesanan ini. Klik untuk membatalkan.'
-              : 'Klik untuk memakai diskon ini.'}
-          </span>
-        </button>
+              <span className='checkout-voucher-meta'>
+                <strong>Min. Belanja:</strong> {formatCurrency(discount.minPurchase)}
+              </span>
+              <span className='checkout-voucher-expiry'>
+                Berlaku s/d {formatDateTime(discount.endDate)}
+              </span>
+            </button>
+          ))}
+        </div>
       )}
     </section>
   )

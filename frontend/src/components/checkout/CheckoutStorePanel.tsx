@@ -18,11 +18,11 @@ export function CheckoutStorePanel({ nearestStore }: CheckoutStorePanelProps) {
 
       {nearestStore ? (
         <div className="checkout-store-card">
-          <div>
+          <div className="checkout-store-card-main">
             <span className="store-chip">Cabang Terdekat</span>
             <h3>{nearestStore.name}</h3>
-            <p>{nearestStore.address}</p>
-            <p className="inline-flex items-center gap-1.5">
+            <p className="checkout-store-address">{nearestStore.address}</p>
+            <p className="checkout-store-location">
               <MapPin className="size-4 shrink-0 text-(--green)" aria-hidden="true" />
               {nearestStore.city}, {nearestStore.province}
             </p>
