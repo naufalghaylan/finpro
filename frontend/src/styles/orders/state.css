@@ -92,6 +92,38 @@
   padding: 0 8px;
 }
 
+@media (max-width: 720px) {
+  .order-card--skeleton {
+    grid-template-columns: var(--order-card-image-size) 1fr;
+  }
+
+  .orders-pagination {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.72);
+  }
+
+  .orders-pagination .button {
+    justify-content: center;
+    width: 100%;
+    min-height: 44px;
+    padding-inline: 10px;
+  }
+
+  .orders-pagination span {
+    order: -1;
+    grid-column: 1 / -1;
+    padding: 0 0 2px;
+    font-size: 0.86rem;
+    text-align: center;
+  }
+}
+
 @keyframes ordersPulse {
   0% {
     background-position: 0% 50%;
