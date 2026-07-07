@@ -1,8 +1,9 @@
 ﻿@media (max-width: 720px) {
   .checkout-voucher-card-top {
     align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 6px;
     min-width: 0;
   }
 
@@ -25,28 +26,40 @@
   }
 
   .checkout-payment-card.checkout-voucher-card .checkout-selection-badge {
-    max-width: 88px;
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    max-width: none;
     justify-content: center;
-    white-space: normal;
+    overflow: hidden;
+    padding: 0;
+    font-size: 0;
+    line-height: 0;
+    white-space: nowrap;
   }
 
   .checkout-selection-badge {
-    padding: 3px 6px;
-    font-size: 0.68rem;
+    padding: 2px 5px;
+    font-size: 0.62rem;
     line-height: 1.2;
+  }
+
+  .checkout-selection-badge svg {
+    width: 10px;
+    height: 10px;
   }
 
   .checkout-voucher-name {
     grid-column: 1;
     margin-top: 0;
-    font-size: 0.94rem;
+    font-size: 0.92rem;
     line-height: 1.25;
   }
 
   .checkout-payment-card .checkout-voucher-discount {
     grid-column: 1;
     margin: 0;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     line-height: 1.2;
   }
 

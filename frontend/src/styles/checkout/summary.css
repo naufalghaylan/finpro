@@ -27,7 +27,9 @@
 
 .checkout-summary-header h2 {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-body);
+  font-weight: 800;
+  line-height: 1.25;
 }
 
 .checkout-summary-header span {

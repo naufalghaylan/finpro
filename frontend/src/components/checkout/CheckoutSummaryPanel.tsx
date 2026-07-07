@@ -1,8 +1,10 @@
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
 import type { ShippingCostResult } from '../../api/rajaongkir'
 import { formatCurrency } from '../../utils/format'
+import { CheckoutInlineAlert } from './CheckoutInlineAlert'
+import { getOtherDiscountAmount, getReadinessItems } from './checkoutSummaryDisplay'
 
-interface CheckoutSummaryPanelProps {
+export interface CheckoutSummaryPanelProps {
   totalQuantity: number
   subtotal: number
   storeDiscountAmount?: number
@@ -18,111 +20,94 @@ interface CheckoutSummaryPanelProps {
   onCreateOrder: () => void
 }
 
-export function CheckoutSummaryPanel({
-  totalQuantity,
-  subtotal,
-  storeDiscountAmount = 0,
-  voucherReferralAmount = 0,
-  discountAmount = 0,
-  selectedShippingService,
-  totalPayment,
-  hasSelectedAddressCoordinates,
-  hasSelectedAddress,
-  hasNearestBranch,
-  canCreateOrder,
-  isSubmitting,
-  onCreateOrder,
-}: CheckoutSummaryPanelProps) {
-  const otherDiscountAmount = Math.max(0, discountAmount - storeDiscountAmount - voucherReferralAmount)
-  const hasReadyAddress = hasSelectedAddress && hasSelectedAddressCoordinates
-  const hasShipping = Boolean(selectedShippingService)
-  const readinessItems = [
-    { label: 'Alamat berkoordinat', ready: hasReadyAddress },
-    { label: 'Cabang pemrosesan tersedia', ready: hasNearestBranch },
-    { label: 'Layanan pengiriman dipilih', ready: hasShipping },
-  ]
+export function CheckoutSummaryPanel(props: CheckoutSummaryPanelProps) {
+  const otherDiscountAmount = getOtherDiscountAmount(props.discountAmount ?? 0, props.storeDiscountAmount ?? 0, props.voucherReferralAmount ?? 0)
 
   return (
     <aside className="checkout-summary-panel">
-      <div className="checkout-summary-header">
-        <h2>Rincian Pembayaran</h2>
-        <span>
-          {totalQuantity} item
-        </span>
-      </div>
-
-      <div className="checkout-readiness-list" aria-label="Kelengkapan checkout">
-        {readinessItems.map((item) => (
-          <div
-            key={item.label}
-            className={`checkout-readiness-item ${item.ready ? 'ready' : ''}`}
-          >
-            {item.ready ? (
-              <CheckCircle2 aria-hidden="true" />
-            ) : (
-              <AlertCircle aria-hidden="true" />
-            )}
-            <span>{item.label}</span>
-          </div>
-        ))}
-      </div>
-
-      <div className="cart-summary-row">
-        <span>Total Harga ({totalQuantity} item)</span>
-        <strong>{formatCurrency(subtotal)}</strong>
-      </div>
-      {storeDiscountAmount > 0 && (
-        <div className="cart-summary-row">
-          <span>Diskon PanenMart</span>
-          <strong>-{formatCurrency(storeDiscountAmount)}</strong>
-        </div>
-      )}
-      {voucherReferralAmount > 0 && (
-        <div className="cart-summary-row">
-          <span>Voucher Referral</span>
-          <strong>-{formatCurrency(voucherReferralAmount)}</strong>
-        </div>
-      )}
-      {otherDiscountAmount > 0 && (
-        <div className="cart-summary-row">
-          <span>Potongan Lainnya</span>
-          <strong>-{formatCurrency(otherDiscountAmount)}</strong>
-        </div>
-      )}
-      <div className="cart-summary-row">
-        <span>Ongkir</span>
-        <strong>{selectedShippingService ? formatCurrency(selectedShippingService.cost) : 'Pilih pengiriman'}</strong>
-      </div>
-      <div className="cart-summary-row checkout-summary-total">
-        <span>Total Bayar</span>
-        <strong>{formatCurrency(totalPayment)}</strong>
-      </div>
-
-      {!hasSelectedAddressCoordinates && hasSelectedAddress && (
-        <div className="checkout-inline-alert compact">
-          <AlertCircle aria-hidden="true" />
-          Alamat terpilih belum punya koordinat.
-        </div>
-      )}
-
-      <button
-        type="button"
-        className="button primary checkout-create-button"
-        disabled={!canCreateOrder}
-        onClick={onCreateOrder}
-      >
-        {isSubmitting ? (
-          <>
-            <Loader2 className="button-icon spin" aria-hidden="true" />
-            Membuat Pesanan
-          </>
-        ) : (
-          <>
-            <CheckCircle2 className="button-icon" aria-hidden="true" />
-            Buat Pesanan
-          </>
-        )}
-      </button>
+      <CheckoutSummaryHeader totalQuantity={props.totalQuantity} />
+      <CheckoutReadinessList {...props} />
+      <CheckoutSummaryRows {...props} otherDiscountAmount={otherDiscountAmount} />
+      <AddressCoordinateAlert {...props} />
+      <CheckoutCreateButton canCreateOrder={props.canCreateOrder} isSubmitting={props.isSubmitting} onCreateOrder={props.onCreateOrder} />
     </aside>
+  )
+}
+
+function CheckoutSummaryHeader({ totalQuantity }: Pick<CheckoutSummaryPanelProps, 'totalQuantity'>) {
+  return (
+    <div className="checkout-summary-header">
+      <h2>Rincian Pembayaran</h2>
+      <span>{totalQuantity} item</span>
+    </div>
+  )
+}
+
+function CheckoutReadinessList(props: CheckoutSummaryPanelProps) {
+  const items = getReadinessItems(props.hasSelectedAddress && props.hasSelectedAddressCoordinates, props.hasNearestBranch, Boolean(props.selectedShippingService))
+
+  return (
+    <div className="checkout-readiness-list" aria-label="Kelengkapan checkout">
+      {items.map((item) => <CheckoutReadinessItem key={item.label} {...item} />)}
+    </div>
+  )
+}
+
+function CheckoutReadinessItem({ label, ready }: { label: string; ready: boolean }) {
+  const Icon = ready ? CheckCircle2 : AlertCircle
+
+  return (
+    <div className={`checkout-readiness-item ${ready ? 'ready' : ''}`}>
+      <Icon aria-hidden="true" />
+      <span>{label}</span>
+    </div>
+  )
+}
+
+type CheckoutSummaryRowsProps = CheckoutSummaryPanelProps & { otherDiscountAmount: number }
+
+function CheckoutSummaryRows(props: CheckoutSummaryRowsProps) {
+  return (
+    <>
+      <SummaryRow label={`Total Harga (${props.totalQuantity} item)`} value={formatCurrency(props.subtotal)} />
+      <DiscountRows {...props} />
+      <SummaryRow label="Ongkir" value={props.selectedShippingService ? formatCurrency(props.selectedShippingService.cost) : 'Pilih pengiriman'} />
+      <SummaryRow label="Total Bayar" value={formatCurrency(props.totalPayment)} className="checkout-summary-total" />
+    </>
+  )
+}
+
+function DiscountRows({ storeDiscountAmount = 0, voucherReferralAmount = 0, otherDiscountAmount }: CheckoutSummaryRowsProps) {
+  return (
+    <>
+      {storeDiscountAmount > 0 && <SummaryRow label="Diskon PanenMart" value={`-${formatCurrency(storeDiscountAmount)}`} />}
+      {voucherReferralAmount > 0 && <SummaryRow label="Voucher Referral" value={`-${formatCurrency(voucherReferralAmount)}`} />}
+      {otherDiscountAmount > 0 && <SummaryRow label="Potongan Lainnya" value={`-${formatCurrency(otherDiscountAmount)}`} />}
+    </>
+  )
+}
+
+function SummaryRow({ label, value, className = '' }: { label: string; value: string; className?: string }) {
+  return (
+    <div className={`cart-summary-row ${className}`.trim()}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  )
+}
+
+function AddressCoordinateAlert({ hasSelectedAddress, hasSelectedAddressCoordinates }: CheckoutSummaryPanelProps) {
+  if (hasSelectedAddressCoordinates || !hasSelectedAddress) return null
+  return <CheckoutInlineAlert icon={AlertCircle} compact>Alamat terpilih belum punya koordinat.</CheckoutInlineAlert>
+}
+
+function CheckoutCreateButton({ canCreateOrder, isSubmitting, onCreateOrder }: Pick<CheckoutSummaryPanelProps, 'canCreateOrder' | 'isSubmitting' | 'onCreateOrder'>) {
+  const Icon = isSubmitting ? Loader2 : CheckCircle2
+
+  return (
+    <button type="button" className="button primary checkout-create-button" disabled={!canCreateOrder} onClick={onCreateOrder}>
+      <Icon className={`button-icon ${isSubmitting ? 'spin' : ''}`.trim()} aria-hidden="true" />
+      {isSubmitting ? 'Membuat Pesanan' : 'Buat Pesanan'}
+    </button>
   )
 }
