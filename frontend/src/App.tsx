@@ -10,6 +10,8 @@ import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
 import AdminDashboardLayout from './components/admin/AdminDashboardLayout'
 import AdminStoreLayout, { AdminStoreIndexRedirect } from './pages/admin/AdminStoreLayout'
+import AdminStoreSalesReportPage from './pages/admin/AdminStoreSalesReportPage'
+import AdminStoreStockReportPage from './pages/admin/AdminStoreStockReportPage'
 import './App.css'
 import './styles/index.css'
 
@@ -52,6 +54,7 @@ const PageLoader = () => (
     <p style={{ color: 'var(--ink-soft)', fontWeight: 500 }}>Memuat halaman...</p>
   </div>
 )
+
 
 function OrderPaymentRedirect() {
   const { id } = useParams()
@@ -116,6 +119,8 @@ function App() {
             <Route path="orders" element={<SuperAdminRoute><Suspense fallback={<PageLoader />}><AdminOrderList /></Suspense></SuperAdminRoute>} />
             <Route path=":id/orders" element={<Suspense fallback={<PageLoader />}><AdminStoreOrdersPage /></Suspense>} />
             <Route path=":id/fulfillment" element={<Suspense fallback={<PageLoader />}><AdminStoreMutationsPage /></Suspense>} />
+            <Route path=":id/sales-report" element={<AdminStoreSalesReportPage />} />
+            <Route path=":id/stock-report" element={<AdminStoreStockReportPage />} />
             <Route path=":id/stocks" element={<Suspense fallback={<PageLoader />}><AdminStoreStocksPage /></Suspense>} />
             <Route path=":id/admins" element={<Suspense fallback={<PageLoader />}><AdminStoreScopedAdminsPage /></Suspense>} />
             <Route path="sales-report" element={<SuperAdminRoute><Suspense fallback={<PageLoader />}><AdminSalesReport /></Suspense></SuperAdminRoute>} />

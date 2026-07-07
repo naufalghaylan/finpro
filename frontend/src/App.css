@@ -228,6 +228,7 @@
   border: 1px solid var(--line);
   background: var(--surface);
   box-shadow: var(--shadow-soft);
+  height: 100%;
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
@@ -288,7 +289,7 @@
 
 .product-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
 }
@@ -296,6 +297,13 @@
 .product-header h3 {
   margin: 0;
   font-size: 1rem;
+  line-height: 1.3;
+  /* Selalu setinggi 2 baris agar harga/stok/tombol antar kartu sejajar */
+  min-height: 2.6em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .product-tag {
@@ -305,6 +313,8 @@
   color: var(--accent-strong);
   font-size: 0.7rem;
   font-weight: 600;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .product-price {
@@ -339,6 +349,8 @@
 .product-footer {
   display: flex;
   gap: 10px;
+  /* Dorong tombol ke dasar kartu supaya sejajar antar kartu */
+  margin-top: auto;
 }
 
 .product-footer .button {

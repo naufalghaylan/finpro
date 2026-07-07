@@ -13,6 +13,8 @@ import {
   UserCog,
   Repeat2,
   ChevronDown,
+  LineChart,
+  BarChart3,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -55,6 +57,8 @@ export function AdminSidebar({ isCollapsed, toggleCollapse }: AdminSidebarProps)
         { to: `/admin/stores/${scopedStoreId}/stocks`, label: 'Stok Toko', icon: Package },
         { to: `/admin/stores/${scopedStoreId}/orders`, label: 'Pesanan Toko', icon: ClipboardList },
         { to: `/admin/stores/${scopedStoreId}/fulfillment`, label: 'Mutasi Stok', icon: Repeat2 },
+        { to: `/admin/stores/${scopedStoreId}/sales-report`, label: 'Laporan Penjualan', icon: LineChart },
+        { to: `/admin/stores/${scopedStoreId}/stock-report`, label: 'Laporan Stok', icon: BarChart3 },
         { to: `/admin/stores/${scopedStoreId}/admins`, label: 'Admin Toko', icon: Users },
       ]
     : [];
@@ -69,6 +73,8 @@ export function AdminSidebar({ isCollapsed, toggleCollapse }: AdminSidebarProps)
         },
         { to: '/admin/stores/admins', label: 'Daftar Admin', icon: Users },
         { to: '/admin/users', label: 'Daftar Pengguna', icon: UserCog },
+        { to: '/admin/stores/sales-report', label: 'Laporan Penjualan Global', icon: LineChart },
+        { to: '/admin/stores/stock-report', label: 'Laporan Stok Global', icon: BarChart3 },
       ]
     : [
         {
@@ -78,6 +84,7 @@ export function AdminSidebar({ isCollapsed, toggleCollapse }: AdminSidebarProps)
           exact: true,
         },
       ];
+
 
   const commonMenuItems: AdminMenuItem[] = [
     { to: '/admin/stores/stocks', label: 'Daftar Stok', icon: Package },
