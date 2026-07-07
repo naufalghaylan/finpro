@@ -9,6 +9,10 @@ type BankDestinationInfoProps = {
   onCopyDestination: (destinationValue: string) => void
 }
 
+type DestinationCopyProps = Pick<BankDestinationInfoProps, 'hasCopiedDestination' | 'onCopyDestination'> & {
+  selectedChannel: ManualPaymentChannel
+}
+
 const formatPaymentDestination = (value: string) => {
   if (/^08\d{8,11}$/.test(value)) {
     return value.replace(/(\d{4})(\d{4})(\d+)/, '$1 $2 $3')
@@ -17,51 +21,74 @@ const formatPaymentDestination = (value: string) => {
   return value.replace(/(\d{5})(?=\d)/g, '$1 ')
 }
 
-export function BankDestinationInfo({
-  selectedChannel,
-  hasCopiedDestination,
-  totalAmount,
-  onCopyDestination,
-}: BankDestinationInfoProps) {
-  const SelectedChannelIcon = selectedChannel.Icon ?? WalletCards
-  const selectedDestinationDisplay =
-    selectedChannel.destinationDisplayValue ?? formatPaymentDestination(selectedChannel.destinationValue)
+const getDestinationDisplayValue = (selectedChannel: ManualPaymentChannel) =>
+  selectedChannel.destinationDisplayValue ?? formatPaymentDestination(selectedChannel.destinationValue)
 
+export function BankDestinationInfo(props: BankDestinationInfoProps) {
   return (
     <div className="payment-bank-card">
+      <PaymentBankHeader selectedChannel={props.selectedChannel} />
+      <PaymentDestinationRow selectedChannel={props.selectedChannel} hasCopiedDestination={props.hasCopiedDestination} onCopyDestination={props.onCopyDestination} />
+      <PaymentAccountHolder accountHolder={props.selectedChannel.accountHolder} />
+      <PaymentTransferTotal totalAmount={props.totalAmount} />
+      <p className="payment-bank-instruction">{props.selectedChannel.proofHint}</p>
+    </div>
+  )
+}
+
+function PaymentBankHeader({ selectedChannel }: { selectedChannel: ManualPaymentChannel }) {
+  const SelectedChannelIcon = selectedChannel.Icon ?? WalletCards
+
+  return (
+    <>
       <div className="payment-bank-header">
         <SelectedChannelIcon aria-hidden="true" />
         <span>Transfer Bank</span>
       </div>
       <h3>{selectedChannel.label}</h3>
+    </>
+  )
+}
 
-      <div className="payment-bank-info-block">
-        <span>{selectedChannel.destinationLabel}</span>
-        <div className="payment-bank-value-row">
-          <strong>{selectedDestinationDisplay}</strong>
-          <button
-            type="button"
-            className={`button ghost payment-bank-copy ${hasCopiedDestination ? 'copied' : ''}`}
-            onClick={() => onCopyDestination(selectedChannel.destinationValue)}
-            aria-label={`Salin ${selectedChannel.destinationLabel.toLowerCase()}`}
-          >
-            <Copy className="button-icon" aria-hidden="true" />
-            {hasCopiedDestination ? 'Tersalin' : 'Salin'}
-          </button>
-        </div>
+function PaymentDestinationRow(props: DestinationCopyProps) {
+  const destinationDisplay = getDestinationDisplayValue(props.selectedChannel)
+
+  return (
+    <div className="payment-bank-info-block">
+      <span>{props.selectedChannel.destinationLabel}</span>
+      <div className="payment-bank-value-row">
+        <strong>{destinationDisplay}</strong>
+        <CopyDestinationButton {...props} />
       </div>
+    </div>
+  )
+}
 
-      <div className="payment-bank-info-block payment-bank-account-block">
-        <span>Atas Nama</span>
-        <strong className="payment-bank-account-name">{selectedChannel.accountHolder}</strong>
-      </div>
+function CopyDestinationButton({ selectedChannel, hasCopiedDestination, onCopyDestination }: DestinationCopyProps) {
+  const copyLabel = hasCopiedDestination ? 'Tersalin' : 'Salin'
 
-      <div className="payment-bank-info-block payment-bank-total">
-        <span>Nominal Transfer</span>
-        <strong>{formatCurrency(totalAmount)}</strong>
-      </div>
+  return (
+    <button type="button" className={`button ghost payment-bank-copy ${hasCopiedDestination ? 'copied' : ''}`} onClick={() => onCopyDestination(selectedChannel.destinationValue)} aria-label={`Salin ${selectedChannel.destinationLabel.toLowerCase()}`}>
+      <Copy className="button-icon" aria-hidden="true" />
+      {copyLabel}
+    </button>
+  )
+}
 
-      <p className="payment-bank-instruction">{selectedChannel.proofHint}</p>
+function PaymentAccountHolder({ accountHolder }: { accountHolder: string }) {
+  return (
+    <div className="payment-bank-info-block payment-bank-account-block">
+      <span>Atas Nama</span>
+      <strong className="payment-bank-account-name">{accountHolder}</strong>
+    </div>
+  )
+}
+
+function PaymentTransferTotal({ totalAmount }: { totalAmount: number }) {
+  return (
+    <div className="payment-bank-info-block payment-bank-total">
+      <span>Nominal Transfer</span>
+      <strong>{formatCurrency(totalAmount)}</strong>
     </div>
   )
 }
