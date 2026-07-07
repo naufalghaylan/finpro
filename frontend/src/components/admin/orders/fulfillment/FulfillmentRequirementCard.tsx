@@ -13,6 +13,9 @@ type Props = {
   onSourceStoreChange: (requirement: FulfillmentRequirement, storeId: number | '') => void
 }
 
+const fieldLabelClassName = 'mb-2 block text-xs font-semibold uppercase tracking-wider text-admin-ink-soft'
+const fieldControlClassName = 'h-12 w-full rounded-xl border border-admin-line bg-admin-surface px-3.5 text-sm text-admin-ink transition-all focus:border-admin-accent focus:outline-none focus:ring-2 focus:ring-admin-accent/20'
+
 export function FulfillmentRequirementCard({
   requirement,
   index,
@@ -58,7 +61,7 @@ export function FulfillmentRequirementCard({
           <div>
             <label
               htmlFor={`source-${requirement.productId}`}
-              className="mb-2 block text-xs font-semibold uppercase tracking-wider text-admin-ink-soft"
+              className={fieldLabelClassName}
             >
               Toko Sumber
             </label>
@@ -69,7 +72,7 @@ export function FulfillmentRequirementCard({
                 requirement,
                 event.target.value === '' ? '' : Number(event.target.value),
               )}
-              className="w-full rounded-xl border border-admin-line bg-admin-surface px-3.5 py-2.5 text-sm text-admin-ink transition-all focus:border-admin-accent focus:outline-none focus:ring-2 focus:ring-admin-accent/20"
+              className={fieldControlClassName}
             >
               <option value="">Pilih toko sumber terdekat</option>
               {requirement.sources.map((source) => (
@@ -83,7 +86,7 @@ export function FulfillmentRequirementCard({
           <div>
             <label
               htmlFor={`quantity-${requirement.productId}`}
-              className="mb-2 block text-xs font-semibold uppercase tracking-wider text-admin-ink-soft"
+              className={fieldLabelClassName}
             >
               Jumlah
             </label>
@@ -96,14 +99,14 @@ export function FulfillmentRequirementCard({
               onChange={(event) => updateDraft(requirement.productId, {
                 quantity: Number(event.target.value),
               })}
-              className="w-full rounded-xl border border-admin-line bg-admin-surface px-3.5 py-2.5 text-sm text-admin-ink transition-all focus:border-admin-accent focus:outline-none focus:ring-2 focus:ring-admin-accent/20"
+              className={fieldControlClassName}
             />
           </div>
 
           <div className="md:col-span-2">
             <label
               htmlFor={`notes-${requirement.productId}`}
-              className="mb-2 block text-xs font-semibold uppercase tracking-wider text-admin-ink-soft"
+              className={fieldLabelClassName}
             >
               Catatan <span className="font-normal normal-case text-admin-ink-muted">(opsional)</span>
             </label>
@@ -116,7 +119,7 @@ export function FulfillmentRequirementCard({
                 notes: event.target.value,
               })}
               placeholder="Contoh: mohon periksa tanggal kedaluwarsa"
-              className="w-full rounded-xl border border-admin-line bg-admin-surface px-3.5 py-2.5 text-sm text-admin-ink transition-all placeholder:text-admin-ink-muted focus:border-admin-accent focus:outline-none focus:ring-2 focus:ring-admin-accent/20"
+              className={`${fieldControlClassName} placeholder:text-admin-ink-muted`}
             />
           </div>
 
