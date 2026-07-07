@@ -1,5 +1,6 @@
 import type { FormEvent } from 'react'
-import { CalendarDays, RotateCcw, Search } from 'lucide-react'
+import { RotateCcw, Search } from 'lucide-react'
+import { OrdersDatePicker } from './OrdersDatePicker'
 
 type OrdersFilterPanelProps = {
   searchDraft: string
@@ -39,29 +40,17 @@ export function OrdersFilterPanel({
         </div>
       </label>
 
-      <label className="orders-filter-field">
-        <span>Dari Tanggal</span>
-        <div className="orders-input-shell">
-          <CalendarDays aria-hidden="true" />
-          <input
-            type="date"
-            value={startDateDraft}
-            onChange={(event) => onStartDateChange(event.target.value)}
-          />
-        </div>
-      </label>
+      <OrdersDatePicker
+        label="Dari Tanggal"
+        value={startDateDraft}
+        onChange={onStartDateChange}
+      />
 
-      <label className="orders-filter-field">
-        <span>Sampai Tanggal</span>
-        <div className="orders-input-shell">
-          <CalendarDays aria-hidden="true" />
-          <input
-            type="date"
-            value={endDateDraft}
-            onChange={(event) => onEndDateChange(event.target.value)}
-          />
-        </div>
-      </label>
+      <OrdersDatePicker
+        label="Sampai Tanggal"
+        value={endDateDraft}
+        onChange={onEndDateChange}
+      />
 
       <div className="orders-filter-actions">
         <button type="submit" className="button primary">

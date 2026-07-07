@@ -4,8 +4,9 @@
 }
 
 .order-card {
+  --order-card-image-size: 138px;
   display: grid;
-  grid-template-columns: 96px minmax(0, 1fr) minmax(160px, auto);
+  grid-template-columns: var(--order-card-image-size) minmax(0, 1fr) minmax(160px, auto);
   gap: 16px;
   align-items: stretch;
   padding: 14px;
@@ -23,9 +24,10 @@
 }
 
 .order-card-image {
+  align-self: center;
   display: grid;
   place-items: center;
-  width: 96px;
+  width: var(--order-card-image-size);
   aspect-ratio: 1;
   overflow: hidden;
   border-radius: 8px;
