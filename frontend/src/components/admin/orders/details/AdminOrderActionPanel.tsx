@@ -1,4 +1,4 @@
-import { Ban, Loader2, PackageCheck, ReceiptText, Send } from 'lucide-react'
+import { Ban, PackageCheck, ReceiptText } from 'lucide-react'
 
 type AdminOrderActionPanelProps = {
   canShowActions: boolean
@@ -65,7 +65,6 @@ export function AdminOrderActionPanel({
                 title={fulfillmentInProgress ? 'Selesaikan kebutuhan mutasi stok sebelum mengirim pesanan' : undefined}
                 className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border-none bg-admin-green px-4 py-2.5 text-sm font-semibold text-white transition-all hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {fulfillmentInProgress ? <Loader2 className="h-4 w-4 admin-spin" /> : <Send className="h-4 w-4" />}
                 Kirim Pesanan
               </button>
               {fulfillmentInProgress && (
