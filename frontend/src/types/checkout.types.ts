@@ -97,6 +97,7 @@ export type CreateCheckoutOrderPayload = {
   paymentMethod: PaymentMethod
   voucherId?: number
   notes?: string
+  applyStoreDiscount?: boolean
 }
 
 export type CreateCheckoutOrderResult = {

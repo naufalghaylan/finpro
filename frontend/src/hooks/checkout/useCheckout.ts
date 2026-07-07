@@ -19,6 +19,8 @@ export function useCheckout() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('MANUAL_TRANSFER')
   const [selectedVoucherId, setSelectedVoucherId] = useState<number | null>(null)
   const [notes, setNotes] = useState('')
+  // Diskon toko opt-in: default tidak dipakai; user memilih mengaktifkannya.
+  const [useStoreDiscount, setUseStoreDiscount] = useState(false)
 
   const error = fetchError?.message ?? null
 
@@ -52,7 +54,7 @@ export function useCheckout() {
     fetchShippingForCourier,
   } = useCheckoutShippingOptions(preview, selectedAddressId, totalWeight)
 
-  const paymentSummary = useCheckoutPaymentSummary(preview, selectedVoucher, selectedShippingService)
+  const paymentSummary = useCheckoutPaymentSummary(preview, selectedVoucher, selectedShippingService, useStoreDiscount)
 
   const {
     createdOrder,
@@ -70,6 +72,7 @@ export function useCheckout() {
     paymentMethod,
     selectedVoucherId: activeSelectedVoucherId,
     notes,
+    applyStoreDiscount: useStoreDiscount,
   })
 
   // Re-evaluating canCreateOrder specifically for the returned object
@@ -107,6 +110,8 @@ export function useCheckout() {
     canCreateOrder,
     isCartEmpty,
     hasSelectedAddressCoordinates,
+    useStoreDiscount,
+    setUseStoreDiscount,
     setPaymentMethod,
     setSelectedVoucherId,
     setNotes,

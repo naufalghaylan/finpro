@@ -47,6 +47,7 @@ const AdminSalesReport = lazy(() => import('./pages/admin/AdminSalesReport'))
 const AdminStockReport = lazy(() => import('./pages/admin/AdminStockReport'))
 const AdminUserPage = lazy(() => import('./pages/admin/AdminUserPage'))
 const NotFoundPage = lazy(() => import('./pages/error/NotFoundPage'))
+const AdminStoreDiscountsPage = lazy(() => import('./pages/admin/AdminStoreDiscountsPage'))
 
 const PageLoader = () => (
   <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '50vh', gap: '16px' }}>
@@ -123,6 +124,7 @@ function App() {
             <Route path=":id/stock-report" element={<StoreAdminScopedRoute><AdminStoreStockReportPage /></StoreAdminScopedRoute>} />
             <Route path=":id/stocks" element={<StoreAdminScopedRoute><Suspense fallback={<PageLoader />}><AdminStoreStocksPage /></Suspense></StoreAdminScopedRoute>} />
             <Route path=":id/admins" element={<SuperAdminRoute><Suspense fallback={<PageLoader />}><AdminStoreScopedAdminsPage /></Suspense></SuperAdminRoute>} />
+            <Route path=":id/discounts" element={<Suspense fallback={<PageLoader />}><AdminStoreDiscountsPage /></Suspense>} />
             <Route path="sales-report" element={<SuperAdminRoute><Suspense fallback={<PageLoader />}><AdminSalesReport /></Suspense></SuperAdminRoute>} />
             <Route path="stock-report" element={<SuperAdminRoute><Suspense fallback={<PageLoader />}><AdminStockReport /></Suspense></SuperAdminRoute>} />
             <Route path=":id" element={<StoreAdminScopedRoute><Suspense fallback={<PageLoader />}><AdminStoreDetailPage /></Suspense></StoreAdminScopedRoute>} />

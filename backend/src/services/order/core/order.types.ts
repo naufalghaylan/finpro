@@ -11,6 +11,7 @@ export type CreateCheckoutOrderParams = {
   paymentMethod: PaymentMethod
   voucherId?: number
   notes?: string
+  applyStoreDiscount?: boolean
 }
 
 export type CheckoutPreviewParams = {
