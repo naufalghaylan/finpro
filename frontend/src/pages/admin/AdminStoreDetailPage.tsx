@@ -12,6 +12,8 @@ import {
   Radar,
   Tag,
   Users,
+  LineChart,
+  BarChart3,
 } from 'lucide-react'
 import { getStoreById, updateStore } from '../../api/store'
 import { AdminStoreDetailsForm, type StoreDetailFormData } from '../../components/admin/AdminStoreDetailsForm'
@@ -20,8 +22,11 @@ import type { Store } from '../../types/store'
 import ErrorPage from '../error/ErrorPage'
 import AdminDiscountList from './AdminDiscountList'
 import AdminStockList from './AdminStockList'
+import AdminStoreFulfillmentPage from './AdminStoreFulfillmentPage'
+import AdminSalesReport from './AdminSalesReport'
+import AdminStockReport from './AdminStockReport'
 
-type StoreDetailTabKey = 'details' | 'stocks' | 'discounts'
+type StoreDetailTabKey = 'details' | 'stocks' | 'discounts' | 'orders' | 'fulfillment' | 'sales-report' | 'stock-report'
 
 const fallbackPosition: [number, number] = [-6.2088, 106.8456]
 
@@ -113,6 +118,10 @@ export default function AdminStoreDetailPage() {
     { key: 'details', label: 'Detail Toko', icon: Info },
     { key: 'stocks', label: 'Manajemen Stok', icon: Package },
     { key: 'discounts', label: 'Manajemen Diskon', icon: Tag },
+    { key: 'orders', label: 'Pesanan Toko', icon: ClipboardList },
+    { key: 'fulfillment', label: 'Mutasi Stok', icon: Repeat2 },
+    { key: 'sales-report', label: 'Laporan Penjualan', icon: LineChart },
+    { key: 'stock-report', label: 'Laporan Stok', icon: BarChart3 },
   ]
 
   if (loading) {
@@ -237,6 +246,12 @@ export default function AdminStoreDetailPage() {
 
         {activeTab === 'stocks' && <AdminStockList storeId={Number(id)} />}
         {activeTab === 'discounts' && <AdminDiscountList storeId={Number(id)} />}
+        {activeTab === 'orders' && <AdminOrderList storeId={Number(id)} />}
+        {activeTab === 'fulfillment' && (
+          <AdminStoreFulfillmentPage storeId={Number(id)} onOpenOrders={() => setActiveTab('orders')} />
+        )}
+        {activeTab === 'sales-report' && <AdminSalesReport storeId={Number(id)} />}
+        {activeTab === 'stock-report' && <AdminStockReport storeId={Number(id)} />}
       </div>
     </div>
   )

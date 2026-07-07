@@ -12,6 +12,8 @@ export default function AdminProductPage() {
   const { user } = useAuthStore()
   const navigate = useNavigate()
   const isAdminRole = user?.role === 'SUPER_ADMIN' || user?.role === 'STORE_ADMIN'
+  // Store admin hanya bisa melihat (read only); kelola produk khusus super admin.
+  const canManage = user?.role === 'SUPER_ADMIN'
 
   const [products, setProducts] = useState<Product[]>([])
   const [total, setTotal] = useState(0)
@@ -62,7 +64,7 @@ export default function AdminProductPage() {
             {loading ? 'Memuat...' : `${total} produk terdaftar`}
           </p>
         </div>
-        {isAdminRole && (
+        {canManage && (
           <button
             onClick={openCreate}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-admin-accent text-white
@@ -93,7 +95,7 @@ export default function AdminProductPage() {
                         <th className="px-5 py-3.5 font-semibold text-admin-ink-soft text-xs uppercase tracking-wider">Kategori</th>
                         <th className="px-5 py-3.5 font-semibold text-admin-ink-soft text-xs uppercase tracking-wider">Harga</th>
                         <th className="px-5 py-3.5 font-semibold text-admin-ink-soft text-xs uppercase tracking-wider">Foto</th>
-                        {isAdminRole && (
+                        {canManage && (
                           <th className="px-5 py-3.5 font-semibold text-admin-ink-soft text-xs uppercase tracking-wider text-right">Aksi</th>
                         )}
                       </tr>
@@ -101,7 +103,7 @@ export default function AdminProductPage() {
                     <tbody>
                       {products.length === 0 ? (
                         <tr>
-                          <td colSpan={isAdminRole ? 6 : 5} className="px-5 py-16 text-center text-admin-ink-muted">
+                          <td colSpan={canManage ? 6 : 5} className="px-5 py-16 text-center text-admin-ink-muted">
                             <ShoppingBag className="w-10 h-10 mx-auto mb-3 text-admin-line" />
                             <p className="m-0 font-medium">Belum ada produk</p>
                           </td>
@@ -131,7 +133,7 @@ export default function AdminProductPage() {
                               {p.images.length}
                             </span>
                           </td>
-                          {isAdminRole && (
+                          {canManage && (
                             <td className="px-5 py-4">
                               <div className="flex items-center gap-1 justify-end">
                                 <button

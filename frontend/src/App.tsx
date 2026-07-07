@@ -39,6 +39,8 @@ const PageLoader = () => (
     <p style={{ color: 'var(--ink-soft)', fontWeight: 500 }}>Memuat halaman...</p>
   </div>
 )
+import AdminSalesReport from './pages/admin/AdminSalesReport'
+import AdminStockReport from './pages/admin/AdminStockReport'
 import NotFoundPage from './pages/error/NotFoundPage'
 import AdminUserPage from './pages/admin/AdminUserPage'
 import './App.css'
@@ -103,7 +105,9 @@ function App() {
             <Route path="orders" element={<SuperAdminRoute><AdminOrderList /></SuperAdminRoute>} />
             <Route path=":id/orders" element={<Suspense fallback={<PageLoader />}><AdminStoreOrdersPage /></Suspense>} />
             <Route path=":id/fulfillment" element={<Suspense fallback={<PageLoader />}><AdminStoreMutationsPage /></Suspense>} />
-            <Route path=":id" element={<Suspense fallback={<PageLoader />}><AdminStoreDetailPage /></Suspense>} />
+            <Route path="sales-report" element={<SuperAdminRoute><AdminSalesReport /></SuperAdminRoute>} />
+          <Route path="stock-report" element={<SuperAdminRoute><AdminStockReport /></SuperAdminRoute>} />
+          <Route path=":id" element={<Suspense fallback={<PageLoader />}><AdminStoreDetailPage /></Suspense>} />
           </Route>
         </Route>
 

@@ -1,6 +1,10 @@
 import { Outlet, Navigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { Store } from 'lucide-react';
+import { Navbar } from '../../components/common/Navbar';
+import { HomeFooter } from '../../components/home/HomeFooter';
+import { BRAND, navLinks, footerSections } from '../../data/home/homeData';
+import { Store, Users, LayoutDashboard, Package, ShoppingBag, Layers, ClipboardList, BarChart3, LineChart } from 'lucide-react';
+
 
 export function AdminStoreIndexRedirect() {
   const { user } = useAuthStore();
@@ -31,6 +35,19 @@ export default function AdminStoreLayout() {
   if (!isSuperAdmin && !isStoreAdmin) {
     return <Navigate to="/" replace />;
   }
+
+  const currentPath = location.pathname;
+
+  const tabs = [
+    { to: '/admin/stores/list', label: 'Daftar Toko', icon: Store, match: '/list' },
+    { to: '/admin/stores/admins', label: 'Daftar Admin', icon: Users, match: '/admins' },
+    { to: '/admin/stores/stocks', label: 'Daftar Stok Global', icon: Package, match: '/stocks' },
+    { to: '/admin/stores/products', label: 'Manajemen Produk', icon: ShoppingBag, match: '/products' },
+    { to: '/admin/categories', label: 'Manajemen Kategori', icon: Layers, match: '/categories' },
+    { to: '/admin/stores/orders', label: 'Pesanan', icon: ClipboardList, match: '/orders' },
+    { to: '/admin/stores/sales-report', label: 'Laporan Penjualan', icon: LineChart, match: '/sales-report' },
+    { to: '/admin/stores/stock-report', label: 'Laporan Stok', icon: BarChart3, match: '/stock-report' },
+  ];
 
   return (
     <div className="admin-fade-in" style={{ animationDelay: '120ms' }}>
