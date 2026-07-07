@@ -1,10 +1,41 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useAddressStore } from '../../store/addressStore'
 import { searchDestinations } from '../../api/rajaongkir'
 import type { KomerceDestination } from '../../api/rajaongkir'
 import { MapPin, X, LocateFixed, Loader2, Search } from 'lucide-react'
 import { z } from 'zod'
 import type { UserAddress, CreateUserAddressDTO } from '../../types/address'
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
+
+// Fix leaflet icon issue in React
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+delete (L.Icon.Default.prototype as any)._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+})
+
+function LocationMarker({ position, setPosition }: { position: [number, number] | null, setPosition: (pos: [number, number]) => void }) {
+  const map = useMapEvents({
+    click(e) {
+      setPosition([e.latlng.lat, e.latlng.lng]);
+    },
+  });
+
+  useEffect(() => {
+    if (position) {
+      map.flyTo(position, 15);
+    }
+  }, [position, map]);
+
+  return position === null ? null : (
+    <Marker position={position}></Marker>
+  );
+}
+
 
 const addressSchema = z.object({
   recipientName: z.string().min(3, "Nama penerima minimal 3 karakter"),
@@ -337,7 +368,7 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
                   Titik Pin Pengiriman *
                 </h4>
                 <p className="m-0 text-[0.85rem] text-[var(--ink-soft)]">
-                  Klik tombol disamping. Diperlukan untuk memvalidasi jarak ke toko terdekat.
+                  Klik tombol disamping atau klik pada peta. Diperlukan untuk memvalidasi jarak ke toko terdekat.
                 </p>
               </div>
               <button 
@@ -351,6 +382,30 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
               </button>
             </div>
             
+            <div className="h-[250px] w-full rounded-xl overflow-hidden border border-[var(--line)] mb-4 relative z-0">
+              <MapContainer 
+                center={formData.latitude && formData.longitude ? [formData.latitude, formData.longitude] : [-6.2088, 106.8456]} 
+                zoom={13} 
+                style={{ height: '100%', width: '100%', zIndex: 0 }}
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <LocationMarker 
+                  position={formData.latitude && formData.longitude ? [formData.latitude, formData.longitude] : null} 
+                  setPosition={(pos) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      latitude: pos[0],
+                      longitude: pos[1]
+                    }))
+                    setFormErrors(prev => ({...prev, latitude: '', longitude: ''}))
+                  }} 
+                />
+              </MapContainer>
+            </div>
+
             {formData.latitude && formData.longitude ? (
               <div className="flex gap-4 text-[0.85rem] text-[var(--accent-cool)] bg-[#eef6f0] px-3 py-2 rounded-md">
                 <span><strong>Lat:</strong> {formData.latitude.toFixed(6)}</span>
