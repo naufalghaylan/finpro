@@ -1,6 +1,7 @@
 import type { Dispatch, FormEvent, SetStateAction } from 'react'
 import { Loader2, MapPin } from 'lucide-react'
 import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet'
+import { useAuthStore } from '../../store/authStore'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
@@ -33,13 +34,17 @@ type AdminStoreDetailsFormProps = {
 function LocationMarker({
   position,
   setPosition,
+  disabled
 }: {
   position: [number, number]
   setPosition: (position: [number, number]) => void
+  disabled?: boolean
 }) {
   useMapEvents({
     click(event) {
-      setPosition([event.latlng.lat, event.latlng.lng])
+      if (!disabled) {
+        setPosition([event.latlng.lat, event.latlng.lng])
+      }
     },
   })
 
@@ -54,6 +59,9 @@ export function AdminStoreDetailsForm({
   setPosition,
   onSubmit,
 }: AdminStoreDetailsFormProps) {
+  const { user } = useAuthStore()
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN'
+
   return (
     <div className="rounded-2xl border border-admin-line-soft bg-admin-surface shadow-sm p-6 md:p-8 max-w-4xl">
       <h4 className="text-base font-bold text-admin-ink m-0 mb-6 flex items-center gap-2">
@@ -112,7 +120,9 @@ export function AdminStoreDetailsForm({
               Tentukan Titik Koordinat
             </label>
             <p className="text-[11px] text-admin-ink-muted mb-3 leading-relaxed">
-              Klik pada peta untuk mengubah lokasi toko. Ini akan memperbarui latitude dan longitude secara otomatis.
+              {isSuperAdmin
+                ? 'Klik pada peta untuk mengubah lokasi toko. Ini akan memperbarui latitude dan longitude secara otomatis.'
+                : 'Lokasi toko hanya dapat diubah oleh Super Admin.'}
             </p>
 
             <div className="h-[240px] w-full rounded-xl overflow-hidden border border-admin-line bg-admin-surface-2 mb-4 z-0 relative">
@@ -121,7 +131,7 @@ export function AdminStoreDetailsForm({
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                <LocationMarker position={position} setPosition={setPosition} />
+                <LocationMarker position={position} setPosition={setPosition} disabled={!isSuperAdmin} />
               </MapContainer>
             </div>
 
@@ -154,8 +164,8 @@ export function AdminStoreDetailsForm({
                 type="number"
                 value={formData.serviceRadius}
                 onChange={(event) => setFormData({ ...formData, serviceRadius: Number(event.target.value) })}
-                className="w-full px-4 py-3 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink
-                           focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all"
+                disabled={!isSuperAdmin}
+                className={`w-full px-4 py-3 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all ${!isSuperAdmin ? 'cursor-not-allowed opacity-70 bg-admin-surface-2' : ''}`}
               />
             </div>
           </div>

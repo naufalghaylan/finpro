@@ -1,0 +1,21 @@
+﻿@media (max-width: 720px) {
+  .cart-mobile-checkout-bar {
+    border-radius: 8px;
+  }
+}
+
+@media (max-width: 420px) {
+  .cart-mobile-checkout-bar {
+    flex-wrap: wrap;
+  }
+
+  .cart-mobile-checkout-bar > div,
+  .cart-mobile-checkout-bar .button {
+    width: 100%;
+  }
+
+  .cart-mobile-checkout-bar .button {
+    justify-content: center;
+    min-width: 0;
+  }
+}

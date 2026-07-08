@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { ArrowRight, AlertCircle, RefreshCcw, Loader2 } from 'lucide-react'
+import { ArrowRight, AlertCircle, RefreshCcw, Loader2, PackageOpen } from 'lucide-react'
 import { useProducts } from '../../hooks/useProducts'
 import { ProductCard } from '../product/ProductCard'
 import type { Product } from '../../types/product'
@@ -95,17 +95,29 @@ export const ProductGrid = ({ products: initialProducts, storeId }: ProductGridP
             <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-[18px] transition-opacity duration-200" style={{ opacity: (!initialProducts && loading) ? 0.5 : 1, pointerEvents: (!initialProducts && loading) ? 'none' : 'auto' }}>
-          {displayProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              isAddingToCart={addingProductId === product.id}
-              onAddToCart={() => void addToCart(product)}
-              onClick={() => navigate(`/products/${product.id}`)}
-            />
-          ))}
-        </div>
+        {displayProducts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-4 py-16 px-6 bg-[var(--surface)] rounded-3xl border border-dashed border-[var(--line)] text-center">
+            <div className="w-16 h-16 rounded-full bg-[var(--surface-sunken)] border border-[var(--line)] flex items-center justify-center text-[var(--ink-soft)] mb-1">
+              <PackageOpen size={32} />
+            </div>
+            <h3 className="m-0 text-xl text-[var(--ink)] font-[family-name:var(--font-display)]">Belum ada produk</h3>
+            <p className="m-0 text-[var(--ink-soft)] max-w-[400px]">
+              Toko ini belum memiliki produk yang tersedia saat ini. Silakan pilih toko lain atau kembali lagi nanti.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[18px] transition-opacity duration-200" style={{ opacity: (!initialProducts && loading) ? 0.5 : 1, pointerEvents: (!initialProducts && loading) ? 'none' : 'auto' }}>
+            {displayProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                isAddingToCart={addingProductId === product.id}
+                onAddToCart={() => void addToCart(product)}
+                onClick={() => navigate(`/products/${product.id}`)}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )

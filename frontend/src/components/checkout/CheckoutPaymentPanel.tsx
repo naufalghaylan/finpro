@@ -1,5 +1,6 @@
 import { CreditCard, WalletCards } from 'lucide-react'
 import type { PaymentMethod } from '../../types/order'
+import { CheckoutSectionTitle } from './CheckoutSectionTitle'
 
 interface PaymentMethodOption {
   value: PaymentMethod
@@ -14,57 +15,38 @@ interface CheckoutPaymentPanelProps {
 }
 
 const paymentMethodDisplay: Record<PaymentMethod, { label: string; description: string }> = {
-  MANUAL_TRANSFER: {
-    label: 'Transfer Manual',
-    description: 'Unggah bukti bayar setelah pesanan dibuat.',
-  },
-  PAYMENT_GATEWAY: {
-    label: 'Pembayaran Online',
-    description: 'Bayar online dan status pesanan diperbarui otomatis.',
-  },
+  MANUAL_TRANSFER: { label: 'Transfer Manual', description: 'Unggah bukti bayar setelah pesanan dibuat.' },
+  PAYMENT_GATEWAY: { label: 'Pembayaran Online', description: 'Bayar online dan status pesanan diperbarui otomatis.' },
 }
 
-const getPaymentIcon = (paymentMethod: PaymentMethod) =>
-  paymentMethod === 'PAYMENT_GATEWAY' ? CreditCard : WalletCards
-
-export function CheckoutPaymentPanel({
-  paymentMethods,
-  selectedPaymentMethod,
-  onPaymentMethodChange,
-}: CheckoutPaymentPanelProps) {
+export function CheckoutPaymentPanel(props: CheckoutPaymentPanelProps) {
   return (
     <section className="checkout-panel">
-      <div className="checkout-section-title">
-        <CreditCard aria-hidden="true" />
-        <div>
-          <h2>Metode Pembayaran</h2>
-          <p>Pilih cara bayar yang paling nyaman untuk menyelesaikan pesanan.</p>
-        </div>
-      </div>
-
-      <div className="checkout-payment-grid">
-        {paymentMethods.map((method) => {
-          const Icon = getPaymentIcon(method.value)
-          const display = paymentMethodDisplay[method.value]
-
-          return (
-            <label
-              key={method.value}
-              className={`checkout-payment-card ${selectedPaymentMethod === method.value ? 'selected' : ''}`}
-            >
-              <input
-                type="radio"
-                name="paymentMethod"
-                checked={selectedPaymentMethod === method.value}
-                onChange={() => onPaymentMethodChange(method.value)}
-              />
-              <Icon aria-hidden="true" />
-              <strong>{display.label}</strong>
-              <span>{display.description}</span>
-            </label>
-          )
-        })}
-      </div>
+      <CheckoutSectionTitle icon={CreditCard} title="Metode Pembayaran" description="Pilih cara bayar yang paling nyaman untuk menyelesaikan pesanan." />
+      <PaymentMethodGrid {...props} />
     </section>
   )
+}
+
+function PaymentMethodGrid(props: CheckoutPaymentPanelProps) {
+  return <div className="checkout-payment-grid">{props.paymentMethods.map((method) => <PaymentMethodCard key={method.value} method={method} {...props} />)}</div>
+}
+
+function PaymentMethodCard({ method, selectedPaymentMethod, onPaymentMethodChange }: CheckoutPaymentPanelProps & { method: PaymentMethodOption }) {
+  const display = paymentMethodDisplay[method.value]
+
+  return (
+    <label className={`checkout-payment-card ${selectedPaymentMethod === method.value ? 'selected' : ''}`}>
+      <input type="radio" name="paymentMethod" checked={selectedPaymentMethod === method.value} onChange={() => onPaymentMethodChange(method.value)} />
+      <PaymentMethodIcon paymentMethod={method.value} />
+      <strong>{display.label}</strong>
+      <span>{display.description}</span>
+    </label>
+  )
+}
+
+function PaymentMethodIcon({ paymentMethod }: { paymentMethod: PaymentMethod }) {
+  return paymentMethod === 'PAYMENT_GATEWAY'
+    ? <CreditCard aria-hidden="true" />
+    : <WalletCards aria-hidden="true" />
 }

@@ -128,8 +128,8 @@ export const allocateStockForOrder = async ({
         quantityChange: -quantityTaken,
         type: StockJournalType.ORDER,
         userId,
-        description: `Reserved for order ${orderNumber} - ${item.product.name}`,
-        notes: 'Order stock reserve',
+        description: `Reservasi pesanan ${orderNumber}`,
+        notes: 'Stok dialokasikan otomatis untuk pesanan pelanggan',
         insufficientStockMessage: 'Stock changed while creating order. Please try again.',
       })
 
@@ -191,8 +191,8 @@ export const restoreReservedOrderStock = async ({
       quantityChange: restoreQuantity,
       type: StockJournalType.CANCEL_RETURN,
       userId: actorUserId,
-      description: `Returned reserved stock from cancelled order ${order.orderNumber}`,
-      notes,
+      description: `Pengembalian stok pesanan ${order.orderNumber}`,
+      notes: notes || 'Pesanan dibatalkan, stok dikembalikan ke toko',
     })
   }
 }

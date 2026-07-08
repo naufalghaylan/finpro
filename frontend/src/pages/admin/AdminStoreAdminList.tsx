@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AxiosError } from 'axios';
 import { Eye, EyeOff, Plus, UserCog, Loader2 } from 'lucide-react';
-import { getStoreAdmins, assignStoreAdmin } from '../../api/user';
+import { getStoreAdmins, assignStoreAdmin, createStoreAdmin } from '../../api/user';
 import { getStores } from '../../api/store';
 import type { Store } from '../../types/store';
 
@@ -88,17 +88,15 @@ export default function AdminStoreAdminList() {
     
     setIsCreating(true);
     try {
-      import('../../api/user').then(async ({ createStoreAdmin }) => {
-        await createStoreAdmin({
-          name: createForm.name,
-          email: createForm.email,
-          password: createForm.password,
-          storeId: createForm.storeId === '' ? null : Number(createForm.storeId)
-        });
-        setCreateModalOpen(false);
-        setCreateForm({ name: '', email: '', password: '', storeId: '' });
-        fetchAdmins();
+      await createStoreAdmin({
+        name: createForm.name,
+        email: createForm.email,
+        password: createForm.password,
+        storeId: createForm.storeId === '' ? null : Number(createForm.storeId)
       });
+      setCreateModalOpen(false);
+      setCreateForm({ name: '', email: '', password: '', storeId: '' });
+      fetchAdmins();
     } catch (e) {
       const error = e as AxiosError<{ message?: string }>;
       alert(error.response?.data?.message ?? 'Gagal membuat admin');
@@ -110,7 +108,7 @@ export default function AdminStoreAdminList() {
   return (
     <div className="font-[family-name:var(--font-admin)]">
       {/* Toolbar */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h3 className="text-lg font-bold text-admin-ink m-0">Daftar Store Admin</h3>
           <p className="text-sm text-admin-ink-muted mt-0.5 m-0">
@@ -119,8 +117,8 @@ export default function AdminStoreAdminList() {
         </div>
         <button
           onClick={() => setCreateModalOpen(true)}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-admin-accent text-white
-                     text-sm font-semibold border-none cursor-pointer shadow-md
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-admin-accent text-white
+                     text-sm font-semibold border-none cursor-pointer shadow-md w-full sm:w-auto
                      hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
         >
           <Plus className="w-4 h-4" />
@@ -136,66 +134,118 @@ export default function AdminStoreAdminList() {
             <p className="text-sm text-admin-ink-muted m-0">Memuat data admin...</p>
           </div>
         ) : (
-          <div className="admin-table-wrap overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-admin-line-soft bg-admin-surface-2/40">
-                  <th className="px-5 py-3.5 font-semibold text-admin-ink-soft text-xs uppercase tracking-wider">Nama</th>
-                  <th className="px-5 py-3.5 font-semibold text-admin-ink-soft text-xs uppercase tracking-wider">Email</th>
-                  <th className="px-5 py-3.5 font-semibold text-admin-ink-soft text-xs uppercase tracking-wider">Penugasan Toko</th>
-                  <th className="px-5 py-3.5 font-semibold text-admin-ink-soft text-xs uppercase tracking-wider">Terdaftar</th>
-                  <th className="px-5 py-3.5 font-semibold text-admin-ink-soft text-xs uppercase tracking-wider text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {admins.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-5 py-16 text-center text-admin-ink-muted">
-                      <UserCog className="w-10 h-10 mx-auto mb-3 text-admin-line" />
-                      <p className="m-0 font-medium">Belum ada Store Admin</p>
-                      <p className="m-0 text-xs mt-1">Klik "Tambah Admin" untuk memulai.</p>
-                    </td>
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block admin-table-wrap overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-admin-line-soft bg-admin-surface-2/40">
+                    <th className="px-5 py-3.5 font-semibold text-admin-ink-soft text-xs uppercase tracking-wider">Nama</th>
+                    <th className="px-5 py-3.5 font-semibold text-admin-ink-soft text-xs uppercase tracking-wider">Email</th>
+                    <th className="px-5 py-3.5 font-semibold text-admin-ink-soft text-xs uppercase tracking-wider">Penugasan Toko</th>
+                    <th className="px-5 py-3.5 font-semibold text-admin-ink-soft text-xs uppercase tracking-wider">Terdaftar</th>
+                    <th className="px-5 py-3.5 font-semibold text-admin-ink-soft text-xs uppercase tracking-wider text-right">Aksi</th>
                   </tr>
-                ) : admins.map(admin => (
-                  <tr key={admin.id} className="admin-table-row border-b border-admin-line-soft/50 last:border-b-0">
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-9 h-9 rounded-full bg-admin-accent-soft text-admin-accent-strong font-bold text-sm shrink-0">
-                          {admin.name.charAt(0).toUpperCase()}
+                </thead>
+                <tbody>
+                  {admins.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-5 py-16 text-center text-admin-ink-muted">
+                        <UserCog className="w-10 h-10 mx-auto mb-3 text-admin-line" />
+                        <p className="m-0 font-medium">Belum ada Store Admin</p>
+                        <p className="m-0 text-xs mt-1">Klik "Tambah Admin" untuk memulai.</p>
+                      </td>
+                    </tr>
+                  ) : admins.map(admin => (
+                    <tr key={admin.id} className="admin-table-row border-b border-admin-line-soft/50 last:border-b-0">
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-9 h-9 rounded-full bg-admin-accent-soft text-admin-accent-strong font-bold text-sm shrink-0">
+                            {admin.name.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="font-semibold text-admin-ink">{admin.name}</span>
                         </div>
-                        <span className="font-semibold text-admin-ink">{admin.name}</span>
+                      </td>
+                      <td className="px-5 py-4 text-admin-ink-soft">{admin.email}</td>
+                      <td className="px-5 py-4">
+                        {admin.store ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-admin-amber-soft text-admin-amber">
+                            <span className="w-1.5 h-1.5 rounded-full bg-admin-amber" />
+                            {admin.store.name}
+                          </span>
+                        ) : (
+                          <span className="text-admin-ink-muted text-xs italic">Belum Ditugaskan</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-4 text-admin-ink-soft text-xs">
+                        {new Date(admin.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <button
+                          onClick={() => openAssignModal(admin)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                                     text-admin-blue bg-admin-blue-soft border-none cursor-pointer
+                                     hover:bg-admin-blue/15 transition-all duration-150"
+                        >
+                          <UserCog className="w-3.5 h-3.5" />
+                          {admin.storeId ? 'Ubah Penugasan' : 'Tugaskan Toko'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden flex flex-col divide-y divide-admin-line-soft/50">
+              {admins.length === 0 ? (
+                <div className="px-5 py-16 text-center text-admin-ink-muted">
+                  <UserCog className="w-10 h-10 mx-auto mb-3 text-admin-line" />
+                  <p className="m-0 font-medium">Belum ada Store Admin</p>
+                  <p className="m-0 text-xs mt-1">Klik "Tambah Admin" untuk memulai.</p>
+                </div>
+              ) : admins.map(admin => (
+                <div key={admin.id} className="p-4 flex flex-col gap-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-admin-accent-soft text-admin-accent-strong font-bold text-sm shrink-0">
+                        {admin.name.charAt(0).toUpperCase()}
                       </div>
-                    </td>
-                    <td className="px-5 py-4 text-admin-ink-soft">{admin.email}</td>
-                    <td className="px-5 py-4">
-                      {admin.store ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-admin-amber-soft text-admin-amber">
-                          <span className="w-1.5 h-1.5 rounded-full bg-admin-amber" />
-                          {admin.store.name}
-                        </span>
-                      ) : (
-                        <span className="text-admin-ink-muted text-xs italic">Belum Ditugaskan</span>
-                      )}
-                    </td>
-                    <td className="px-5 py-4 text-admin-ink-soft text-xs">
+                      <div>
+                        <h4 className="font-semibold text-admin-ink m-0 text-base">{admin.name}</h4>
+                        <span className="text-xs text-admin-ink-soft block mt-0.5">{admin.email}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between text-xs mt-1">
+                    {admin.store ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold bg-admin-amber-soft text-admin-amber">
+                        <span className="w-1.5 h-1.5 rounded-full bg-admin-amber" />
+                        {admin.store.name}
+                      </span>
+                    ) : (
+                      <span className="text-admin-ink-muted italic">Belum Ditugaskan</span>
+                    )}
+                    <span className="text-admin-ink-soft">
                       {new Date(admin.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <button
-                        onClick={() => openAssignModal(admin)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                                   text-admin-blue bg-admin-blue-soft border-none cursor-pointer
-                                   hover:bg-admin-blue/15 transition-all duration-150"
-                      >
-                        <UserCog className="w-3.5 h-3.5" />
-                        {admin.storeId ? 'Ubah Penugasan' : 'Tugaskan Toko'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </span>
+                  </div>
+
+                  <div className="mt-2 pt-3 border-t border-admin-line-soft/30">
+                    <button
+                      onClick={() => openAssignModal(admin)}
+                      className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-semibold text-admin-blue bg-admin-blue-soft hover:bg-admin-blue/20 transition-colors border-none cursor-pointer [font-family:inherit]"
+                    >
+                      <UserCog className="w-4 h-4" />
+                      {admin.storeId ? 'Ubah Penugasan Toko' : 'Tugaskan ke Toko'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 

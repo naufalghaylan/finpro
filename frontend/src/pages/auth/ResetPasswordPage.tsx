@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../../api/axios';
 import { Eye, EyeOff, ChevronLeft } from 'lucide-react';
@@ -15,24 +15,18 @@ const resetPasswordSchema = z.object({
 type ResetErrors = Partial<Record<'newPassword' | 'confirmPassword', string>>;
 
 export default function ResetPasswordPage() {
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [formErrors, setFormErrors] = useState<ResetErrors>({});
-  const [success, setSuccess] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!token) {
-      setError('Token reset password tidak ditemukan. Silakan request reset password kembali.');
-    }
-  }, [token]);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState(token ? '' : 'Token reset password tidak ditemukan. Silakan request reset password kembali.');
+  const [formErrors, setFormErrors] = useState<ResetErrors>({});
+  const [success, setSuccess] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

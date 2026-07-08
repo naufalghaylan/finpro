@@ -1,0 +1,26 @@
+﻿@media (max-width: 1024px) {
+  .cart-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .cart-summary-panel {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .cart-list-head {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .cart-header {
+    align-items: flex-start;
+  }
+
+  .cart-store-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

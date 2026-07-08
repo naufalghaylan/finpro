@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
-import fs from 'fs'
 import * as productService from '../lib/product.service'
+import cloudinary from '../lib/cloudinary'
 import { z } from 'zod'
 import 'multer'
 
@@ -30,6 +30,8 @@ export async function getAllProducts(req: Request, res: Response, next: NextFunc
       minPrice,
       maxPrice,
       storeId,
+      lat,
+      lng,
       limit = 20,
       offset = 0,
       sortBy = 'newest'
@@ -40,6 +42,8 @@ export async function getAllProducts(req: Request, res: Response, next: NextFunc
       minPrice: minPrice ? parseFloat(String(minPrice)) : undefined,
       maxPrice: maxPrice ? parseFloat(String(maxPrice)) : undefined,
       storeId: storeId ? parseInt(String(storeId)) : undefined,
+      lat: lat !== undefined ? parseFloat(String(lat)) : undefined,
+      lng: lng !== undefined ? parseFloat(String(lng)) : undefined,
       limit: Math.min(parseInt(String(limit)) || 20, 100),
       offset: parseInt(String(offset)) || 0,
       sortBy: (sortBy as any) || 'newest'
@@ -54,7 +58,7 @@ export async function getAllProducts(req: Request, res: Response, next: NextFunc
 
 export async function searchProducts(req: Request, res: Response, next: NextFunction) {
   try {
-    const { keyword, categoryId, minPrice, maxPrice, storeId, limit = 20, offset = 0 } = req.query
+    const { keyword, categoryId, minPrice, maxPrice, storeId, lat, lng, limit = 20, offset = 0 } = req.query
 
     if (!keyword) {
       return res.status(400).json({ success: false, error: 'Keyword is required' })
@@ -66,6 +70,8 @@ export async function searchProducts(req: Request, res: Response, next: NextFunc
       minPrice: minPrice ? parseFloat(String(minPrice)) : undefined,
       maxPrice: maxPrice ? parseFloat(String(maxPrice)) : undefined,
       storeId: storeId ? parseInt(String(storeId)) : undefined,
+      lat: lat !== undefined ? parseFloat(String(lat)) : undefined,
+      lng: lng !== undefined ? parseFloat(String(lng)) : undefined,
       limit: Math.min(parseInt(String(limit)) || 20, 100),
       offset: parseInt(String(offset)) || 0
     }
@@ -235,17 +241,23 @@ export async function deleteCategory(req: Request, res: Response, next: NextFunc
 // ─── Admin: Product Images ─────────────────────────────────────────────────
 
 export async function uploadProductImage(req: Request, res: Response, next: NextFunction) {
+  let uploadedPublicId: string | undefined
   try {
     const { id } = req.params
     if (!req.file) return res.status(400).json({ success: false, error: 'Tidak ada file yang diupload' })
 
-    const imageUrl = `/uploads/${req.file.filename}`
-    const image = await productService.addProductImage(parseInt(String(id)), imageUrl)
+    // Upload buffer dari memori langsung ke Cloudinary, lalu simpan URL hasilnya.
+    const uploadResponse = await cloudinary.uploader.upload(
+      `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
+      { folder: 'finpro/product-image' }
+    )
+    uploadedPublicId = uploadResponse.public_id
+    const image = await productService.addProductImage(parseInt(String(id)), uploadResponse.secure_url)
     res.status(201).json({ success: true, data: image })
   } catch (error) {
-    // Hapus file yatim di disk jika record gagal dibuat (mis. kena limit / produk tidak valid)
-    if (req.file?.path) {
-      fs.unlink(req.file.path, () => {})
+    // Hapus gambar yatim di Cloudinary jika record DB gagal dibuat (mis. kena limit / produk tidak valid)
+    if (uploadedPublicId) {
+      cloudinary.uploader.destroy(uploadedPublicId).catch(() => {})
     }
     if (error instanceof Error && error.message === 'Maksimal 3 foto per produk') {
       return res.status(400).json({ success: false, error: error.message })

@@ -60,6 +60,7 @@ export const createCheckoutOrder = async (req: Request, res: Response): Promise<
       paymentMethod: parsed.data.paymentMethod,
       voucherId: parsed.data.voucherId,
       notes: parsed.data.notes,
+      applyStoreDiscount: parsed.data.applyStoreDiscount,
     })
 
     res.status(201).json({

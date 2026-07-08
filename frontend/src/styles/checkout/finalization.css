@@ -1,0 +1,10 @@
+/* Feature 3 selectors that remain clearer as shared custom CSS. */
+.checkout-branch-panel .checkout-section-title > svg {
+  color: var(--green);
+}
+
+.checkout-payment-card strong,
+.checkout-voucher-card strong,
+.checkout-shipping-service-info strong {
+  overflow-wrap: anywhere;
+}

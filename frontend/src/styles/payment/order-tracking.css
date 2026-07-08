@@ -1,0 +1,117 @@
+.order-tracking-panel {
+  padding: 22px;
+  overflow: hidden;
+}
+
+.order-tracking-title {
+  margin-bottom: 24px;
+}
+
+.order-tracking-list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.order-tracking-step {
+  position: relative;
+  display: grid;
+  grid-template-rows: 46px minmax(2.3em, auto) minmax(1.45em, auto);
+  justify-items: center;
+  gap: 8px;
+  min-width: 0;
+  text-align: center;
+}
+
+.order-tracking-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 22px;
+  left: calc(50% + 23px);
+  width: calc(100% - 34px);
+  height: 3px;
+  border-radius: 999px;
+  background: var(--line);
+  z-index: 0;
+}
+
+.order-tracking-step.line-done:not(:last-child)::after {
+  background: var(--accent-cool);
+}
+
+.order-tracking-icon {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink-soft);
+  box-shadow: 0 8px 18px rgba(31, 42, 34, 0.08);
+}
+
+.order-tracking-icon svg {
+  width: 21px;
+  height: 21px;
+}
+
+.order-tracking-step.done .order-tracking-icon,
+.order-tracking-step.active .order-tracking-icon {
+  border-color: var(--accent-cool);
+  background: var(--accent-cool);
+  color: #fff;
+}
+
+.order-tracking-step.cancelled .order-tracking-icon {
+  border-color: #dc2626;
+  background: #dc2626;
+  color: #fff;
+}
+
+.order-tracking-label {
+  display: grid;
+  grid-template-rows: repeat(2, 1.15em);
+  align-items: center;
+  min-height: 2.3em;
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.order-tracking-label span {
+  display: block;
+}
+
+.order-tracking-label.merged span {
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+
+.order-tracking-step.active .order-tracking-label {
+  color: var(--accent-cool);
+}
+
+.order-tracking-step.cancelled .order-tracking-label {
+  color: #b91c1c;
+}
+
+.order-tracking-step.pending .order-tracking-label,
+.order-tracking-step.pending .order-tracking-description {
+  color: #8b978d;
+}
+
+.order-tracking-description {
+  display: block;
+  min-height: 1.45em;
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.order-tracking-description.empty {
+  visibility: hidden;
+}

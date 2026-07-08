@@ -21,37 +21,39 @@ export function OrderCard({ order }: OrderCardProps) {
 
   return (
     <article className="order-card">
-      <div className="order-card-image">
-        {primaryImage ? (
-          <img src={primaryImage.imageUrl} alt={getOrderItemsSummary(order)} />
-        ) : (
-          <ClipboardList aria-hidden="true" />
-        )}
-      </div>
-
-      <div className="order-card-main">
-        <div className="order-card-topline">
-          <div>
-            <p className="order-number">{order.orderNumber}</p>
-            <span>{formatDateTime(order.createdAt)}</span>
-          </div>
-          <span className={`order-status-badge ${statusMeta.className}`}>
-            <StatusIcon aria-hidden="true" />
-            {statusMeta.label}
-          </span>
+      <div className="order-card-content">
+        <div className="order-card-image">
+          {primaryImage ? (
+            <img src={primaryImage.imageUrl} alt={getOrderItemsSummary(order)} />
+          ) : (
+            <ClipboardList aria-hidden="true" />
+          )}
         </div>
 
-        <p className="order-product-summary">{getOrderItemsSummary(order)}</p>
+        <div className="order-card-main">
+          <div className="order-card-topline">
+            <div>
+              <p className="order-number">{order.orderNumber}</p>
+              <span>{formatDateTime(order.createdAt)}</span>
+            </div>
+            <span className={`order-status-badge ${statusMeta.className}`}>
+              <StatusIcon aria-hidden="true" />
+              {statusMeta.label}
+            </span>
+          </div>
 
-        <div className="order-card-meta">
-          <span>
-            <Store aria-hidden="true" />
-            Cabang {order.store.name}
-          </span>
-          <span>
-            <ReceiptText aria-hidden="true" />
-            {getOrderItemQuantity(order)} item
-          </span>
+          <p className="order-product-summary">{getOrderItemsSummary(order)}</p>
+
+          <div className="order-card-meta">
+            <span>
+              <Store aria-hidden="true" />
+              Cabang {order.store.name}
+            </span>
+            <span>
+              <ReceiptText aria-hidden="true" />
+              {getOrderItemQuantity(order)} item
+            </span>
+          </div>
         </div>
       </div>
 

@@ -93,6 +93,8 @@ export const createCheckoutOrderSchema = z.object({
     .default(PaymentMethod.MANUAL_TRANSFER),
   voucherId: positiveIntegerSchema.optional(),
   notes: z.string().trim().max(500, 'Notes must be at most 500 characters').optional(),
+  // Diskon toko bersifat opt-in: hanya diterapkan bila user memilih memakainya.
+  applyStoreDiscount: z.boolean().optional().default(false),
 })
 
 export const orderParamsSchema = z.object({

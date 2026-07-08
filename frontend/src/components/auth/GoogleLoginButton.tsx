@@ -43,7 +43,12 @@ export default function GoogleLoginButton({ onError }: GoogleLoginButtonProps) {
               if (result?.isNewUser) {
                 navigate('/onboarding');
               } else {
-                navigate('/');
+                const user = useAuthStore.getState().user;
+                if (user?.role === 'SUPER_ADMIN' || user?.role === 'STORE_ADMIN') {
+                  navigate('/admin/stores');
+                } else {
+                  navigate('/');
+                }
               }
             } catch (err: unknown) {
               const error = err as { response?: { data?: { message?: string } } };

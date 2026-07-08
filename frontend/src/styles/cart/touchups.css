@@ -1,0 +1,18 @@
+/* Feature 3 cart styles that remain clearer as custom CSS. */
+.cart-empty {
+  border-color: rgba(232, 107, 79, 0.16);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 250, 242, 0.96));
+}
+
+.cart-item-meta.danger {
+  color: #b91c1c;
+  font-weight: 800;
+}
+
+.cart-item-price-block span,
+.cart-line-total-block span {
+  color: var(--ink-soft);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}

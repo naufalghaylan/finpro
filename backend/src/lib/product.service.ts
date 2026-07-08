@@ -1,13 +1,34 @@
 import prisma from './prisma'
+import { getNearestStoreService } from '../services/store.service'
 
 interface ProductFilters {
   categoryId?: number
   minPrice?: number
   maxPrice?: number
   storeId?: number
+  // Lokasi user (opsional). Jika ada, stok yang ditampilkan diambil dari toko terdekat.
+  lat?: number
+  lng?: number
   limit?: number
   offset?: number
   sortBy?: 'name' | 'price' | 'newest'
+}
+
+// Tentukan toko mana yang stoknya ditampilkan:
+// - Jika storeId eksplisit → pakai itu.
+// - Jika tidak, tapi ada lat/lng → pakai toko terdekat dari lokasi user.
+// - Jika keduanya tidak ada → undefined (stok dijumlahkan dari semua toko).
+async function resolveStockStoreId(
+  storeId?: number,
+  lat?: number,
+  lng?: number
+): Promise<number | undefined> {
+  if (storeId) return storeId
+  if (lat !== undefined && lng !== undefined) {
+    const nearest = await getNearestStoreService(lat, lng)
+    if (nearest) return nearest.id
+  }
+  return undefined
 }
 
 interface SearchFilters extends ProductFilters {
@@ -17,7 +38,7 @@ interface SearchFilters extends ProductFilters {
 // Get all products with filters
 export async function getAllProducts(filters: ProductFilters) {
   const {
-    categoryId, minPrice, maxPrice, storeId,
+    categoryId, minPrice, maxPrice, storeId, lat, lng,
     limit = 20, offset = 0, sortBy = 'newest'
   } = filters
 
@@ -29,6 +50,10 @@ export async function getAllProducts(filters: ProductFilters) {
     if (maxPrice) where.basePrice.lte = maxPrice
   }
   if (storeId) where.stocks = { some: { storeId } }
+
+  // Stok yang ditampilkan: toko terdekat (jika ada lokasi) atau semua toko.
+  const stockStoreId = await resolveStockStoreId(storeId, lat, lng)
+  const now = new Date()
 
   const orderBy: any = {}
   switch (sortBy) {
@@ -47,7 +72,23 @@ export async function getAllProducts(filters: ProductFilters) {
           orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }],
           select: { id: true, imageUrl: true, isPrimary: true, sortOrder: true },
         },
-        stocks: storeId ? { where: { storeId }, select: { id: true, quantity: true } } : false
+        // Selalu sertakan stok agar katalog bisa menghitung total stok.
+        // Jika ada toko (terdekat/eksplisit), batasi ke toko itu; selain itu jumlahkan semua toko.
+        stocks: {
+          where: stockStoreId ? { storeId: stockStoreId, deletedAt: null } : { deletedAt: null },
+          select: { id: true, quantity: true }
+        },
+        // Diskon produk yang sedang berlaku, untuk menampilkan harga coret di kartu.
+        discounts: {
+          where: {
+            ...(stockStoreId ? { storeId: stockStoreId } : {}),
+            isActive: true,
+            deletedAt: null,
+            startDate: { lte: now },
+            endDate: { gte: now },
+          },
+          select: { id: true, discountType: true, discountValue: true, isActive: true },
+        }
       },
       orderBy,
       take: limit,
@@ -78,6 +119,10 @@ export async function searchProducts(keyword: string, filters: SearchFilters) {
   }
   if (otherFilters.storeId) where.stocks = { some: { storeId: otherFilters.storeId } }
 
+  // Stok yang ditampilkan: toko terdekat (jika ada lokasi) atau semua toko.
+  const stockStoreId = await resolveStockStoreId(otherFilters.storeId, otherFilters.lat, otherFilters.lng)
+  const now = new Date()
+
   const orderBy: any = {}
   switch (sortBy) {
     case 'name': orderBy.name = 'asc'; break
@@ -95,9 +140,24 @@ export async function searchProducts(keyword: string, filters: SearchFilters) {
           orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }],
           select: { id: true, imageUrl: true, isPrimary: true, sortOrder: true },
         },
-        stocks: otherFilters.storeId
-          ? { where: { storeId: otherFilters.storeId }, select: { id: true, quantity: true } }
-          : false
+        // Selalu sertakan stok agar hasil pencarian bisa menghitung total stok.
+        stocks: {
+          where: stockStoreId
+            ? { storeId: stockStoreId, deletedAt: null }
+            : { deletedAt: null },
+          select: { id: true, quantity: true }
+        },
+        // Diskon produk yang sedang berlaku, untuk menampilkan harga coret di kartu.
+        discounts: {
+          where: {
+            ...(stockStoreId ? { storeId: stockStoreId } : {}),
+            isActive: true,
+            deletedAt: null,
+            startDate: { lte: now },
+            endDate: { gte: now },
+          },
+          select: { id: true, discountType: true, discountValue: true, isActive: true },
+        }
       },
       orderBy,
       take: limit,

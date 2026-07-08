@@ -1,10 +1,41 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useAddressStore } from '../../store/addressStore'
 import { searchDestinations } from '../../api/rajaongkir'
 import type { KomerceDestination } from '../../api/rajaongkir'
 import { MapPin, X, LocateFixed, Loader2, Search } from 'lucide-react'
 import { z } from 'zod'
 import type { UserAddress, CreateUserAddressDTO } from '../../types/address'
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
+
+// Fix leaflet icon issue in React
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+delete (L.Icon.Default.prototype as any)._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+})
+
+function LocationMarker({ position, setPosition }: { position: [number, number] | null, setPosition: (pos: [number, number]) => void }) {
+  const map = useMapEvents({
+    click(e) {
+      setPosition([e.latlng.lat, e.latlng.lng]);
+    },
+  });
+
+  useEffect(() => {
+    if (position) {
+      map.flyTo(position, 15);
+    }
+  }, [position, map]);
+
+  return position === null ? null : (
+    <Marker position={position}></Marker>
+  );
+}
+
 
 const addressSchema = z.object({
   recipientName: z.string().min(3, "Nama penerima minimal 3 karakter"),
@@ -20,6 +51,8 @@ interface AddressFormModalProps {
   onClose: () => void
   editData?: UserAddress | null
 }
+
+import { createPortal } from 'react-dom'
 
 export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModalProps) => {
   const { createAddress, updateAddress, isLoading } = useAddressStore()
@@ -48,7 +81,12 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useEffect(() => {
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen)
+  const [prevEditData, setPrevEditData] = useState(editData)
+
+  if (isOpen !== prevIsOpen || editData !== prevEditData) {
+    setPrevIsOpen(isOpen)
+    setPrevEditData(editData)
     if (isOpen) {
       if (editData) {
         setFormData({
@@ -89,7 +127,7 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
       setErrorMsg('')
       setFormErrors({})
     }
-  }, [isOpen, editData])
+  }
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value
@@ -190,21 +228,22 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
       } else if (backendMessage) {
         setErrorMsg(backendMessage);
       } else {
-        setErrorMsg(err.message || 'Terjadi kesalahan saat menyimpan alamat');
+        setErrorMsg(error.message || 'Terjadi kesalahan saat menyimpan alamat');
       }
     }
   }
 
   if (!isOpen) return null
 
-  return (
-    <div className="fixed inset-0 bg-[#1f2a2266] backdrop-blur-[4px] flex items-center justify-center z-[1000] p-5">
-      <div className="bg-[var(--surface)] rounded-[24px] w-full max-w-[600px] max-h-[90vh] overflow-y-auto shadow-[var(--shadow-strong)] animate-[fadeUp_0.3s_ease-out_forwards]">
-        <div className="px-8 py-6 border-b border-[var(--line)] flex justify-between items-center sticky top-0 bg-[var(--surface)] z-10">
+  return createPortal(
+    <div className="fixed inset-0 bg-[#1f2a2266] backdrop-blur-[4px] flex items-center justify-center z-[1000] sm:p-6 lg:p-8">
+      <div className="bg-[var(--surface)] w-full h-full sm:rounded-[24px] sm:max-w-[1000px] sm:max-h-[95vh] flex flex-col shadow-[var(--shadow-strong)] animate-[fadeUp_0.3s_ease-out_forwards]">
+        <div className="px-6 sm:px-8 py-5 sm:py-6 border-b border-[var(--line)] flex justify-between items-center sticky top-0 bg-[var(--surface)] z-10 shrink-0">
           <h2 className="m-0 text-[1.25rem] text-[var(--ink)] font-semibold">
             {editData ? 'Edit Alamat' : 'Tambah Alamat Baru'}
           </h2>
           <button 
+            type="button"
             onClick={onClose} 
             className="bg-transparent border-none cursor-pointer text-[var(--ink-soft)] p-2 rounded-full flex items-center justify-center hover:bg-[var(--surface-muted)] transition-colors"
           >
@@ -212,7 +251,7 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8">
+        <form onSubmit={handleSubmit} className="p-6 sm:p-8 flex-1 overflow-y-auto">
           {errorMsg && (
             <div className="bg-[#fee2e2] text-[#dc2626] px-4 py-3 rounded-lg mb-6 text-[0.9rem]">
               {errorMsg}
@@ -332,7 +371,7 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
                   Titik Pin Pengiriman *
                 </h4>
                 <p className="m-0 text-[0.85rem] text-[var(--ink-soft)]">
-                  Klik tombol disamping. Diperlukan untuk memvalidasi jarak ke toko terdekat.
+                  Klik tombol disamping atau klik pada peta. Diperlukan untuk memvalidasi jarak ke toko terdekat.
                 </p>
               </div>
               <button 
@@ -346,6 +385,30 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
               </button>
             </div>
             
+            <div className="h-[250px] w-full rounded-xl overflow-hidden border border-[var(--line)] mb-4 relative z-0">
+              <MapContainer 
+                center={formData.latitude && formData.longitude ? [formData.latitude, formData.longitude] : [-6.2088, 106.8456]} 
+                zoom={13} 
+                style={{ height: '100%', width: '100%', zIndex: 0 }}
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <LocationMarker 
+                  position={formData.latitude && formData.longitude ? [formData.latitude, formData.longitude] : null} 
+                  setPosition={(pos) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      latitude: pos[0],
+                      longitude: pos[1]
+                    }))
+                    setFormErrors(prev => ({...prev, latitude: '', longitude: ''}))
+                  }} 
+                />
+              </MapContainer>
+            </div>
+
             {formData.latitude && formData.longitude ? (
               <div className="flex gap-4 text-[0.85rem] text-[var(--accent-cool)] bg-[#eef6f0] px-3 py-2 rounded-md">
                 <span><strong>Lat:</strong> {formData.latitude.toFixed(6)}</span>
@@ -397,6 +460,7 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

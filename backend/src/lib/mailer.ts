@@ -28,6 +28,43 @@ const resetPasswordTemplatePath = path.join(process.cwd(), 'templates', 'reset-p
 const resetPasswordTemplateSource = fs.readFileSync(resetPasswordTemplatePath, 'utf8')
 const compiledResetPasswordTemplate = handlebars.compile(resetPasswordTemplateSource)
 
+const orderNotificationTemplatePath = path.join(
+  process.cwd(),
+  'templates',
+  'order-notification.hbs',
+)
+const orderNotificationTemplateSource = fs.readFileSync(orderNotificationTemplatePath, 'utf8')
+const compiledOrderNotificationTemplate = handlebars.compile(orderNotificationTemplateSource)
+
+const newsletterTemplatePath = path.join(process.cwd(), 'templates', 'newsletter.hbs')
+const newsletterTemplateSource = fs.readFileSync(newsletterTemplatePath, 'utf8')
+const compiledNewsletterTemplate = handlebars.compile(newsletterTemplateSource)
+
+export type OrderNotificationEmailItem = {
+  name: string
+  quantity: number
+  subtotal: string
+}
+
+export type OrderNotificationEmailParams = {
+  email: string
+  subject: string
+  customerName: string
+  title: string
+  message: string
+  orderNumber: string
+  statusLabel: string
+  totalAmount: string
+  actionUrl: string
+  actionLabel: string
+  items: OrderNotificationEmailItem[]
+  paymentMethod?: string
+  paymentDeadline?: string
+  shippingInfo?: string
+  recipientAddress?: string
+  cancelReason?: string
+}
+
 export const sendVerificationEmail = async (email: string, token: string) => {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
   const verificationLink = `${frontendUrl}/verify?token=${token}`
@@ -71,5 +108,62 @@ export const sendResetPasswordEmail = async (email: string, token: string) => {
   } catch (error) {
     console.error('[MAILER] Error sending reset password email:', error)
     throw new Error('Failed to send reset password email')
+  }
+}
+
+export const sendOrderNotificationEmail = async ({
+  email,
+  subject,
+  ...templateData
+}: OrderNotificationEmailParams) => {
+  const htmlToSend = compiledOrderNotificationTemplate(templateData)
+  const itemSummary = templateData.items
+    .map((item) => `${item.name} (${item.quantity}x) - ${item.subtotal}`)
+    .join('\n')
+
+  const mailOptions = {
+    from: 'PanenMart <noreply@panenmart.com>',
+    to: email,
+    subject,
+    text: [
+      `Halo ${templateData.customerName},`,
+      templateData.message,
+      `Nomor pesanan: ${templateData.orderNumber}`,
+      `Status: ${templateData.statusLabel}`,
+      itemSummary,
+      `Total: ${templateData.totalAmount}`,
+      templateData.cancelReason ? `Alasan pembatalan: ${templateData.cancelReason}` : null,
+      `Lihat pesanan: ${templateData.actionUrl}`,
+    ].filter(Boolean).join('\n\n'),
+    html: htmlToSend,
+  }
+
+  const info = await transporter.sendMail(mailOptions)
+  console.log(
+    '[MAILER] Order notification email sent to:',
+    email,
+    'MessageId:',
+    info.messageId,
+  )
+}
+
+export const sendNewsletterSubscriptionEmail = async (email: string) => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
+
+  const htmlToSend = compiledNewsletterTemplate({ frontendUrl })
+
+  const mailOptions = {
+    from: '"PanenMart" <noreply@panenmart.com>',
+    to: email,
+    subject: 'Terima Kasih Telah Berlangganan Promo PanenMart',
+    html: htmlToSend,
+  }
+
+  try {
+    const info = await transporter.sendMail(mailOptions)
+    console.log('[MAILER] Newsletter subscription email sent to:', email, 'MessageId:', info.messageId)
+  } catch (error) {
+    console.error('[MAILER] Error sending newsletter email:', error)
+    throw new Error('Failed to send newsletter email')
   }
 }

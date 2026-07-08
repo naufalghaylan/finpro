@@ -18,9 +18,9 @@ export const SERVICE_RANGE_KM = 12
 
 export const navLinks: NavLink[] = [
   { id: 'katalog', label: 'Katalog', href: '/catalog' },
-  { id: 'promo', label: 'Promo Harian', href: '/home#deals' },
+  { id: 'promo', label: 'Produk Harian', href: '/home#deals' },
   { id: 'toko', label: 'Toko', href: '/home#stores' },
-  { id: 'bantuan', label: 'Bantuan', href: '/home#help' },
+  { id: 'bantuan', label: 'Bantuan', href: '/help' },
 ]
 
 export const categoryChips: CategoryChip[] = [
@@ -263,27 +263,27 @@ export const footerSections: FooterSection[] = [
     id: 'layanan',
     title: 'Layanan',
     links: [
-      { label: 'Bantuan', href: '#help' },
-      { label: 'Pengembalian', href: '#help' },
-      { label: 'Status pesanan', href: '#help' },
+      { label: 'Bantuan', href: '/help' },
+      { label: 'Pengembalian', href: '/orders' },
+      { label: 'Status pesanan', href: '/orders' },
     ],
   },
   {
     id: 'perusahaan',
     title: 'Perusahaan',
     links: [
-      { label: 'Tentang PanenMart', href: '#help' },
-      { label: 'Mitra petani', href: '#help' },
-      { label: 'Karir', href: '#help' },
+      { label: 'Tentang PanenMart', href: '/about' },
+      { label: 'Mitra petani', href: '/partners' },
+      { label: 'Karir', href: '/careers' },
     ],
   },
   {
     id: 'kontak',
     title: 'Kontak',
     links: [
-      { label: 'WhatsApp', href: '#help' },
-      { label: 'Email', href: '#help' },
-      { label: 'Instagram', href: '#help' },
+      { label: 'WhatsApp', href: '/help' },
+      { label: 'Email', href: '/help' },
+      { label: 'Instagram', href: '/help' },
     ],
   },
 ]

@@ -1,0 +1,98 @@
+﻿@media (max-width: 720px) {
+  .checkout-voucher-card-top {
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .checkout-payment-card.checkout-voucher-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 5px 10px;
+    align-items: start;
+  }
+
+  .checkout-payment-card.checkout-voucher-card .checkout-voucher-card-top {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    justify-content: flex-end;
+  }
+
+  .checkout-payment-card.checkout-voucher-card .checkout-voucher-card-top > svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .checkout-payment-card.checkout-voucher-card .checkout-selection-badge {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    max-width: none;
+    justify-content: center;
+    overflow: hidden;
+    padding: 0;
+    font-size: 0;
+    line-height: 0;
+    white-space: nowrap;
+  }
+
+  .checkout-selection-badge {
+    padding: 2px 5px;
+    font-size: 0.62rem;
+    line-height: 1.2;
+  }
+
+  .checkout-selection-badge svg {
+    width: 10px;
+    height: 10px;
+  }
+
+  .checkout-voucher-name {
+    grid-column: 1;
+    margin-top: 0;
+    font-size: 0.92rem;
+    line-height: 1.25;
+  }
+
+  .checkout-payment-card .checkout-voucher-discount {
+    grid-column: 1;
+    margin: 0;
+    font-size: 0.92rem;
+    line-height: 1.2;
+  }
+
+  .checkout-payment-card .checkout-voucher-meta,
+  .checkout-payment-card .checkout-voucher-expiry {
+    grid-column: 1 / -1;
+    font-size: 0.76rem;
+    line-height: 1.32;
+  }
+
+  .checkout-payment-card .checkout-voucher-expiry {
+    margin-top: 2px;
+    border-top: 1px dashed var(--line);
+    padding-top: 7px;
+  }
+
+  .checkout-voucher-empty {
+    gap: 6px;
+    padding: 18px 12px;
+  }
+
+  .checkout-voucher-empty > svg {
+    width: 34px;
+    height: 34px;
+  }
+
+  .checkout-voucher-empty h3 {
+    font-size: 0.98rem;
+  }
+
+  .checkout-voucher-empty p {
+    font-size: 0.82rem;
+    line-height: 1.4;
+  }
+
+}

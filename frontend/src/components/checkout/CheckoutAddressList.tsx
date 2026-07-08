@@ -1,5 +1,11 @@
+import { useMemo, useState } from 'react'
 import { AlertCircle, MapPin } from 'lucide-react'
 import type { CheckoutAddress } from '../../types/order'
+import { CheckoutAddressCard } from './CheckoutAddressCard'
+import { CheckoutAddressPicker } from './CheckoutAddressPicker'
+import { CheckoutInlineAlert } from './CheckoutInlineAlert'
+import { CheckoutSectionTitle } from './CheckoutSectionTitle'
+import { CheckoutSelectedAddressCard } from './CheckoutSelectedAddressCard'
 
 interface CheckoutAddressListProps {
   addresses: CheckoutAddress[]
@@ -7,64 +13,65 @@ interface CheckoutAddressListProps {
   onAddressChange: (addressId: number) => void
 }
 
-const getAddressLine = (address: CheckoutAddress) =>
-  [address.district, address.city, address.province, address.postalCode]
-    .filter(Boolean)
-    .join(', ')
+export function CheckoutAddressList(props: CheckoutAddressListProps) {
+  const picker = useCheckoutAddressPicker(props)
 
-export function CheckoutAddressList({
-  addresses,
-  selectedAddressId,
-  onAddressChange,
-}: CheckoutAddressListProps) {
   return (
     <section className="checkout-panel">
-      <div className="checkout-section-title">
-        <MapPin aria-hidden="true" />
-        <div>
-          <h2>Alamat Pengiriman</h2>
-          <p>Pilih alamat berkoordinat agar cabang PanenMart terdekat bisa dihitung.</p>
-        </div>
-      </div>
-
-      {addresses.length === 0 ? (
-        <div className="checkout-inline-alert">
-          <AlertCircle aria-hidden="true" />
-          Belum ada alamat tersimpan. Tambahkan alamat terlebih dahulu di profil.
-        </div>
-      ) : (
-        <div className="checkout-address-grid">
-          {addresses.map((address) => {
-            const hasCoordinates = address.latitude !== null && address.longitude !== null
-
-            return (
-              <label
-                key={address.id}
-                className={`checkout-address-card ${
-                  selectedAddressId === address.id ? 'selected' : ''
-                } ${!hasCoordinates ? 'warning' : ''}`}
-              >
-                <input
-                  type="radio"
-                  name="addressId"
-                  checked={selectedAddressId === address.id}
-                  onChange={() => onAddressChange(address.id)}
-                />
-                <span className="checkout-address-topline">
-                  <strong>{address.recipientName}</strong>
-                  {address.isPrimary && <em>Utama</em>}
-                </span>
-                <span>{address.phone}</span>
-                <span>{address.address}</span>
-                <span>{getAddressLine(address)}</span>
-                <span className={hasCoordinates ? 'checkout-coordinate-ok' : 'checkout-coordinate-missing'}>
-                  {hasCoordinates ? 'Koordinat tersedia' : 'Koordinat belum tersedia'}
-                </span>
-              </label>
-            )
-          })}
-        </div>
-      )}
+      <CheckoutSectionTitle icon={MapPin} title="Alamat Pengiriman" description="Pilih alamat berkoordinat agar cabang PanenMart terdekat bisa dihitung." />
+      {props.addresses.length === 0 ? <EmptyAddressAlert /> : <AddressOptions {...props} {...picker} />}
     </section>
   )
+}
+
+function useCheckoutAddressPicker({ addresses, selectedAddressId, onAddressChange }: CheckoutAddressListProps) {
+  const [isPickerOpen, setIsPickerOpen] = useState(false)
+  const selectedAddress = useMemo(() => addresses.find((address) => address.id === selectedAddressId) ?? null, [addresses, selectedAddressId])
+  const addressCountLabel = `${addresses.length} alamat tersimpan`
+  const closePicker = () => setIsPickerOpen(false)
+  const changePickerAddress = (addressId: number) => {
+    onAddressChange(addressId)
+    closePicker()
+  }
+  return { addressCountLabel, changePickerAddress, closePicker, isPickerOpen, selectedAddress, setIsPickerOpen }
+}
+
+type AddressOptionsProps = CheckoutAddressListProps & ReturnType<typeof useCheckoutAddressPicker>
+
+function AddressOptions(props: AddressOptionsProps) {
+  return (
+    <>
+      <DesktopAddressOptions {...props} />
+      <MobileAddressSelector {...props} />
+      {props.isPickerOpen && <CheckoutAddressPicker addresses={props.addresses} addressCountLabel={props.addressCountLabel} selectedAddressId={props.selectedAddressId} onAddressChange={props.changePickerAddress} onClose={props.closePicker} />}
+    </>
+  )
+}
+
+function DesktopAddressOptions({ addresses, selectedAddressId, onAddressChange, addressCountLabel }: AddressOptionsProps) {
+  return (
+    <>
+      <div className="checkout-address-list-meta checkout-address-desktop-meta"><span>Pilih salah satu alamat</span><strong>{addressCountLabel}</strong></div>
+      <div className="checkout-address-grid checkout-address-desktop-grid">
+        {addresses.map((address) => <CheckoutAddressCard key={address.id} address={address} isSelected={selectedAddressId === address.id} onSelect={onAddressChange} />)}
+      </div>
+    </>
+  )
+}
+
+function MobileAddressSelector({ selectedAddress, setIsPickerOpen }: AddressOptionsProps) {
+  return (
+    <div className="checkout-address-mobile-selector">
+      {selectedAddress ? <CheckoutSelectedAddressCard address={selectedAddress} /> : <SelectAddressAlert />}
+      <button type="button" className="checkout-address-change-button" onClick={() => setIsPickerOpen(true)}>Ganti alamat</button>
+    </div>
+  )
+}
+
+function EmptyAddressAlert() {
+  return <CheckoutInlineAlert icon={AlertCircle}>Belum ada alamat tersimpan. Tambahkan alamat terlebih dahulu di profil.</CheckoutInlineAlert>
+}
+
+function SelectAddressAlert() {
+  return <CheckoutInlineAlert icon={AlertCircle}>Pilih alamat pengiriman untuk melanjutkan checkout.</CheckoutInlineAlert>
 }

@@ -1,0 +1,71 @@
+﻿@media (max-width: 420px) {
+  .manual-payment-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .manual-payment-option {
+    height: 62px;
+    border-radius: 10px;
+    padding: 7px 4px;
+  }
+
+  .manual-payment-option svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .manual-payment-option strong {
+    font-size: 0.73rem;
+  }
+
+  .payment-deadline-card {
+    align-items: flex-start;
+  }
+
+  .payment-deadline-card {
+    gap: 8px;
+    margin-bottom: 12px;
+    border-radius: 11px;
+    padding: 10px;
+  }
+
+  .payment-deadline-card svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .payment-deadline-card strong {
+    font-size: 0.9rem;
+    line-height: 1.25;
+  }
+
+  .payment-deadline-card span,
+  .payment-deadline-card em {
+    font-size: 0.76rem;
+    line-height: 1.35;
+  }
+
+  .payment-summary-meta {
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .payment-summary-meta strong {
+    text-align: right;
+  }
+
+  .payment-flow-page .checkout-product-item {
+    grid-template-columns: 50px minmax(0, 1fr);
+  }
+
+  .payment-flow-page .checkout-summary-image {
+    width: 50px;
+    height: 50px;
+  }
+
+  .payment-gateway-retry-button {
+    justify-content: center;
+    width: 100%;
+  }
+}
