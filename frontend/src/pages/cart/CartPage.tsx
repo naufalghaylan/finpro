@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { AlertCircle, ArrowLeft, Loader2, PackageCheck, ShoppingBag } from 'lucide-react'
 import { Navbar } from '../../components/common/Navbar'
@@ -6,6 +6,9 @@ import { HomeFooter } from '../../components/home/HomeFooter'
 import { BRAND, footerSections, navLinks } from '../../data/home/homeData'
 import { formatCurrency } from '../../utils/format'
 import { useCartPage } from '../../hooks/cart/useCartPage'
+import { useAuthStore } from '../../store/authStore'
+import { useAddressStore } from '../../store/addressStore'
+import { useLocationSelection } from '../../hooks/home/useLocationSelection'
 import { CartItemCard } from '../../components/cart/CartItemCard'
 import { CartSummaryPanel } from '../../components/cart/CartSummaryPanel'
 import type { CartItem } from '../../types/cart'
@@ -50,6 +53,30 @@ const getDisplayQuantity = (item: CartItem, drafts: Record<number, string>) => {
 }
 
 function CartPage() {
+  // Koordinat acuan: sama seperti katalog — alamat terpilih/utama, atau geolokasi.
+  // Dikirim ke backend agar diskon di keranjang memakai toko yang sama dengan katalog.
+  const { isAuthenticated } = useAuthStore()
+  const { addresses, selectedAddressId, fetchAddresses } = useAddressStore()
+  const { coords } = useLocationSelection()
+
+  useEffect(() => {
+    if (isAuthenticated) fetchAddresses()
+  }, [isAuthenticated, fetchAddresses])
+
+  const userAddress = useMemo(() => {
+    if (!isAuthenticated) return null
+    const selected = selectedAddressId != null ? addresses.find((a) => a.id === selectedAddressId) : null
+    return selected ?? addresses.find((a) => a.isPrimary) ?? addresses[0] ?? null
+  }, [isAuthenticated, selectedAddressId, addresses])
+
+  const userCoords = useMemo(() => {
+    if (!isAuthenticated) return null
+    if (userAddress?.latitude != null && userAddress?.longitude != null) {
+      return { lat: userAddress.latitude, lng: userAddress.longitude }
+    }
+    return coords
+  }, [isAuthenticated, userAddress, coords])
+
   const {
     cart,
     isLoading,
@@ -61,7 +88,7 @@ function CartPage() {
     handleQuantityUpdate,
     handleQuantitySubmit,
     handleDeleteItem,
-  } = useCartPage()
+  } = useCartPage(userCoords)
 
   const displayItems = useMemo<CartItemView[]>(
     () =>
@@ -82,11 +109,16 @@ function CartPage() {
   const cartSummary = useMemo(
     () =>
       displayItems.reduce(
-        (summary, item) => ({
-          totalQuantity: summary.totalQuantity + item.displayQuantity,
-          subtotal: summary.subtotal + item.displayLineTotal,
-        }),
-        { totalQuantity: 0, subtotal: 0 },
+        (summary, item) => {
+          const originalLineTotal = item.displayQuantity * item.product.basePrice
+          return {
+            totalQuantity: summary.totalQuantity + item.displayQuantity,
+            subtotal: summary.subtotal + originalLineTotal,
+            discount: summary.discount + (originalLineTotal - item.displayLineTotal),
+            total: summary.total + item.displayLineTotal,
+          }
+        },
+        { totalQuantity: 0, subtotal: 0, discount: 0, total: 0 },
       ),
     [displayItems],
   )
@@ -201,6 +233,8 @@ function CartPage() {
                 <CartSummaryPanel
                   totalQuantity={cartSummary.totalQuantity}
                   subtotal={cartSummary.subtotal}
+                  discount={cartSummary.discount}
+                  total={cartSummary.total}
                   fulfillmentBranch={fulfillmentBranch}
                 />
               </div>
@@ -213,7 +247,7 @@ function CartPage() {
         <div className="cart-mobile-checkout-bar">
           <div>
             <span>Total sementara</span>
-            <strong>{formatCurrency(cartSummary.subtotal)}</strong>
+            <strong>{formatCurrency(cartSummary.total)}</strong>
           </div>
           <Link to="/checkout" className="button primary">
             Checkout ({cartSummary.totalQuantity})

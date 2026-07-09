@@ -70,7 +70,14 @@ export function CartItemCard({
 
       <div className="cart-item-price-block">
         <span>Harga</span>
-        <p className="cart-item-price">{formatCurrency(item.displayUnitPrice)}</p>
+        {item.displayUnitPrice < item.product.basePrice ? (
+          <div className="cart-item-price-group">
+            <p className="cart-item-price-original">{formatCurrency(item.product.basePrice)}</p>
+            <p className="cart-item-price">{formatCurrency(item.displayUnitPrice)}</p>
+          </div>
+        ) : (
+          <p className="cart-item-price">{formatCurrency(item.displayUnitPrice)}</p>
+        )}
       </div>
 
       <div className="cart-item-quantity-block">

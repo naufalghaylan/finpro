@@ -19,8 +19,8 @@ export function useCheckout() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('MANUAL_TRANSFER')
   const [selectedVoucherId, setSelectedVoucherId] = useState<number | null>(null)
   const [notes, setNotes] = useState('')
-  // Diskon toko opt-in: default tidak dipakai; user memilih mengaktifkannya.
-  const [useStoreDiscount, setUseStoreDiscount] = useState(false)
+  // Diskon toko: user memilih maksimal satu (diskon per-produk tetap otomatis).
+  const [selectedDiscountId, setSelectedDiscountId] = useState<number | null>(null)
 
   const error = fetchError?.message ?? null
 
@@ -40,6 +40,13 @@ export function useCheckout() {
   )
   const activeSelectedVoucherId = selectedVoucher?.id ?? null
 
+  // Diskon toko terpilih divalidasi terhadap daftar yang tersedia (bisa berubah saat alamat berganti).
+  const selectedStoreDiscount = useMemo(
+    () => (preview?.availableStoreDiscounts ?? []).find((discount) => discount.id === selectedDiscountId) ?? null,
+    [preview?.availableStoreDiscounts, selectedDiscountId],
+  )
+  const activeSelectedDiscountId = selectedStoreDiscount?.id ?? null
+
   const totalWeight = useMemo(() => {
     return preview?.cart.items.reduce((acc, item) => acc + (item.product.weight * item.quantity), 0) ?? 0
   }, [preview?.cart.items])
@@ -55,7 +62,7 @@ export function useCheckout() {
     fetchShippingForCourier,
   } = useCheckoutShippingOptions(preview, selectedAddressId, totalWeight)
 
-  const paymentSummary = useCheckoutPaymentSummary(preview, selectedVoucher, selectedShippingService, useStoreDiscount)
+  const paymentSummary = useCheckoutPaymentSummary(preview, selectedVoucher, selectedShippingService, selectedStoreDiscount)
 
   const {
     createdOrder,
@@ -73,7 +80,7 @@ export function useCheckout() {
     paymentMethod,
     selectedVoucherId: activeSelectedVoucherId,
     notes,
-    applyStoreDiscount: useStoreDiscount,
+    discountId: activeSelectedDiscountId,
   })
 
   // Re-evaluating canCreateOrder specifically for the returned object
@@ -112,8 +119,8 @@ export function useCheckout() {
     canCreateOrder,
     isCartEmpty,
     hasSelectedAddressCoordinates,
-    useStoreDiscount,
-    setUseStoreDiscount,
+    selectedDiscountId: activeSelectedDiscountId,
+    setSelectedDiscountId,
     setPaymentMethod,
     setSelectedVoucherId,
     setNotes,

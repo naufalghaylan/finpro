@@ -16,6 +16,13 @@ export type CartProductStock = {
   }
 }
 
+export type CartProductDiscount = {
+  id: number
+  discountType: 'PERCENTAGE' | 'NOMINAL' | 'BUY_ONE_GET_ONE'
+  discountValue: number
+  isActive: boolean
+}
+
 export type CartProduct = {
   id: number
   name: string
@@ -29,6 +36,7 @@ export type CartProduct = {
   }
   images: CartProductImage[]
   stocks: CartProductStock[]
+  discounts?: CartProductDiscount[]
   totalStock: number
 }
 
@@ -40,6 +48,8 @@ export type CartItem = {
   updatedAt: string
   product: CartProduct
   lineTotal: number
+  baseLineTotal?: number
+  discountAmount?: number
 }
 
 export type CartSummary = {
@@ -48,6 +58,7 @@ export type CartSummary = {
   storeDiscountAmount?: number
   voucherReferralAmount?: number
   discountAmount?: number
+  total?: number
 }
 
 export type Cart = {

@@ -15,7 +15,7 @@ const EMPTY_FORM = {
   name: '',
   discountType: 'PERCENTAGE' as DiscountType,
   discountValue: '',
-  productId: '',
+  productIds: [] as number[],
   minPurchase: '0',
   maxDiscount: '',
   startDate: '',
@@ -61,6 +61,15 @@ export default function AdminDiscountList({ storeId }: { storeId: number }) {
     p.name.toLowerCase().includes(productSearch.toLowerCase())
   );
 
+  const toggleProduct = (id: number) => {
+    setFormData(prev => ({
+      ...prev,
+      productIds: prev.productIds.includes(id)
+        ? prev.productIds.filter(x => x !== id)
+        : [...prev.productIds, id],
+    }));
+  };
+
   const openCreate = () => {
     setEditingId(null);
     setFormData(EMPTY_FORM);
@@ -69,19 +78,18 @@ export default function AdminDiscountList({ storeId }: { storeId: number }) {
   };
 
   const openEdit = (d: Discount) => {
-    const product = products.find(p => p.id === d.productId);
     setEditingId(d.id);
     setFormData({
       name: d.name,
       discountType: d.discountType,
       discountValue: d.discountType === 'BUY_ONE_GET_ONE' ? '' : String(d.discountValue),
-      productId: d.productId ? String(d.productId) : '',
+      productIds: d.productId ? [d.productId] : [],
       minPurchase: String(d.minPurchase ?? 0),
       maxDiscount: d.maxDiscount ? String(d.maxDiscount) : '',
       startDate: toLocalDatetimeInput(d.startDate),
       endDate: toLocalDatetimeInput(d.endDate),
     });
-    setProductSearch(product?.name ?? '');
+    setProductSearch('');
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -94,8 +102,8 @@ export default function AdminDiscountList({ storeId }: { storeId: number }) {
   };
 
   const validate = (): string | null => {
-    const { discountType, discountValue, productId, minPurchase, maxDiscount } = formData;
-    if (discountType === 'BUY_ONE_GET_ONE' && !productId) return 'Pilih produk untuk diskon Beli 1 Gratis 1';
+    const { discountType, discountValue, productIds, minPurchase, maxDiscount } = formData;
+    if (discountType === 'BUY_ONE_GET_ONE' && productIds.length === 0) return 'Pilih minimal satu produk untuk diskon Beli 1 Gratis 1';
     if (discountType !== 'BUY_ONE_GET_ONE') {
       if (!discountValue || Number(discountValue) <= 0) return 'Nilai diskon harus lebih dari 0';
       if (discountType === 'PERCENTAGE' && Number(discountValue) > 100) return 'Persentase diskon tidak boleh melebihi 100%';
@@ -112,12 +120,11 @@ export default function AdminDiscountList({ storeId }: { storeId: number }) {
     try {
       setSaving(true);
       const isBOGO = formData.discountType === 'BUY_ONE_GET_ONE';
-      const payload = {
+      const base = {
         storeId,
         name: formData.name,
         discountType: formData.discountType,
         discountValue: isBOGO ? 0 : Number(formData.discountValue),
-        productId: formData.productId ? Number(formData.productId) : null,
         minPurchase: Number(formData.minPurchase) || 0,
         maxDiscount: formData.maxDiscount ? Number(formData.maxDiscount) : null,
         startDate: new Date(formData.startDate).toISOString(),
@@ -126,10 +133,16 @@ export default function AdminDiscountList({ storeId }: { storeId: number }) {
       };
 
       if (editingId) {
-        await updateDiscount(editingId, payload);
+        // Edit hanya untuk satu baris diskon → pakai produk pertama (atau semua produk bila kosong).
+        await updateDiscount(editingId, { ...base, productId: formData.productIds[0] ?? null });
         showToast('Diskon berhasil diperbarui', 'success');
+      } else if (formData.productIds.length > 0) {
+        // Satu diskon per produk yang dipilih.
+        await Promise.all(formData.productIds.map(pid => createDiscount({ ...base, productId: pid })));
+        showToast(`${formData.productIds.length} diskon berhasil ditambahkan`, 'success');
       } else {
-        await createDiscount(payload);
+        // Tanpa produk → diskon berlaku untuk semua produk (diskon toko).
+        await createDiscount({ ...base, productId: null });
         showToast('Diskon berhasil ditambahkan', 'success');
       }
       closeForm();
@@ -249,20 +262,23 @@ export default function AdminDiscountList({ storeId }: { storeId: number }) {
               </div>
             )}
 
-            {/* Product Selector */}
+            {/* Product Selector — bisa pilih beberapa produk */}
             <div className={isBOGO ? '' : 'md:col-span-2'}>
               <label className="block text-xs font-semibold text-admin-ink-soft uppercase tracking-wider mb-2">
                 Produk yang Didiskon
                 {isBOGO && <span className="text-admin-red"> *</span>}
-                {!isBOGO && <span className="text-admin-ink-muted font-normal normal-case tracking-normal ml-1">— opsional, kosongkan untuk semua produk</span>}
+                {!isBOGO && <span className="text-admin-ink-muted font-normal normal-case tracking-normal ml-1">— pilih satu atau beberapa; kosongkan untuk semua produk</span>}
               </label>
+              {editingId && (
+                <p className="text-xs text-admin-amber mb-2 m-0">Saat mengedit, hanya satu produk yang berlaku untuk diskon ini.</p>
+              )}
               <div className="relative mb-2">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-admin-ink-muted pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Cari produk..."
                   value={productSearch}
-                  onChange={(e) => { setProductSearch(e.target.value); setFormData({ ...formData, productId: '' }); }}
+                  onChange={(e) => setProductSearch(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-admin-line bg-admin-surface-2 text-sm
                              focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all"
                 />
@@ -272,33 +288,36 @@ export default function AdminDiscountList({ storeId }: { storeId: number }) {
                   {filteredProducts.length === 0 ? (
                     <p className="p-3 text-center text-xs text-admin-ink-muted m-0">Produk tidak ditemukan.</p>
                   ) : (
-                    filteredProducts.slice(0, 20).map(p => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => { setFormData({ ...formData, productId: String(p.id) }); setProductSearch(p.name); }}
-                        className={`w-full text-left px-4 py-2.5 text-sm border-b border-admin-line last:border-0 cursor-pointer transition-colors
-                          ${formData.productId === String(p.id) ? 'bg-admin-accent/10 text-admin-accent-strong font-semibold' : 'hover:bg-admin-surface-2 text-admin-ink'}`}
-                      >
-                        <span>{p.name}</span>
-                        <span className="ml-2 text-xs text-admin-ink-muted">Rp {p.basePrice.toLocaleString('id-ID')}</span>
-                      </button>
-                    ))
+                    filteredProducts.slice(0, 20).map(p => {
+                      const selected = formData.productIds.includes(p.id);
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => toggleProduct(p.id)}
+                          className={`w-full flex items-center justify-between text-left px-4 py-2.5 text-sm border-b border-admin-line last:border-0 cursor-pointer transition-colors
+                            ${selected ? 'bg-admin-accent/10 text-admin-accent-strong font-semibold' : 'hover:bg-admin-surface-2 text-admin-ink'}`}
+                        >
+                          <span>{p.name}<span className="ml-2 text-xs text-admin-ink-muted">Rp {p.basePrice.toLocaleString('id-ID')}</span></span>
+                          {selected && <CheckCircle2 className="w-4 h-4 text-admin-accent-strong shrink-0" />}
+                        </button>
+                      );
+                    })
                   )}
                 </div>
               )}
-              {formData.productId && (
-                <div className="flex items-center gap-2 mt-2">
-                  <CheckCircle2 className="w-4 h-4 text-admin-green" />
-                  <span className="text-xs text-admin-green font-semibold">
-                    {products.find(p => String(p.id) === formData.productId)?.name} dipilih
-                  </span>
-                  {!isBOGO && (
-                    <button type="button" onClick={() => { setFormData({ ...formData, productId: '' }); setProductSearch(''); }}
-                      className="ml-1 text-xs text-admin-ink-muted hover:text-admin-red cursor-pointer bg-transparent border-none">
-                      Hapus pilihan
-                    </button>
-                  )}
+              {formData.productIds.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 mt-2">
+                  <span className="text-xs text-admin-ink-muted">{formData.productIds.length} produk dipilih:</span>
+                  {products.filter(p => formData.productIds.includes(p.id)).map(p => (
+                    <span key={p.id} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-semibold bg-admin-accent/10 text-admin-accent-strong">
+                      {p.name}
+                      <button type="button" onClick={() => toggleProduct(p.id)} aria-label={`Hapus ${p.name}`}
+                        className="inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-admin-accent/20 cursor-pointer bg-transparent border-none text-admin-accent-strong">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
                 </div>
               )}
             </div>

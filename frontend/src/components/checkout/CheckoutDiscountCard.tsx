@@ -4,14 +4,14 @@ import { formatCurrency, formatDateTime } from '../../utils/format'
 
 type CheckoutDiscountCardProps = {
   discount: CheckoutStoreDiscount
-  isApplied: boolean
-  onToggleApply?: (apply: boolean) => void
+  isSelected: boolean
+  onToggle?: () => void
 }
 
-export function CheckoutDiscountCard({ discount, isApplied, onToggleApply }: CheckoutDiscountCardProps) {
+export function CheckoutDiscountCard({ discount, isSelected, onToggle }: CheckoutDiscountCardProps) {
   return (
-    <button type="button" className={`checkout-payment-card checkout-voucher-card${isApplied ? ' selected' : ''}`} onClick={() => onToggleApply?.(!isApplied)} aria-pressed={isApplied}>
-      <DiscountCardTop isApplied={isApplied} />
+    <button type="button" className={`checkout-payment-card checkout-voucher-card${isSelected ? ' selected' : ''}`} onClick={() => onToggle?.()} aria-pressed={isSelected}>
+      <DiscountCardTop isSelected={isSelected} />
       <strong className="checkout-voucher-name">{discount.name}</strong>
       <span className="checkout-voucher-discount">Hemat {formatCurrency(discount.amount)}</span>
       <DiscountMeta label="Berlaku untuk" value={discount.productId ? 'Produk tertentu' : 'Semua produk'} />
@@ -21,20 +21,20 @@ export function CheckoutDiscountCard({ discount, isApplied, onToggleApply }: Che
   )
 }
 
-function DiscountCardTop({ isApplied }: { isApplied: boolean }) {
+function DiscountCardTop({ isSelected }: { isSelected: boolean }) {
   return (
     <div className="checkout-voucher-card-top">
       <BadgePercent aria-hidden="true" />
-      {isApplied && <DiscountAppliedBadge />}
+      {isSelected && <DiscountSelectedBadge />}
     </div>
   )
 }
 
-function DiscountAppliedBadge() {
+function DiscountSelectedBadge() {
   return (
     <span className="checkout-selection-badge">
       <CheckCircle2 aria-hidden="true" />
-      Terpasang
+      Dipilih
     </span>
   )
 }
