@@ -40,8 +40,10 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     if (!id) return
-    setLoading(true)
-    setActiveImage(0)
+    Promise.resolve().then(() => {
+      setLoading(true)
+      setActiveImage(0)
+    })
     getProductById(parseInt(id))
       .then(setProduct)
       .catch(() => setError('Produk tidak ditemukan'))

@@ -6,33 +6,32 @@ export const checkDuplicateUser = async (req: Request, res: Response, next: Next
   try {
     const { email, username } = req.body;
 
-    if (email) {
-      const existingEmail = await prisma.user.findUnique({
-        where: { email },
-        select: { emailVerified: true },
-      });
-      if (existingEmail) {
-        throw new AppError(
-          409,
-          existingEmail.emailVerified
-            ? 'Email already registered'
-            : 'Email already registered but not verified. Please resend the verification email.',
-        );
-      }
-    }
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [{ email: email || '' }, { username: username || '' }],
+      },
+    });
 
-    if (username) {
-      const existingUsername = await prisma.user.findUnique({
-        where: { username },
-        select: { id: true }
-      });
-      if (existingUsername) {
-        throw new AppError(409, 'Username already taken');
+    if (existingUser) {
+      if (existingUser.email === email && existingUser.username === username) {
+        res.status(400).json({ message: 'Email dan Username sudah terdaftar.' });
+        return;
+      } else if (existingUser.email === email) {
+        res.status(400).json({ message: 'Email sudah terdaftar.' });
+        return;
+      } else if (existingUser.username === username) {
+        res.status(400).json({ message: 'Username sudah digunakan.' });
+        return;
       }
     }
 
     next();
   } catch (err) {
-    next(err);
+    if (err instanceof AppError) {
+      res.status(err.statusCode).json({ message: err.message });
+    } else {
+      console.error('[checkDuplicateUser]', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
   }
 };

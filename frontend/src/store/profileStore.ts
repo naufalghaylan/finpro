@@ -33,6 +33,7 @@ interface ProfileState {
   fetchProfile: () => Promise<void>
   updateProfile: (formData: FormData) => Promise<void>
   updateEmail: (email: string) => Promise<void>
+  verifyEmailChange: (token: string) => Promise<void>
   reverifyEmail: () => Promise<void>
 }
 
@@ -80,13 +81,29 @@ export const useProfileStore = create<ProfileState>((set) => ({
     set({ isUpdating: true, error: null })
     try {
       await api.put('/profile/email', { email })
-      // Email updated successfully, we need to refresh the profile to get the new emailVerified status
+      // Email verification sent, we don't refresh the profile yet until verified
+      set({ isUpdating: false })
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      set({ 
+        error: error.response?.data?.message || 'Failed to update email',
+        isUpdating: false 
+      })
+      throw error
+    }
+  },
+
+  verifyEmailChange: async (token: string) => {
+    set({ isUpdating: true, error: null })
+    try {
+      await api.post('/profile/verify-email-change', { token })
+      // Email updated successfully, refresh the profile
       const response = await api.get('/profile')
       set({ profile: response.data, isUpdating: false })
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       set({ 
-        error: error.response?.data?.message || 'Failed to update email',
+        error: error.response?.data?.message || 'Failed to verify email change',
         isUpdating: false 
       })
       throw error

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type { CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
@@ -29,22 +29,32 @@ export default function AdminUserPage() {
   const [editing, setEditing] = useState<AdminUser | null>(null)
   const [showModal, setShowModal] = useState(false)
 
-  if (user?.role !== 'SUPER_ADMIN') { navigate('/'); return null }
+  useEffect(() => {
+    if (user?.role !== 'SUPER_ADMIN') {
+      navigate('/')
+    }
+  }, [user, navigate])
 
-  const load = () => {
-    setLoading(true)
+  const load = useCallback(() => {
+    Promise.resolve().then(() => setLoading(true))
     adminListUsers({ page, limit: 10, search, role: roleFilter || undefined, sortBy, order })
       .then(res => { setUsers(res.data); setTotal(res.total); setTotalPages(res.totalPages) })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }
+  }, [page, search, roleFilter, sortBy, order])
 
-  useEffect(() => { load() }, [page, search, roleFilter, sortBy, order])
+  useEffect(() => { load() }, [load])
 
   const handleDelete = async (u: AdminUser) => {
     if (!confirm(`Hapus user "${u.name}"? Tindakan ini tidak bisa dibatalkan.`)) return
     try { await adminDeleteUser(u.id); load() }
-    catch (e: any) { alert(e?.response?.data?.message ?? 'Gagal menghapus user') }
+    catch (e: unknown) {
+      if (typeof e === 'object' && e !== null && 'response' in e) {
+        alert((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? 'Gagal menghapus user')
+      } else {
+        alert('Gagal menghapus user')
+      }
+    }
   }
 
   const handleSortChange = (val: string) => {
@@ -52,6 +62,8 @@ export default function AdminUserPage() {
     setSortBy(s)
     setOrder(o as 'asc' | 'desc')
   }
+
+  if (user?.role !== 'SUPER_ADMIN') return null;
 
   return (
     <div className="shell">

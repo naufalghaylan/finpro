@@ -113,6 +113,12 @@
   font-size: 0.9rem;
 }
 
+.checkout-inline-alert.warning {
+  color: #d32f2f;
+  background: rgba(211, 47, 47, 0.1);
+  border: 1px solid rgba(211, 47, 47, 0.2);
+}
+
 .checkout-inline-alert svg {
   width: 20px;
   height: 20px;

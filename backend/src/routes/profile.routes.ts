@@ -5,6 +5,9 @@ import * as profileController from '../controllers/profile.controller'
 
 const router = Router()
 
+// Public route for verifying email change from email link
+router.post('/verify-email-change', profileController.verifyEmailChange)
+
 router.use(authenticate)
 
 router.get('/', profileController.getProfile)

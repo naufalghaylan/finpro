@@ -12,6 +12,7 @@ interface CheckoutShippingPanelProps {
   courierServices: Record<string, ShippingCostResult[]>
   selectedShippingService: ShippingCostResult | null
   fetchingCouriers: Record<string, boolean>
+  shippingError: string | null
   onCourierChange: (courier: string) => void
   onShippingServiceChange: (service: ShippingCostResult) => void
 }
@@ -28,6 +29,7 @@ export function CheckoutShippingPanel(props: CheckoutShippingPanelProps) {
 function CheckoutShippingContent(props: CheckoutShippingPanelProps) {
   if (!props.hasSelectedAddressCoordinates) return <MissingAddressAlert />
   if (!props.hasNearestStore) return <MissingStoreAlert />
+  if (props.shippingError) return <ShippingErrorAlert message={props.shippingError} />
   return <CheckoutCourierContainer {...props} />
 }
 
@@ -53,6 +55,10 @@ function MissingAddressAlert() {
 
 function MissingStoreAlert() {
   return <CheckoutInlineAlert icon={AlertCircle}>Cabang PanenMart belum tersedia untuk alamat ini.</CheckoutInlineAlert>
+}
+
+function ShippingErrorAlert({ message }: { message: string }) {
+  return <CheckoutInlineAlert icon={AlertCircle} warning>{message}</CheckoutInlineAlert>
 }
 
 function DestinationHint() {
