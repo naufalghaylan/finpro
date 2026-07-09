@@ -108,7 +108,7 @@ export const ProductGrid = ({ products: initialProducts, storeId }: ProductGridP
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[18px] transition-opacity duration-200" style={{ opacity: (!initialProducts && loading) ? 0.5 : 1, pointerEvents: (!initialProducts && loading) ? 'none' : 'auto' }}>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-[18px] transition-opacity duration-200" style={{ opacity: (!initialProducts && loading) ? 0.5 : 1, pointerEvents: (!initialProducts && loading) ? 'none' : 'auto' }}>
             {displayProducts.map((product) => (
               <ProductCard
                 key={product.id}

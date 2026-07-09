@@ -11,6 +11,7 @@ const createProductSchema = z.object({
   image: z.string().optional(),
   categoryId: z.number(),
   basePrice: z.number().positive('Harga harus lebih dari 0'),
+  weight: z.number().optional(),
 })
 
 const updateProductSchema = createProductSchema.partial()

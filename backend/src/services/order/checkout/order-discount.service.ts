@@ -8,7 +8,7 @@ type ActiveDiscountOptions = {
   scope?: DiscountScope
 }
 
-type DiscountCartItem = {
+export type DiscountCartItem = {
   productId: number
   quantity: number
   product: {
@@ -38,7 +38,7 @@ type DiscountCandidate = {
   amount: number
 }
 
-const checkoutDiscountSelect = {
+export const checkoutDiscountSelect = {
   id: true,
   name: true,
   productId: true,
@@ -94,7 +94,7 @@ const getProductDiscountAmount = (item: DiscountCartItem, discount: CheckoutDisc
   return Math.min(amount, lineSubtotal)
 }
 
-const getBestProductDiscount = (item: DiscountCartItem, discounts: CheckoutDiscount[]) =>
+export const getBestProductDiscount = (item: DiscountCartItem, discounts: CheckoutDiscount[]) =>
   discounts
     .filter((discount) => discount.productId === item.productId)
     .reduce((best, discount) => selectBetterDiscount(best, discount, getProductDiscountAmount(item, discount)), createEmptyCandidate())
@@ -205,4 +205,65 @@ export const getStoreDiscountBreakdownForCheckout = async (
 
   const activeDiscounts = await getActiveStoreDiscounts(storeId, db, options)
   return calculateOrderDiscountBreakdown(items, activeDiscounts, totalProductAmount)
+}
+
+// ── Diskon toko yang DIPILIH user (1 saja) + diskon produk yang OTOMATIS ──────
+
+// Total potongan dari diskon per-produk (productId terisi). Selalu otomatis.
+const getProductDiscountTotalOnly = (items: DiscountCartItem[], discounts: CheckoutDiscount[]) =>
+  Math.round(calculateProductDiscounts(items, discounts).productDiscountTotal)
+
+// Daftar diskon toko (productId null) yang memenuhi syarat, tiap opsi dengan amount terhitung.
+const getEligibleStoreWideDiscounts = (
+  discounts: CheckoutDiscount[],
+  totalProductAmount: number,
+): AppliedCheckoutDiscount[] =>
+  discounts
+    .filter(isStoreWideDiscount)
+    .filter((discount) => isEligibleStoreDiscount(discount, totalProductAmount))
+    .map((discount) => ({
+      ...discount,
+      amount: Math.round(Math.min(getDiscountAmountForBase(discount, totalProductAmount), totalProductAmount)),
+    }))
+    .filter((discount) => discount.amount > 0)
+
+// Untuk halaman checkout: diskon produk otomatis + daftar opsi diskon toko.
+export const getCheckoutStoreDiscountOptions = async (
+  storeId: number,
+  items: DiscountCartItem[],
+  totalProductAmount: number,
+  db: DiscountDb = prisma,
+) => {
+  if (items.length === 0 || totalProductAmount <= 0) {
+    return { productDiscountAmount: 0, availableStoreDiscounts: [] as AppliedCheckoutDiscount[] }
+  }
+
+  const activeDiscounts = await getActiveStoreDiscounts(storeId, db)
+  return {
+    productDiscountAmount: getProductDiscountTotalOnly(items, activeDiscounts),
+    availableStoreDiscounts: getEligibleStoreWideDiscounts(activeDiscounts, totalProductAmount),
+  }
+}
+
+// Saat membuat order: diskon produk (otomatis) + satu diskon toko yang dipilih user.
+export const resolveCheckoutDiscount = async (
+  storeId: number,
+  items: DiscountCartItem[],
+  totalProductAmount: number,
+  selectedStoreDiscountId?: number,
+  db: DiscountDb = prisma,
+) => {
+  if (items.length === 0 || totalProductAmount <= 0) {
+    return { productDiscountAmount: 0, storeDiscountAmount: 0, totalDiscount: 0 }
+  }
+
+  const activeDiscounts = await getActiveStoreDiscounts(storeId, db)
+  const productDiscountAmount = getProductDiscountTotalOnly(items, activeDiscounts)
+  const selected = selectedStoreDiscountId
+    ? getEligibleStoreWideDiscounts(activeDiscounts, totalProductAmount).find((d) => d.id === selectedStoreDiscountId)
+    : undefined
+  const storeDiscountAmount = selected?.amount ?? 0
+  const totalDiscount = Math.min(productDiscountAmount + storeDiscountAmount, totalProductAmount)
+
+  return { productDiscountAmount, storeDiscountAmount, totalDiscount }
 }

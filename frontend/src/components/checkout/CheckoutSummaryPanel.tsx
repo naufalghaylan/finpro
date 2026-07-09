@@ -7,8 +7,7 @@ import { getOtherDiscountAmount, getReadinessItems } from './checkoutSummaryDisp
 export interface CheckoutSummaryPanelProps {
   totalQuantity: number
   subtotal: number
-  productOriginalSubtotal: number
-  productDiscountAmount: number
+  productDiscountAmount?: number
   storeDiscountAmount?: number
   voucherReferralAmount?: number
   discountAmount?: number
@@ -23,7 +22,7 @@ export interface CheckoutSummaryPanelProps {
 }
 
 export function CheckoutSummaryPanel(props: CheckoutSummaryPanelProps) {
-  const otherDiscountAmount = getOtherDiscountAmount(props.discountAmount ?? 0, props.storeDiscountAmount ?? 0, props.voucherReferralAmount ?? 0)
+  const otherDiscountAmount = getOtherDiscountAmount(props.discountAmount ?? 0, props.productDiscountAmount ?? 0, props.storeDiscountAmount ?? 0, props.voucherReferralAmount ?? 0)
 
   return (
     <aside className="checkout-summary-panel">
@@ -71,7 +70,7 @@ type CheckoutSummaryRowsProps = CheckoutSummaryPanelProps & { otherDiscountAmoun
 function CheckoutSummaryRows(props: CheckoutSummaryRowsProps) {
   return (
     <>
-      <ProductPriceRows {...props} />
+      <SummaryRow label={`Total Harga (${props.totalQuantity} item)`} value={formatCurrency(props.subtotal)} />
       <DiscountRows {...props} />
       <SummaryRow label="Ongkir" value={props.selectedShippingService ? formatCurrency(props.selectedShippingService.cost) : 'Pilih pengiriman'} />
       <SummaryRow label="Total Bayar" value={formatCurrency(props.totalPayment)} className="checkout-summary-total" />
@@ -79,26 +78,13 @@ function CheckoutSummaryRows(props: CheckoutSummaryRowsProps) {
   )
 }
 
-function ProductPriceRows({ totalQuantity, subtotal, productOriginalSubtotal, productDiscountAmount }: CheckoutSummaryRowsProps) {
-  if (productDiscountAmount <= 0) {
-    return <SummaryRow label={`Total Harga (${totalQuantity} item)`} value={formatCurrency(subtotal)} />
-  }
-
+function DiscountRows({ productDiscountAmount = 0, storeDiscountAmount = 0, voucherReferralAmount = 0, otherDiscountAmount }: CheckoutSummaryRowsProps) {
   return (
     <>
-      <SummaryRow label={`Subtotal Produk (${totalQuantity} item)`} value={formatCurrency(productOriginalSubtotal)} />
-      <SummaryRow label="Diskon Produk" value={`-${formatCurrency(productDiscountAmount)}`} className="checkout-summary-discount" />
-      <SummaryRow label="Total Harga" value={formatCurrency(subtotal)} />
-    </>
-  )
-}
-
-function DiscountRows({ storeDiscountAmount = 0, voucherReferralAmount = 0, otherDiscountAmount }: CheckoutSummaryRowsProps) {
-  return (
-    <>
-      {storeDiscountAmount > 0 && <SummaryRow label="Diskon PanenMart" value={`-${formatCurrency(storeDiscountAmount)}`} className="checkout-summary-discount" />}
-      {voucherReferralAmount > 0 && <SummaryRow label="Voucher Referral" value={`-${formatCurrency(voucherReferralAmount)}`} className="checkout-summary-discount" />}
-      {otherDiscountAmount > 0 && <SummaryRow label="Potongan Lainnya" value={`-${formatCurrency(otherDiscountAmount)}`} className="checkout-summary-discount" />}
+      {productDiscountAmount > 0 && <SummaryRow label="Diskon Produk" value={`-${formatCurrency(productDiscountAmount)}`} />}
+      {storeDiscountAmount > 0 && <SummaryRow label="Diskon Toko" value={`-${formatCurrency(storeDiscountAmount)}`} />}
+      {voucherReferralAmount > 0 && <SummaryRow label="Voucher Referral" value={`-${formatCurrency(voucherReferralAmount)}`} />}
+      {otherDiscountAmount > 0 && <SummaryRow label="Potongan Lainnya" value={`-${formatCurrency(otherDiscountAmount)}`} />}
     </>
   )
 }

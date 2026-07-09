@@ -36,6 +36,8 @@ export type Discount = {
   id: number
   discountType: string
   discountValue: number
+  minPurchase?: number
+  maxDiscount?: number | null
   isActive: boolean
 }
 

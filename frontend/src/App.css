@@ -675,12 +675,15 @@
 @media (max-width: 768px) {
   .product-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
 }
 
+/* Mobile: tetap 2 kolom per baris (bukan 1) supaya daftar produk lebih ringkas */
 @media (max-width: 480px) {
   .product-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
 }
 
@@ -701,6 +704,60 @@
   height: 100%;
   object-fit: contain;
   display: block;
+}
+
+/* Ringkas kartu produk saat 2 kolom di layar kecil supaya rapi & konsisten */
+@media (max-width: 560px) {
+  .product-card {
+    padding: 12px;
+    gap: 10px;
+    border-radius: 16px;
+  }
+
+  .product-card-image {
+    border-radius: 10px;
+  }
+
+  .product-header h3 {
+    font-size: 0.9rem;
+    min-height: 2.4em;
+  }
+
+  /* Sembunyikan tag kategori di mobile agar nama produk tidak terhimpit */
+  .product-header .product-tag {
+    display: none;
+  }
+
+  .product-price {
+    font-size: 0.95rem;
+  }
+
+  .product-price-original {
+    font-size: 0.78rem;
+  }
+
+  .product-discount-badge {
+    font-size: 0.66rem;
+    padding: 2px 6px;
+  }
+
+  .product-stock {
+    font-size: 0.78rem;
+  }
+
+  .product-footer {
+    gap: 8px;
+  }
+
+  /* Kartu sudah bisa diklik untuk lihat detail, jadi tombol Detail disembunyikan */
+  .product-footer .button.ghost {
+    display: none;
+  }
+
+  .product-footer .button {
+    padding: 9px 12px;
+    font-size: 0.85rem;
+  }
 }
 
 @media (max-width: 720px) {
