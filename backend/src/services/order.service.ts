@@ -15,7 +15,6 @@ export { listStoreFulfillments } from './order/fulfillment/order-fulfillment-que
 export { createCheckoutOrder, getCheckoutPreview } from './order/checkout/order-checkout.service'
 export {
   calculateOrderDiscount,
-  calculateStoreDiscountForCheckout,
   getActiveStoreDiscounts,
 } from './order/checkout/order-discount.service'
 export type { CheckoutDiscount } from './order/checkout/order-discount.service'

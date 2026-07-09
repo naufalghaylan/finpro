@@ -2,10 +2,21 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import { useSearchParams } from 'react-router-dom'
 import { getOrders } from '../../api/order.api'
 import { getOrderItemQuantity } from '../../components/orders/orderDisplay'
-import type { CheckoutOrder, OrderListMeta, OrderStatusGroup } from '../../types/order'
+import type { CheckoutOrder, OrderListMeta } from '../../types/order'
 import { getApiFetchError, type ApiFetchError } from '../../utils/apiError'
+import {
+  getAppliedOrderFilterParams,
+  getClearedOrderFilterParams,
+  getDebouncedSearchParams,
+  getOrderPageParams,
+  getOrderStatusGroupParams,
+  getPositivePage,
+  getSearchValue,
+  isOrderStatusGroup,
+  type OrderStatusTab,
+} from './orderListParams'
 
-export type OrderStatusTab = 'all' | OrderStatusGroup
+export type { OrderStatusTab } from './orderListParams'
 
 const ORDER_LIST_LIMIT = 10
 const ORDER_SEARCH_DEBOUNCE_MS = 400
@@ -17,27 +28,8 @@ export const statusTabs: { value: OrderStatusTab; label: string }[] = [
   { value: 'cancelled', label: 'Dibatalkan' },
 ]
 
-const isOrderStatusGroup = (value: string | null): value is OrderStatusGroup =>
-  value === 'ongoing' || value === 'completed' || value === 'cancelled'
-
-const getPositivePage = (value: string | null) => {
-  const page = Number(value)
-  return Number.isInteger(page) && page > 0 ? page : 1
-}
-
-const getSearchValue = (searchParams: URLSearchParams, key: string) =>
-  searchParams.get(key)?.trim() ?? ''
-
 const getFetchError = (error: unknown, fallback = 'Gagal memuat daftar pesanan') =>
   getApiFetchError(error, fallback)
-
-const setParamOrDelete = (params: URLSearchParams, key: string, value: string) => {
-  if (value.trim()) {
-    params.set(key, value.trim())
-  } else {
-    params.delete(key)
-  }
-}
 
 export function useOrdersPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -79,11 +71,7 @@ export function useOrdersPage() {
     if (trimmedSearch === search) return
 
     const debounceId = window.setTimeout(() => {
-      const nextParams = new URLSearchParams(searchParamString)
-      setParamOrDelete(nextParams, 'search', trimmedSearch)
-      nextParams.delete('orderNumber')
-      nextParams.delete('page')
-      setSearchParams(nextParams, { replace: true })
+      setSearchParams(getDebouncedSearchParams(searchParamString, trimmedSearch), { replace: true })
     }, ORDER_SEARCH_DEBOUNCE_MS)
 
     return () => window.clearTimeout(debounceId)
@@ -131,51 +119,22 @@ export function useOrdersPage() {
 
   const applyFilters = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const nextParams = new URLSearchParams(searchParams)
-    setParamOrDelete(nextParams, 'search', searchDraft)
-    nextParams.delete('orderNumber')
-    setParamOrDelete(nextParams, 'startDate', startDateDraft)
-    setParamOrDelete(nextParams, 'endDate', endDateDraft)
-    nextParams.delete('page')
-    setSearchParams(nextParams)
+    setSearchParams(getAppliedOrderFilterParams(searchParams, { searchDraft, startDateDraft, endDateDraft }))
   }
 
   const clearFilters = () => {
-    const nextParams = new URLSearchParams(searchParams)
     setSearchDraft('')
     setStartDateDraft('')
     setEndDateDraft('')
-    nextParams.delete('search')
-    nextParams.delete('orderNumber')
-    nextParams.delete('startDate')
-    nextParams.delete('endDate')
-    nextParams.delete('statusGroup')
-    nextParams.delete('status')
-    nextParams.delete('page')
-    setSearchParams(nextParams)
+    setSearchParams(getClearedOrderFilterParams(searchParams))
   }
 
   const changeStatusGroup = (statusGroup: OrderStatusTab) => {
-    const nextParams = new URLSearchParams(searchParams)
-    if (statusGroup === 'all') {
-      nextParams.delete('statusGroup')
-    } else {
-      nextParams.set('statusGroup', statusGroup)
-    }
-    nextParams.delete('status')
-    nextParams.delete('page')
-    setSearchParams(nextParams)
+    setSearchParams(getOrderStatusGroupParams(searchParams, statusGroup))
   }
 
   const goToPage = (nextPage: number) => {
-    const safePage = Math.max(1, nextPage)
-    const nextParams = new URLSearchParams(searchParams)
-    if (safePage === 1) {
-      nextParams.delete('page')
-    } else {
-      nextParams.set('page', String(safePage))
-    }
-    setSearchParams(nextParams)
+    setSearchParams(getOrderPageParams(searchParams, nextPage))
   }
 
   return {

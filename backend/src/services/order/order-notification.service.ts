@@ -4,6 +4,7 @@ import {
   type OrderNotificationEmailParams,
 } from '../../lib/mailer'
 import prisma from '../../lib/prisma'
+import { logger } from '../../utils/logger'
 
 export type OrderNotificationEvent =
   | 'CHECKOUT_CREATED'
@@ -144,7 +145,7 @@ export const notifyOrderStatusChange = async (
     })
 
     if (!order) {
-      console.error(`[ORDER_NOTIFICATION] Order ${orderId} not found for event ${event}`)
+      logger.warn('Order notification skipped because order was not found', { orderId, event })
       return false
     }
 
@@ -178,7 +179,7 @@ export const notifyOrderStatusChange = async (
 
     return true
   } catch (error) {
-    console.error(`[ORDER_NOTIFICATION] Failed for order ${orderId}, event ${event}:`, error)
+    logger.error('Order notification failed', { error, orderId, event })
     return false
   }
 }

@@ -11,50 +11,16 @@ import { useAddressStore } from '../../store/addressStore'
 import { useLocationSelection } from '../../hooks/home/useLocationSelection'
 import { CartItemCard } from '../../components/cart/CartItemCard'
 import { CartSummaryPanel } from '../../components/cart/CartSummaryPanel'
-import type { CartItem } from '../../types/cart'
-
-type CartItemView = CartItem & {
-  displayQuantity: number
-  displayUnitPrice: number
-  displayLineTotal: number
-}
-
-const cartEmptyClassName = [
-  'cart-empty flex flex-col items-center justify-center gap-3 border rounded-lg',
-  'p-10 text-center shadow-(--shadow-soft)',
-  '[&>h3]:m-0 [&>p]:m-0 [&>p]:text-(--ink-soft)',
-].join(' ')
-
-const cartStateIconClassName = [
-  'inline-grid size-14.5 place-items-center rounded-[18px]',
-  'bg-[rgba(232,107,79,0.1)] text-(--accent-strong)',
-  '[&>svg]:size-7.5',
-].join(' ')
-
-const getDisplayUnitPrice = (item: CartItem) =>
-  item.quantity > 0 ? item.lineTotal / item.quantity : item.product.basePrice
-
-const getDisplayQuantity = (item: CartItem, drafts: Record<number, string>) => {
-  const draft = drafts[item.id]
-  if (draft === undefined || draft === '') {
-    return item.quantity
-  }
-
-  const quantity = Number(draft)
-  if (!Number.isInteger(quantity) || quantity <= 0) {
-    return item.quantity
-  }
-
-  if (item.product.totalStock > 0 && quantity > item.product.totalStock) {
-    return item.quantity
-  }
-
-  return quantity
-}
+import {
+  getCartCoords,
+  getCartDisplayItems,
+  getCartPageSummary,
+  getFulfillmentBranch,
+  getSelectedCartAddress,
+} from './cartPageDisplay'
+import { cartEmptyClassName, cartStateIconClassName } from './cartPageClassNames'
 
 function CartPage() {
-  // Koordinat acuan: sama seperti katalog — alamat terpilih/utama, atau geolokasi.
-  // Dikirim ke backend agar diskon di keranjang memakai toko yang sama dengan katalog.
   const { isAuthenticated } = useAuthStore()
   const { addresses, selectedAddressId, fetchAddresses } = useAddressStore()
   const { coords } = useLocationSelection()
@@ -65,17 +31,10 @@ function CartPage() {
 
   const userAddress = useMemo(() => {
     if (!isAuthenticated) return null
-    const selected = selectedAddressId != null ? addresses.find((a) => a.id === selectedAddressId) : null
-    return selected ?? addresses.find((a) => a.isPrimary) ?? addresses[0] ?? null
+    return getSelectedCartAddress(addresses, selectedAddressId)
   }, [isAuthenticated, selectedAddressId, addresses])
 
-  const userCoords = useMemo(() => {
-    if (!isAuthenticated) return null
-    if (userAddress?.latitude != null && userAddress?.longitude != null) {
-      return { lat: userAddress.latitude, lng: userAddress.longitude }
-    }
-    return coords
-  }, [isAuthenticated, userAddress, coords])
+  const userCoords = useMemo(() => getCartCoords(isAuthenticated, userAddress, coords), [isAuthenticated, userAddress, coords])
 
   const {
     cart,
@@ -90,41 +49,11 @@ function CartPage() {
     handleDeleteItem,
   } = useCartPage(userCoords)
 
-  const displayItems = useMemo<CartItemView[]>(
-    () =>
-      cart.items.map((item) => {
-        const displayQuantity = getDisplayQuantity(item, quantityDrafts)
-        const displayUnitPrice = getDisplayUnitPrice(item)
-
-        return {
-          ...item,
-          displayQuantity,
-          displayUnitPrice,
-          displayLineTotal: displayQuantity * displayUnitPrice,
-        }
-      }),
-    [cart.items, quantityDrafts],
-  )
-
-  const cartSummary = useMemo(
-    () =>
-      displayItems.reduce(
-        (summary, item) => {
-          const originalLineTotal = item.displayQuantity * item.product.basePrice
-          return {
-            totalQuantity: summary.totalQuantity + item.displayQuantity,
-            subtotal: summary.subtotal + originalLineTotal,
-            discount: summary.discount + (originalLineTotal - item.displayLineTotal),
-            total: summary.total + item.displayLineTotal,
-          }
-        },
-        { totalQuantity: 0, subtotal: 0, discount: 0, total: 0 },
-      ),
-    [displayItems],
-  )
+  const displayItems = useMemo(() => getCartDisplayItems(cart, quantityDrafts), [cart, quantityDrafts])
+  const cartSummary = useMemo(() => getCartPageSummary(displayItems), [displayItems])
 
   const hasItems = displayItems.length > 0
-  const fulfillmentBranch = cart.store?.city ? `Cabang ${cart.store.city}` : 'cabang terdekat'
+  const fulfillmentBranch = getFulfillmentBranch(cart)
 
   return (
     <div className="page cart-page">
