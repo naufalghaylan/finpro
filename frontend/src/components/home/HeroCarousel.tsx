@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Tag } from 'lucide-react'
 import type { PromoSlide } from '../../types/home/home'
+import { useProducts } from '../../hooks/useProducts'
 
 type HeroCarouselProps = {
   slides: PromoSlide[]
@@ -9,6 +11,18 @@ type HeroCarouselProps = {
 
 export const HeroCarousel = ({ slides, storeName }: HeroCarouselProps) => {
   const [activeIndex, setActiveIndex] = useState(0)
+  const navigate = useNavigate()
+  
+  // Ambil beberapa produk terbaru untuk mencari yang ada diskonnya
+  const { products } = useProducts({ limit: 10, sortBy: 'newest' })
+  
+  const discountedProducts = products?.filter(p => p.discounts && p.discounts.some(d => d.isActive)) || []
+  const displayItems = [...discountedProducts]
+  
+  if (displayItems.length < 3 && products) {
+    const nonDiscounted = products.filter(p => !p.discounts || !p.discounts.some(d => d.isActive))
+    displayItems.push(...nonDiscounted.slice(0, 3 - displayItems.length))
+  }
 
   useEffect(() => {
     if (slides.length <= 1) {
@@ -35,10 +49,10 @@ export const HeroCarousel = ({ slides, storeName }: HeroCarouselProps) => {
           <h1 className="m-0 font-[family-name:var(--font-display)] text-[clamp(2.6rem,4.4vw,4.4rem)] leading-[1.04] text-[var(--ink)] fade-in delay-2">{activeSlide.title}</h1>
           <p className="m-0 text-[1.05rem] text-[var(--ink-soft)] max-w-[560px] fade-in delay-3">{activeSlide.description}</p>
           <div className="flex flex-wrap gap-3 fade-in delay-4">
-            <button type="button" className="inline-flex items-center justify-center gap-2 rounded-full border border-transparent px-4.5 py-2.5 font-semibold cursor-pointer bg-[var(--accent)] text-white shadow-[var(--shadow-soft)] hover:-translate-y-[1px] hover:shadow-[var(--shadow-strong)] transition-all">
+            <button type="button" onClick={() => navigate(activeSlide.targetCategoryId ? `/catalog?category=${activeSlide.targetCategoryId}` : '/catalog')} className="inline-flex items-center justify-center gap-2 rounded-full border border-transparent px-4.5 py-2.5 font-semibold cursor-pointer bg-[var(--accent)] text-white shadow-[var(--shadow-soft)] hover:-translate-y-[1px] hover:shadow-[var(--shadow-strong)] transition-all">
               {activeSlide.ctaLabel}
             </button>
-            <button type="button" className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-transparent px-4.5 py-2.5 font-semibold cursor-pointer text-[var(--ink)] transition-all hover:-translate-y-[1px] hover:shadow-[var(--shadow-strong)] hover:border-transparent">
+            <button type="button" onClick={() => navigate('/catalog')} className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-transparent px-4.5 py-2.5 font-semibold cursor-pointer text-[var(--ink)] transition-all hover:-translate-y-[1px] hover:shadow-[var(--shadow-strong)] hover:border-transparent">
               Lihat katalog
             </button>
           </div>
@@ -75,23 +89,50 @@ export const HeroCarousel = ({ slides, storeName }: HeroCarouselProps) => {
           </div>
           
           <div className="grid gap-[14px] relative z-10 w-full">
-            <div className="p-[18px] rounded-[20px] border border-[var(--line)] bg-white/85 shadow-[var(--shadow-soft)] backdrop-blur-[10px] grid gap-1.5 -rotate-2 -translate-y-[6px]">
-              <p className="m-0 font-semibold text-[var(--ink)]">Paket sayur pagi</p>
-              <p className="m-0 text-[var(--ink-soft)] text-[0.95rem]">Siap 15 menit</p>
-              <span className="w-fit px-2.5 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent-strong)] font-bold text-[0.75rem] tracking-[0.08em] uppercase block">Diskon 15%</span>
-            </div>
-            
-            <div className="p-[18px] rounded-[20px] border border-[var(--line)] bg-white/85 shadow-[var(--shadow-soft)] backdrop-blur-[10px] grid gap-1.5 rotate-2">
-              <p className="m-0 font-semibold text-[var(--ink)]">Buah premium</p>
-              <p className="m-0 text-[var(--ink-soft)] text-[0.95rem]">Manis dan renyah</p>
-              <span className="w-fit px-2.5 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent-strong)] font-bold text-[0.75rem] tracking-[0.08em] uppercase block">Stok segar</span>
-            </div>
-            
-            <div className="p-[18px] rounded-[20px] border border-[var(--line)] bg-white/85 shadow-[var(--shadow-soft)] backdrop-blur-[10px] grid gap-1.5 -rotate-1 translate-y-[6px]">
-              <p className="m-0 font-semibold text-[var(--ink)]">Protein siap masak</p>
-              <p className="m-0 text-[var(--ink-soft)] text-[0.95rem]">Dinginkan optimal</p>
-              <span className="w-fit px-2.5 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent-strong)] font-bold text-[0.75rem] tracking-[0.08em] uppercase block">Kurasi harian</span>
-            </div>
+            {displayItems.length > 0 ? (
+              displayItems.slice(0, 3).map((item, i) => {
+                const rotateClasses = [
+                  '-rotate-2 -translate-y-[6px]',
+                  'rotate-2',
+                  '-rotate-1 translate-y-[6px]'
+                ]
+                
+                const activeDiscount = item.discounts?.find(d => d.isActive)
+                const tagText = activeDiscount 
+                  ? (activeDiscount.discountType === 'PERCENTAGE' 
+                      ? `Diskon ${activeDiscount.discountValue}%` 
+                      : `Potongan ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(activeDiscount.discountValue)}`)
+                  : 'Stok segar'
+
+                return (
+                  <div key={item.id} className={`p-[18px] rounded-[20px] border border-[var(--line)] bg-white/85 shadow-[var(--shadow-soft)] backdrop-blur-[10px] grid gap-1.5 ${rotateClasses[i % 3]} cursor-pointer hover:border-[var(--accent)] transition-colors`} onClick={() => navigate(`/products/${item.id}`)}>
+                    <p className="m-0 font-semibold text-[var(--ink)] line-clamp-1">{item.name}</p>
+                    <p className="m-0 text-[var(--ink-soft)] text-[0.95rem]">{item.category?.name || 'Terbaru'}</p>
+                    <span className="w-fit px-2.5 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent-strong)] font-bold text-[0.75rem] tracking-[0.08em] uppercase block">{tagText}</span>
+                  </div>
+                )
+              })
+            ) : (
+              <>
+                <div className="p-[18px] rounded-[20px] border border-[var(--line)] bg-white/85 shadow-[var(--shadow-soft)] backdrop-blur-[10px] grid gap-1.5 -rotate-2 -translate-y-[6px]">
+                  <p className="m-0 font-semibold text-[var(--ink)]">Paket sayur pagi</p>
+                  <p className="m-0 text-[var(--ink-soft)] text-[0.95rem]">Siap 15 menit</p>
+                  <span className="w-fit px-2.5 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent-strong)] font-bold text-[0.75rem] tracking-[0.08em] uppercase block">Diskon 15%</span>
+                </div>
+                
+                <div className="p-[18px] rounded-[20px] border border-[var(--line)] bg-white/85 shadow-[var(--shadow-soft)] backdrop-blur-[10px] grid gap-1.5 rotate-2">
+                  <p className="m-0 font-semibold text-[var(--ink)]">Buah premium</p>
+                  <p className="m-0 text-[var(--ink-soft)] text-[0.95rem]">Manis dan renyah</p>
+                  <span className="w-fit px-2.5 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent-strong)] font-bold text-[0.75rem] tracking-[0.08em] uppercase block">Stok segar</span>
+                </div>
+                
+                <div className="p-[18px] rounded-[20px] border border-[var(--line)] bg-white/85 shadow-[var(--shadow-soft)] backdrop-blur-[10px] grid gap-1.5 -rotate-1 translate-y-[6px]">
+                  <p className="m-0 font-semibold text-[var(--ink)]">Protein siap masak</p>
+                  <p className="m-0 text-[var(--ink-soft)] text-[0.95rem]">Dinginkan optimal</p>
+                  <span className="w-fit px-2.5 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent-strong)] font-bold text-[0.75rem] tracking-[0.08em] uppercase block">Kurasi harian</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useProducts } from '../../hooks/useProducts'
 import { useCategories } from '../../hooks/useCategories'
 import { useAddToCart } from '../../hooks/useAddToCart'
@@ -18,7 +18,11 @@ import type { Product } from '../../types/product'
 
 export default function CatalogPage() {
   const navigate = useNavigate()
-  const { filters, changeFilter, nextPage, prevPage, getPageInfo } = useProductFilters()
+  const [searchParams] = useSearchParams()
+  const categoryParam = searchParams.get('category')
+  const { filters, changeFilter, nextPage, prevPage, getPageInfo } = useProductFilters({
+    categoryId: categoryParam ? Number(categoryParam) : undefined
+  })
 
   // Lokasi user: hanya untuk user login. Tamu → stok total semua toko.
   const { isAuthenticated } = useAuthStore()
