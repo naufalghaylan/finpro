@@ -73,7 +73,15 @@ export const getCart = async (req: Request, res: Response): Promise<void> => {
     const userId = getAuthenticatedUserId(req, res)
     if (!userId) return
 
-    const cart = await getCartService(userId)
+    // Halaman keranjang menampilkan harga setelah diskon toko terdekat user.
+    // lat/lng dikirim frontend (alamat terpilih/geolokasi) agar konsisten dengan katalog.
+    const lat = req.query.lat !== undefined ? Number(req.query.lat) : undefined
+    const lng = req.query.lng !== undefined ? Number(req.query.lng) : undefined
+    const hasCoords = lat !== undefined && lng !== undefined && !Number.isNaN(lat) && !Number.isNaN(lng)
+    const cart = await getCartService(userId, {
+      applyItemDiscounts: true,
+      ...(hasCoords ? { lat, lng } : {}),
+    })
     res.json({ data: cart })
   } catch (error) {
     sendInternalError(res, 'getCart', error)

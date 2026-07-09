@@ -1,6 +1,6 @@
 import { CircleDollarSign } from 'lucide-react'
 import type { AdminOrder } from '../../../../types/order'
-import { getOrderItemQuantity, getOrderDiscountBreakdown } from '../../../orders/orderDisplay'
+import { getOrderItemQuantity, getOrderDiscountSummary } from '../../../orders/orderDisplay'
 import { formatCurrency } from '../../../../utils/format'
 
 type AdminOrderSummaryPanelProps = {
@@ -9,12 +9,7 @@ type AdminOrderSummaryPanelProps = {
 
 export function AdminOrderSummaryPanel({ order }: AdminOrderSummaryPanelProps) {
   const totalItemQuantity = getOrderItemQuantity(order)
-  const {
-    storeDiscountAmount,
-    referralVoucherAmount,
-    otherVoucherAmount,
-    voucherLabel,
-  } = getOrderDiscountBreakdown(order)
+  const { discountAmount, discountLabel } = getOrderDiscountSummary(order)
 
   return (
     <section className="rounded-2xl border border-admin-line-soft bg-admin-surface p-5 shadow-sm">
@@ -35,22 +30,10 @@ export function AdminOrderSummaryPanel({ order }: AdminOrderSummaryPanelProps) {
           <span className="text-admin-ink-muted">Ongkir</span>
           <strong className="text-admin-ink">{formatCurrency(order.shippingCost)}</strong>
         </div>
-        {storeDiscountAmount > 0 && (
+        {discountAmount > 0 && (
           <div className="flex justify-between gap-3">
-            <span className="text-admin-ink-muted">Diskon toko</span>
-            <strong className="text-admin-ink">-{formatCurrency(storeDiscountAmount)}</strong>
-          </div>
-        )}
-        {referralVoucherAmount > 0 && (
-          <div className="flex justify-between gap-3">
-            <span className="text-admin-ink-muted">Voucher referral</span>
-            <strong className="text-admin-ink">-{formatCurrency(referralVoucherAmount)}</strong>
-          </div>
-        )}
-        {otherVoucherAmount > 0 && (
-          <div className="flex justify-between gap-3">
-            <span className="text-admin-ink-muted">{voucherLabel ?? 'Voucher'}</span>
-            <strong className="text-admin-ink">-{formatCurrency(otherVoucherAmount)}</strong>
+            <span className="text-admin-ink-muted">{discountLabel}</span>
+            <strong className="text-admin-ink">-{formatCurrency(discountAmount)}</strong>
           </div>
         )}
         <div className="flex justify-between gap-3 border-t border-admin-line-soft pt-3">

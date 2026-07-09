@@ -13,7 +13,7 @@ export function CheckoutAddressCard({ address, isSelected, onSelect, className =
 
   return (
     <label className={`checkout-address-card ${isSelected ? 'selected' : ''} ${!hasCoordinates ? 'warning' : ''} ${className}`.trim()}>
-      <input type="radio" name="addressId" checked={isSelected} onChange={() => onSelect(address.id)} />
+      <input type="radio" checked={isSelected} onChange={() => onSelect(address.id)} />
       <CheckoutAddressDetails address={address} />
     </label>
   )

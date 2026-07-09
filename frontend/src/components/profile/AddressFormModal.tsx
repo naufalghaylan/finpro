@@ -8,6 +8,7 @@ import type { UserAddress, CreateUserAddressDTO } from '../../types/address'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
+import MapSearchControl from '../common/MapSearchControl'
 
 // Fix leaflet icon issue in React
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -394,6 +395,16 @@ export const AddressFormModal = ({ isOpen, onClose, editData }: AddressFormModal
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <MapSearchControl 
+                  onLocationSelect={(pos) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      latitude: pos[0],
+                      longitude: pos[1]
+                    }))
+                    setFormErrors(prev => ({...prev, latitude: '', longitude: ''}))
+                  }} 
                 />
                 <LocationMarker 
                   position={formData.latitude && formData.longitude ? [formData.latitude, formData.longitude] : null} 

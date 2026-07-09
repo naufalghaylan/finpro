@@ -23,10 +23,13 @@ export function useCheckoutShippingOptions(
   const [selectedShippingService, setSelectedShippingService] = useState<ShippingCostResult | null>(null)
   const [fetchingCouriers, setFetchingCouriers] = useState<Record<string, boolean>>({})
 
+  const [shippingError, setShippingError] = useState<string | null>(null)
+
   const fetchShippingForCourier = useCallback(async (courierCode: string) => {
     if (!selectedAddressId || !preview?.nearestStore) return
 
     setFetchingCouriers(prev => ({ ...prev, [courierCode]: true }))
+    setShippingError(null)
     
     try {
       const roundedWeight = calculateRoundedWeight(totalWeight)
@@ -38,9 +41,12 @@ export function useCheckoutShippingOptions(
       })
       
       setCourierServices(prev => ({ ...prev, [courierCode]: results || [] }))
-    } catch {
+    } catch (error: any) {
       // Ignore individual courier errors (e.g. unsupported route)
       setCourierServices(prev => ({ ...prev, [courierCode]: [] }))
+      if (error.response?.status === 400) {
+        setShippingError('Kota tidak ditemukan atau tidak didukung oleh toko. Silakan pilih alamat lain atau buat alamat baru.')
+      }
     } finally {
       setFetchingCouriers(prev => ({ ...prev, [courierCode]: false }))
     }
@@ -73,6 +79,7 @@ export function useCheckoutShippingOptions(
     selectedShippingService,
     setSelectedShippingService,
     fetchingCouriers,
+    shippingError,
     fetchShippingForCourier,
   }
 }

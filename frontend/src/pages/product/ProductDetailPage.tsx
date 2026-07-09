@@ -6,10 +6,27 @@ import { useAddToCart } from '../../hooks/useAddToCart'
 import { Navbar } from '../../components/common/Navbar'
 import { HomeFooter } from '../../components/home/HomeFooter'
 import { BRAND, navLinks, footerSections } from '../../data/home/homeData'
-import type { Product } from '../../types/product'
+import type { Product, Discount } from '../../types/product'
 import { getImageUrl } from '../../utils/image'
 
 //komponen & logic
+
+// Label diskon untuk badge per toko.
+const discountBadgeLabel = (d: Discount) => {
+  if (d.discountType === 'PERCENTAGE') return `Diskon ${d.discountValue}%`
+  if (d.discountType === 'NOMINAL') return `Diskon Rp ${d.discountValue.toLocaleString('id-ID')}`
+  if (d.discountType === 'BUY_ONE_GET_ONE') return 'Beli 1 Gratis 1'
+  return 'Diskon'
+}
+
+// Diskon dianggap berlaku bila aktif dan sedang dalam rentang tanggalnya.
+const isDiscountActiveNow = (d: Discount) => {
+  if (!d.isActive) return false
+  const now = Date.now()
+  if (d.startDate && new Date(d.startDate).getTime() > now) return false
+  if (d.endDate && new Date(d.endDate).getTime() < now) return false
+  return true
+}
 
 export default function ProductDetailPage() {
   const { id } = useParams()
@@ -23,8 +40,10 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     if (!id) return
-    setLoading(true)
-    setActiveImage(0)
+    Promise.resolve().then(() => {
+      setLoading(true)
+      setActiveImage(0)
+    })
     getProductById(parseInt(id))
       .then(setProduct)
       .catch(() => setError('Produk tidak ditemukan'))
@@ -106,14 +125,27 @@ export default function ProductDetailPage() {
                 {product.stocks && product.stocks.length > 0 && (
                   <div>
                     <p style={{ fontWeight: 600, marginBottom: '8px' }}>Stok tersedia:</p>
-                    {product.stocks.map((stock) => (
-                      <div key={stock.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
-                        <span>{stock.store?.name ?? `Toko #${stock.id}`}</span>
-                        <span className={stock.quantity > 0 ? 'product-stock stock-ok' : 'product-stock stock-out'}>
-                          {stock.quantity > 0 ? `${stock.quantity} tersedia` : 'Habis'}
-                        </span>
-                      </div>
-                    ))}
+                    {product.stocks.map((stock) => {
+                      // Diskon untuk produk ini yang berlaku di toko tsb.
+                      const storeDiscounts = (product.discounts ?? []).filter(
+                        (d) => d.storeId === stock.store?.id && isDiscountActiveNow(d)
+                      )
+                      return (
+                        <div key={stock.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
+                          <span>{stock.store?.name ?? `Toko #${stock.id}`}</span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                            {storeDiscounts.map((d) => (
+                              <span key={d.id} className={`product-discount-badge${d.discountType === 'BUY_ONE_GET_ONE' ? ' product-badge-bogo' : ''}`}>
+                                {discountBadgeLabel(d)}
+                              </span>
+                            ))}
+                            <span className={stock.quantity > 0 ? 'product-stock stock-ok' : 'product-stock stock-out'}>
+                              {stock.quantity > 0 ? `${stock.quantity} tersedia` : 'Habis'}
+                            </span>
+                          </span>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
 

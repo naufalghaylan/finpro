@@ -3,6 +3,7 @@ import {
   autoCancelExpiredManualTransferOrders,
   autoConfirmShippedOrders,
 } from '../services/order.service'
+import { logger } from '../utils/logger'
 
 let isOrderCronRunning = false
 
@@ -16,7 +17,7 @@ export const startOrderCron = () => {
       await autoCancelExpiredManualTransferOrders()
       await autoConfirmShippedOrders()
     } catch (error) {
-      console.error('Error during order cron job:', error)
+      logger.error('Order cron job failed', { error })
     } finally {
       isOrderCronRunning = false
     }

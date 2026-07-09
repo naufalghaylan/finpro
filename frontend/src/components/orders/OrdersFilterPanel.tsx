@@ -1,5 +1,5 @@
 import type { FormEvent } from 'react'
-import { RotateCcw, Search } from 'lucide-react'
+import { ListFilter, RotateCcw, Search } from 'lucide-react'
 import { OrdersDatePicker } from './OrdersDatePicker'
 
 type OrdersFilterPanelProps = {
@@ -54,8 +54,8 @@ export function OrdersFilterPanel({
 
       <div className="orders-filter-actions">
         <button type="submit" className="button primary">
-          <Search className="button-icon" aria-hidden="true" />
-          Cari
+          <ListFilter className="button-icon" aria-hidden="true" />
+          Filter
         </button>
         <button
           type="button"

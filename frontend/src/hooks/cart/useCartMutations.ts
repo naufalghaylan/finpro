@@ -4,6 +4,12 @@ import { useToast } from '../../components/common/toastContext'
 import { useCartStore } from '../../store/cartStore'
 import type { CartItem } from '../../types/cart'
 import { getApiErrorMessage } from '../../utils/apiError'
+import {
+  getCartQuantityValidationMessage,
+  isCartQuantityDraftInput,
+  resetCartQuantityDraft,
+  setCartQuantityDraft,
+} from './cartQuantityDrafts'
 
 const CART_QUANTITY_SAVE_DELAY_MS = 700
 
@@ -50,17 +56,20 @@ export function useCartMutations(
     })
   }, [])
 
+  const showQuantityWarning = useCallback(
+    (item: CartItem, message: string) => {
+      setError(message)
+      showToast(message, 'warning')
+      resetCartQuantityDraft(setQuantityDrafts, item)
+    },
+    [setError, setQuantityDrafts, showToast],
+  )
+
   const persistQuantityUpdate = useCallback(
     async (item: CartItem, nextQuantity: number) => {
       clearPendingQuantitySave(item.id)
 
-      if (!Number.isInteger(nextQuantity) || nextQuantity <= 0) {
-        return
-      }
-
-      if (nextQuantity > item.product.totalStock || nextQuantity === item.quantity) {
-        return
-      }
+      if (getCartQuantityValidationMessage(item, nextQuantity) || nextQuantity === item.quantity) return
 
       setItemSaving(item.id, true)
       setError(null)
@@ -73,7 +82,7 @@ export function useCartMutations(
         const message = getErrorMessage(updateError)
         setError(message)
         showToast(message, 'error')
-        setQuantityDrafts((drafts) => ({ ...drafts, [item.id]: String(item.quantity) }))
+        resetCartQuantityDraft(setQuantityDrafts, item)
       } finally {
         setItemSaving(item.id, false)
       }
@@ -85,19 +94,9 @@ export function useCartMutations(
     (item: CartItem, nextQuantity: number) => {
       clearPendingQuantitySave(item.id)
 
-      if (!Number.isInteger(nextQuantity) || nextQuantity <= 0) {
-        const message = 'Jumlah produk minimal 1'
-        setError(message)
-        showToast(message, 'warning')
-        setQuantityDrafts((drafts) => ({ ...drafts, [item.id]: String(item.quantity) }))
-        return
-      }
-
-      if (nextQuantity > item.product.totalStock) {
-        const message = `Stok ${item.product.name} hanya ${item.product.totalStock}`
-        setError(message)
-        showToast(message, 'warning')
-        setQuantityDrafts((drafts) => ({ ...drafts, [item.id]: String(item.quantity) }))
+      const validationMessage = getCartQuantityValidationMessage(item, nextQuantity)
+      if (validationMessage) {
+        showQuantityWarning(item, validationMessage)
         return
       }
 
@@ -111,15 +110,15 @@ export function useCartMutations(
         void persistQuantityUpdate(item, nextQuantity)
       }, CART_QUANTITY_SAVE_DELAY_MS)
     },
-    [clearPendingQuantitySave, persistQuantityUpdate, showToast, setError, setQuantityDrafts],
+    [clearPendingQuantitySave, persistQuantityUpdate, setError, showQuantityWarning],
   )
 
   const handleQuantityDraftChange = (item: CartItem, value: string) => {
-    if (value !== '' && !/^\d+$/.test(value)) {
+    if (!isCartQuantityDraftInput(value)) {
       return
     }
 
-    setQuantityDrafts((drafts) => ({ ...drafts, [item.id]: value }))
+    setCartQuantityDraft(setQuantityDrafts, item.id, value)
 
     if (value === '') {
       clearPendingQuantitySave(item.id)
@@ -130,52 +129,31 @@ export function useCartMutations(
   }
 
   const handleQuantityUpdate = (item: CartItem, nextQuantity: number) => {
-    if (!Number.isInteger(nextQuantity) || nextQuantity <= 0) {
-      const message = 'Jumlah produk minimal 1'
-      setError(message)
-      showToast(message, 'warning')
-      setQuantityDrafts((drafts) => ({ ...drafts, [item.id]: String(item.quantity) }))
-      return
-    }
-
-    if (nextQuantity > item.product.totalStock) {
-      const message = `Stok ${item.product.name} hanya ${item.product.totalStock}`
-      setError(message)
-      showToast(message, 'warning')
-      setQuantityDrafts((drafts) => ({ ...drafts, [item.id]: String(item.quantity) }))
+    const validationMessage = getCartQuantityValidationMessage(item, nextQuantity)
+    if (validationMessage) {
+      showQuantityWarning(item, validationMessage)
       return
     }
 
     if (nextQuantity === item.quantity) {
-      setQuantityDrafts((drafts) => ({ ...drafts, [item.id]: String(item.quantity) }))
+      resetCartQuantityDraft(setQuantityDrafts, item)
       clearPendingQuantitySave(item.id)
       setError(null)
       return
     }
 
-    setQuantityDrafts((drafts) => ({ ...drafts, [item.id]: String(nextQuantity) }))
+    setCartQuantityDraft(setQuantityDrafts, item.id, String(nextQuantity))
     scheduleQuantityUpdate(item, nextQuantity)
   }
 
   const handleQuantitySubmit = (item: CartItem) => {
     const draftQuantity = quantityDrafts[item.id]
     const nextQuantity = Number(draftQuantity)
+    const validationMessage = getCartQuantityValidationMessage(item, nextQuantity, draftQuantity)
 
-    if (draftQuantity === '' || !Number.isInteger(nextQuantity) || nextQuantity <= 0) {
+    if (validationMessage) {
       clearPendingQuantitySave(item.id)
-      const message = 'Jumlah produk minimal 1'
-      setError(message)
-      showToast(message, 'warning')
-      setQuantityDrafts((drafts) => ({ ...drafts, [item.id]: String(item.quantity) }))
-      return
-    }
-
-    if (nextQuantity > item.product.totalStock) {
-      clearPendingQuantitySave(item.id)
-      const message = `Stok ${item.product.name} hanya ${item.product.totalStock}`
-      setError(message)
-      showToast(message, 'warning')
-      setQuantityDrafts((drafts) => ({ ...drafts, [item.id]: String(item.quantity) }))
+      showQuantityWarning(item, validationMessage)
       return
     }
 

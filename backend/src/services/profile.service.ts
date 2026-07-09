@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs'
-import { generateVerificationTokenJWT } from './auth/jwt.service'
+import { generateVerificationTokenJWT, generateEmailChangeTokenJWT, verifyEmailChangeTokenJWT } from './auth/jwt.service'
 import prisma from '../lib/prisma'
 import { sendVerificationEmail } from '../lib/mailer'
 import { AppError } from '../utils/AppError'
@@ -50,9 +50,9 @@ export const updateProfileService = async (userId: number, data: Record<string, 
   if (phone !== undefined) updateData.phone = phone
 
   if (newPassword) {
-    if (!user.password) throw new AppError(400, 'Current account does not have a password set. Please use the verify account flow or reset password.')
-    if (!currentPassword) throw new AppError(400, 'Current password is required')
-    if (!(await bcrypt.compare(currentPassword as string, user.password))) throw new AppError(401, 'Invalid current password')
+    if (!user.password) throw new AppError(400, 'Akun saat ini tidak memiliki password. Silakan gunakan alur verifikasi akun atau reset password.');
+    if (!currentPassword) throw new AppError(400, 'Password saat ini harus diisi');
+    if (!(await bcrypt.compare(currentPassword as string, user.password))) throw new AppError(401, 'Password saat ini salah');
     updateData.password = await bcrypt.hash(newPassword as string, 10)
   }
 
@@ -87,6 +87,7 @@ export const updateProfileService = async (userId: number, data: Record<string, 
   })
 }
 
+//...
 export const updateEmailService = async (userId: number, newEmail: string) => {
   const user = await prisma.user.findUnique({ where: { id: userId } })
   if (!user) throw new AppError(404, 'User not found')
@@ -96,8 +97,48 @@ export const updateEmailService = async (userId: number, newEmail: string) => {
     throw new AppError(409, 'Email is already taken by another user')
   }
 
-  await prisma.user.update({ where: { id: userId }, data: { email: newEmail, emailVerified: false } })
-  await generateAndSendVerification(newEmail)
+  // Generate Email Change Token and save it in VerificationToken table for tracking/revocation
+  await prisma.verificationToken.deleteMany({ where: { email: newEmail } })
+  const tokenStr = generateEmailChangeTokenJWT({ userId, newEmail })
+  await prisma.verificationToken.create({
+    data: { email: newEmail, token: tokenStr, expires: new Date(Date.now() + 60 * 60 * 1000) }
+  })
+
+  // Send the specific email change verification email
+  const { sendEmailChangeVerificationEmail } = await import('../lib/mailer')
+  await sendEmailChangeVerificationEmail(newEmail, tokenStr)
+}
+
+export const verifyEmailChangeService = async (token: string) => {
+  const verificationRecord = await prisma.verificationToken.findUnique({
+    where: { token }
+  })
+
+  if (!verificationRecord) {
+    throw new AppError(400, 'Invalid or expired token')
+  }
+
+  if (verificationRecord.expires < new Date()) {
+    throw new AppError(400, 'Token has expired')
+  }
+
+  let decoded: { userId: number; newEmail: string }
+  try {
+    decoded = verifyEmailChangeTokenJWT(token)
+  } catch (error) {
+    throw new AppError(400, 'Invalid token payload')
+  }
+
+  // Update the user's email and set it as verified
+  await prisma.user.update({
+    where: { id: decoded.userId },
+    data: { email: decoded.newEmail, emailVerified: true }
+  })
+
+  // Delete the token
+  await prisma.verificationToken.delete({
+    where: { id: verificationRecord.id }
+  })
 }
 
 export const reverifyEmailService = async (userId: number) => {

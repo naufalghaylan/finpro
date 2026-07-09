@@ -111,7 +111,7 @@ export class UserService {
     });
   }
 
-  static async createStoreAdmin(data: any) {
+  static async createStoreAdmin(data: { name: string; email: string; password: string; storeId?: number | null }) {
     const existingUser = await prisma.user.findUnique({ where: { email: data.email } });
     if (existingUser) {
       throw new AppError(400, 'Email already registered');

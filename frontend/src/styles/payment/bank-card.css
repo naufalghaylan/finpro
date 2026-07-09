@@ -103,6 +103,14 @@
   line-height: 1.15;
 }
 
+.payment-bank-total-note {
+  color: var(--green);
+  font-size: 0.82rem;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
 .payment-bank-instruction {
   font-size: 0.9rem;
   line-height: 1.6;

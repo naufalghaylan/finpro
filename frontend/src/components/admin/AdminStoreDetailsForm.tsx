@@ -1,9 +1,11 @@
+import React, { useState } from 'react'
 import type { Dispatch, FormEvent, SetStateAction } from 'react'
 import { Loader2, MapPin } from 'lucide-react'
 import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet'
 import { useAuthStore } from '../../store/authStore'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
+import MapSearchControl from '../common/MapSearchControl'
 
 delete (L.Icon.Default.prototype as L.Icon.Default & { _getIconUrl?: string })._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -61,6 +63,30 @@ export function AdminStoreDetailsForm({
 }: AdminStoreDetailsFormProps) {
   const { user } = useAuthStore()
   const isSuperAdmin = user?.role === 'SUPER_ADMIN'
+  const [formErrors, setFormErrors] = useState<{name?: string; address?: string}>({})
+
+  const handleLocalSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setFormErrors({})
+    const errors: {name?: string; address?: string} = {}
+    let hasError = false
+
+    if (!formData.name.trim()) {
+      errors.name = 'Nama toko harus diisi'
+      hasError = true
+    }
+    if (!formData.address.trim()) {
+      errors.address = 'Alamat lengkap harus diisi'
+      hasError = true
+    }
+
+    if (hasError) {
+      setFormErrors(errors)
+      return
+    }
+
+    onSubmit(e)
+  }
 
   return (
     <div className="rounded-2xl border border-admin-line-soft bg-admin-surface shadow-sm p-6 md:p-8 max-w-4xl">
@@ -68,29 +94,35 @@ export function AdminStoreDetailsForm({
         <MapPin className="w-5 h-5 text-admin-accent" />
         Ubah Detail Toko & Lokasi
       </h4>
-      <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <form onSubmit={handleLocalSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="flex flex-col gap-5">
           <div>
             <label className="block text-xs font-semibold text-admin-ink-soft uppercase tracking-wider mb-2">Nama Toko</label>
             <input
               type="text"
               value={formData.name}
-              onChange={(event) => setFormData({ ...formData, name: event.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink
-                         focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all"
-              required
+              onChange={(event) => {
+                setFormData({ ...formData, name: event.target.value })
+                if (formErrors.name) setFormErrors({ ...formErrors, name: '' })
+              }}
+              className={`w-full px-4 py-3 rounded-xl border ${formErrors.name ? 'border-[#dc2626]' : 'border-admin-line'} bg-admin-surface text-sm text-admin-ink
+                         focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all`}
             />
+            {formErrors.name && <span className="text-[#dc2626] text-xs mt-1 block">{formErrors.name}</span>}
           </div>
           <div>
             <label className="block text-xs font-semibold text-admin-ink-soft uppercase tracking-wider mb-2">Alamat Lengkap</label>
             <input
               type="text"
               value={formData.address}
-              onChange={(event) => setFormData({ ...formData, address: event.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink
-                         focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all"
-              required
+              onChange={(event) => {
+                setFormData({ ...formData, address: event.target.value })
+                if (formErrors.address) setFormErrors({ ...formErrors, address: '' })
+              }}
+              className={`w-full px-4 py-3 rounded-xl border ${formErrors.address ? 'border-[#dc2626]' : 'border-admin-line'} bg-admin-surface text-sm text-admin-ink
+                         focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all`}
             />
+            {formErrors.address && <span className="text-[#dc2626] text-xs mt-1 block">{formErrors.address}</span>}
           </div>
           <div>
             <label className="block text-xs font-semibold text-admin-ink-soft uppercase tracking-wider mb-2">Nomor Telepon</label>
@@ -126,11 +158,25 @@ export function AdminStoreDetailsForm({
             </p>
 
             <div className="h-[240px] w-full rounded-xl overflow-hidden border border-admin-line bg-admin-surface-2 mb-4 z-0 relative">
-              <MapContainer center={position} zoom={13} style={{ height: '100%', width: '100%' }}>
+              <MapContainer
+                center={position}
+                zoom={13}
+                style={{ height: '100%', width: '100%' }}
+                dragging={isSuperAdmin}
+                touchZoom={isSuperAdmin}
+                zoomControl={isSuperAdmin}
+                scrollWheelZoom={isSuperAdmin}
+                doubleClickZoom={isSuperAdmin}
+                boxZoom={isSuperAdmin}
+                keyboard={isSuperAdmin}
+              >
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
+                {isSuperAdmin && (
+                  <MapSearchControl onLocationSelect={(pos) => setPosition(pos)} />
+                )}
                 <LocationMarker position={position} setPosition={setPosition} disabled={!isSuperAdmin} />
               </MapContainer>
             </div>

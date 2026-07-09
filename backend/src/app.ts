@@ -3,6 +3,7 @@ import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import router from './routes'
+import prisma from './lib/prisma'
 
 const app = express()
 
@@ -19,9 +20,16 @@ app.use(express.urlencoded({ extended: true }))
 app.use('/', router)
 
 
-// ── Health check ───────────────────────────────────────────────────────────
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() })
+// ── Health check & Keep Alive ──────────────────────────────────────────────
+app.get('/health', cors(), async (_req, res) => {
+  try {
+    // Ping database to prevent Neon from going to sleep
+    await prisma.$queryRaw`SELECT 1`
+    res.json({ status: 'ok', database: 'connected', timestamp: new Date().toISOString() })
+  } catch (error) {
+    console.error('Health check DB ping error:', error)
+    res.status(500).json({ status: 'error', database: 'disconnected', timestamp: new Date().toISOString() })
+  }
 })
 
 // ── Root handler for browser ───────────────────────────────────────────────

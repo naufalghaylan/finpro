@@ -1,5 +1,9 @@
-export const getOtherDiscountAmount = (discountAmount: number, storeDiscountAmount: number, voucherReferralAmount: number) =>
-  Math.max(0, discountAmount - storeDiscountAmount - voucherReferralAmount)
+export const getOtherDiscountAmount = (
+  discountAmount: number,
+  productDiscountAmount: number,
+  storeDiscountAmount: number,
+  voucherReferralAmount: number,
+) => Math.max(0, discountAmount - productDiscountAmount - storeDiscountAmount - voucherReferralAmount)
 
 export const getReadinessItems = (hasReadyAddress: boolean, hasNearestBranch: boolean, hasShipping: boolean) => [
   { label: 'Alamat berkoordinat', ready: hasReadyAddress },

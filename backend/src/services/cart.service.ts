@@ -1,5 +1,8 @@
 import { Prisma } from '../generated/prisma/client'
 import prisma from '../lib/prisma'
+import { getActiveProductDiscounts, resolveDiscountStoreId, type GetCartOptions } from './cart-pricing.service'
+import { getProductStockTotals } from './cart-stock.service'
+import { getBestProductDiscount } from './order/checkout/order-discount.service'
 
 type DatabaseClient = Prisma.TransactionClient
 
@@ -10,6 +13,8 @@ const emptyCart = {
   summary: {
     totalQuantity: 0,
     subtotal: 0,
+    discountAmount: 0,
+    total: 0,
   },
 }
 
@@ -38,23 +43,7 @@ export const getCartItemCount = async (cartId: number, db: DatabaseClient = pris
   return countAgg._sum.quantity ?? 0
 }
 
-const getProductStockTotals = async (productIds: number[], db: DatabaseClient = prisma) => {
-  if (productIds.length === 0) {
-    return new Map<number, number>()
-  }
-
-  const stockTotals = await db.stock.groupBy({
-    by: ['productId'],
-    where: {
-      productId: { in: productIds },
-    },
-    _sum: { quantity: true },
-  })
-
-  return new Map(stockTotals.map((stock) => [stock.productId, stock._sum.quantity ?? 0]))
-}
-
-export const getCart = async (userId: number) => {
+export const getCart = async (userId: number, options: GetCartOptions = {}) => {
   const cart = await prisma.cart.findUnique({
     where: { userId },
     select: {
@@ -124,11 +113,23 @@ export const getCart = async (userId: number) => {
     return emptyCart
   }
 
+  const applyItemDiscounts = options.applyItemDiscounts ?? false
   const productIds = cart.items.map((item) => item.productId)
-  const stockTotals = await getProductStockTotals(productIds)
+  const discountStoreId = applyItemDiscounts ? await resolveDiscountStoreId(userId, options) : undefined
+  const [stockTotals, activeDiscounts] = await Promise.all([
+    getProductStockTotals(productIds),
+    applyItemDiscounts ? getActiveProductDiscounts(productIds, discountStoreId) : Promise.resolve([]),
+  ])
+
   const items = cart.items.map((item) => {
     const totalStock = stockTotals.get(item.productId) ?? 0
-    const lineTotal = item.quantity * item.product.basePrice
+    const baseLineTotal = item.quantity * item.product.basePrice
+    const bestDiscount = getBestProductDiscount(
+      { productId: item.productId, quantity: item.quantity, product: { basePrice: item.product.basePrice } },
+      activeDiscounts,
+    )
+    const discountAmount = Math.round(bestDiscount.amount)
+    const lineTotal = Math.max(0, baseLineTotal - discountAmount)
 
     return {
       ...item,
@@ -136,6 +137,8 @@ export const getCart = async (userId: number) => {
         ...item.product,
         totalStock,
       },
+      baseLineTotal,
+      discountAmount,
       lineTotal,
     }
   })
@@ -143,9 +146,11 @@ export const getCart = async (userId: number) => {
   const summary = items.reduce(
     (acc, item) => ({
       totalQuantity: acc.totalQuantity + item.quantity,
-      subtotal: acc.subtotal + item.lineTotal,
+      subtotal: acc.subtotal + item.baseLineTotal,
+      discountAmount: acc.discountAmount + item.discountAmount,
+      total: acc.total + item.lineTotal,
     }),
-    { totalQuantity: 0, subtotal: 0 },
+    { totalQuantity: 0, subtotal: 0, discountAmount: 0, total: 0 },
   )
 
   return {

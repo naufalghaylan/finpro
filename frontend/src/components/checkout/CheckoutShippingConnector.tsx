@@ -17,6 +17,7 @@ function getShippingPanelProps(checkout: CheckoutController) {
     courierServices: checkout.courierServices,
     selectedShippingService: checkout.selectedShippingService,
     fetchingCouriers: checkout.fetchingCouriers,
+    shippingError: checkout.shippingError,
     onCourierChange: createCourierChangeHandler(checkout),
     onShippingServiceChange: checkout.setSelectedShippingService,
   }

@@ -1,5 +1,7 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
-import AdminSalesReport from './AdminSalesReport'
+
+const AdminSalesReport = lazy(() => import('./AdminSalesReport'))
 
 export default function AdminStoreSalesReportPage() {
   const { id } = useParams()
@@ -11,7 +13,9 @@ export default function AdminStoreSalesReportPage() {
 
   return (
     <div className="admin-fade-in" style={{ animationDelay: '120ms' }}>
-      <AdminSalesReport storeId={storeId} />
+      <Suspense fallback={<div className="p-8 text-center text-gray-500">Loading report...</div>}>
+        <AdminSalesReport storeId={storeId} />
+      </Suspense>
     </div>
   )
 }

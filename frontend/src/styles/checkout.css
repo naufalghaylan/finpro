@@ -3,6 +3,7 @@
 @import './checkout/address-cards.css';
 @import './checkout/shipping-base.css';
 @import './checkout/summary.css';
+@import './checkout/summary-products.css';
 @import './checkout/state-success.css';
 @import './checkout/voucher-courier-base.css';
 @import './checkout/voucher-card.css';

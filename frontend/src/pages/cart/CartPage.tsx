@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { AlertCircle, ArrowLeft, Loader2, PackageCheck, ShoppingBag } from 'lucide-react'
 import { Navbar } from '../../components/common/Navbar'
@@ -6,50 +6,36 @@ import { HomeFooter } from '../../components/home/HomeFooter'
 import { BRAND, footerSections, navLinks } from '../../data/home/homeData'
 import { formatCurrency } from '../../utils/format'
 import { useCartPage } from '../../hooks/cart/useCartPage'
+import { useAuthStore } from '../../store/authStore'
+import { useAddressStore } from '../../store/addressStore'
+import { useLocationSelection } from '../../hooks/home/useLocationSelection'
 import { CartItemCard } from '../../components/cart/CartItemCard'
 import { CartSummaryPanel } from '../../components/cart/CartSummaryPanel'
-import type { CartItem } from '../../types/cart'
-
-type CartItemView = CartItem & {
-  displayQuantity: number
-  displayUnitPrice: number
-  displayLineTotal: number
-}
-
-const cartEmptyClassName = [
-  'cart-empty flex flex-col items-center justify-center gap-3 border rounded-lg',
-  'p-10 text-center shadow-(--shadow-soft)',
-  '[&>h3]:m-0 [&>p]:m-0 [&>p]:text-(--ink-soft)',
-].join(' ')
-
-const cartStateIconClassName = [
-  'inline-grid size-14.5 place-items-center rounded-[18px]',
-  'bg-[rgba(232,107,79,0.1)] text-(--accent-strong)',
-  '[&>svg]:size-7.5',
-].join(' ')
-
-const getDisplayUnitPrice = (item: CartItem) =>
-  item.quantity > 0 ? item.lineTotal / item.quantity : item.product.basePrice
-
-const getDisplayQuantity = (item: CartItem, drafts: Record<number, string>) => {
-  const draft = drafts[item.id]
-  if (draft === undefined || draft === '') {
-    return item.quantity
-  }
-
-  const quantity = Number(draft)
-  if (!Number.isInteger(quantity) || quantity <= 0) {
-    return item.quantity
-  }
-
-  if (item.product.totalStock > 0 && quantity > item.product.totalStock) {
-    return item.quantity
-  }
-
-  return quantity
-}
+import {
+  getCartCoords,
+  getCartDisplayItems,
+  getCartPageSummary,
+  getFulfillmentBranch,
+  getSelectedCartAddress,
+} from './cartPageDisplay'
+import { cartEmptyClassName, cartStateIconClassName } from './cartPageClassNames'
 
 function CartPage() {
+  const { isAuthenticated } = useAuthStore()
+  const { addresses, selectedAddressId, fetchAddresses } = useAddressStore()
+  const { coords } = useLocationSelection()
+
+  useEffect(() => {
+    if (isAuthenticated) fetchAddresses()
+  }, [isAuthenticated, fetchAddresses])
+
+  const userAddress = useMemo(() => {
+    if (!isAuthenticated) return null
+    return getSelectedCartAddress(addresses, selectedAddressId)
+  }, [isAuthenticated, selectedAddressId, addresses])
+
+  const userCoords = useMemo(() => getCartCoords(isAuthenticated, userAddress, coords), [isAuthenticated, userAddress, coords])
+
   const {
     cart,
     isLoading,
@@ -61,38 +47,13 @@ function CartPage() {
     handleQuantityUpdate,
     handleQuantitySubmit,
     handleDeleteItem,
-  } = useCartPage()
+  } = useCartPage(userCoords)
 
-  const displayItems = useMemo<CartItemView[]>(
-    () =>
-      cart.items.map((item) => {
-        const displayQuantity = getDisplayQuantity(item, quantityDrafts)
-        const displayUnitPrice = getDisplayUnitPrice(item)
-
-        return {
-          ...item,
-          displayQuantity,
-          displayUnitPrice,
-          displayLineTotal: displayQuantity * displayUnitPrice,
-        }
-      }),
-    [cart.items, quantityDrafts],
-  )
-
-  const cartSummary = useMemo(
-    () =>
-      displayItems.reduce(
-        (summary, item) => ({
-          totalQuantity: summary.totalQuantity + item.displayQuantity,
-          subtotal: summary.subtotal + item.displayLineTotal,
-        }),
-        { totalQuantity: 0, subtotal: 0 },
-      ),
-    [displayItems],
-  )
+  const displayItems = useMemo(() => getCartDisplayItems(cart, quantityDrafts), [cart, quantityDrafts])
+  const cartSummary = useMemo(() => getCartPageSummary(displayItems), [displayItems])
 
   const hasItems = displayItems.length > 0
-  const fulfillmentBranch = cart.store?.city ? `Cabang ${cart.store.city}` : 'cabang terdekat'
+  const fulfillmentBranch = getFulfillmentBranch(cart)
 
   return (
     <div className="page cart-page">
@@ -201,6 +162,8 @@ function CartPage() {
                 <CartSummaryPanel
                   totalQuantity={cartSummary.totalQuantity}
                   subtotal={cartSummary.subtotal}
+                  discount={cartSummary.discount}
+                  total={cartSummary.total}
                   fulfillmentBranch={fulfillmentBranch}
                 />
               </div>
@@ -213,7 +176,7 @@ function CartPage() {
         <div className="cart-mobile-checkout-bar">
           <div>
             <span>Total sementara</span>
-            <strong>{formatCurrency(cartSummary.subtotal)}</strong>
+            <strong>{formatCurrency(cartSummary.total)}</strong>
           </div>
           <Link to="/checkout" className="button primary">
             Checkout ({cartSummary.totalQuantity})

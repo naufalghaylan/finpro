@@ -30,6 +30,8 @@ export const ProductGrid = ({ products: initialProducts, storeId }: ProductGridP
   }, [initialProducts, fetchedProducts, loading])
 
   const { addToCart, addingProductId } = useAddToCart()
+  const numericStoreId = storeId ? Number(storeId) : undefined
+  const activeStoreId = Number.isFinite(numericStoreId) ? numericStoreId : undefined
 
   if (displayProducts.length === 0 && loading) return (
     <section className="py-[28px]" id="products">
@@ -106,13 +108,13 @@ export const ProductGrid = ({ products: initialProducts, storeId }: ProductGridP
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[18px] transition-opacity duration-200" style={{ opacity: (!initialProducts && loading) ? 0.5 : 1, pointerEvents: (!initialProducts && loading) ? 'none' : 'auto' }}>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-[18px] transition-opacity duration-200" style={{ opacity: (!initialProducts && loading) ? 0.5 : 1, pointerEvents: (!initialProducts && loading) ? 'none' : 'auto' }}>
             {displayProducts.map((product) => (
               <ProductCard
                 key={product.id}
                 product={product}
                 isAddingToCart={addingProductId === product.id}
-                onAddToCart={() => void addToCart(product)}
+                onAddToCart={() => void addToCart(product, 1, activeStoreId)}
                 onClick={() => navigate(`/products/${product.id}`)}
               />
             ))}

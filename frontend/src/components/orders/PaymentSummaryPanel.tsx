@@ -1,6 +1,6 @@
 import { CheckCircle2, Loader2, XCircle } from 'lucide-react'
 import type { CheckoutOrder } from '../../types/order'
-import { formatCurrency, formatDateTime, getOrderDiscountBreakdown } from './orderDisplay'
+import { formatCurrency, formatDateTime, getOrderDiscountSummary } from './orderDisplay'
 
 type PaymentSummaryPanelProps = {
   order: CheckoutOrder
@@ -23,12 +23,7 @@ export function PaymentSummaryPanel({
   onCancelClick,
   onConfirmReceiptClick,
 }: PaymentSummaryPanelProps) {
-  const {
-    storeDiscountAmount,
-    referralVoucherAmount,
-    otherVoucherAmount,
-    voucherLabel,
-  } = getOrderDiscountBreakdown(order)
+  const { discountAmount, discountLabel } = getOrderDiscountSummary(order)
 
   return (
     <aside className="checkout-summary-panel payment-summary-panel">
@@ -37,22 +32,10 @@ export function PaymentSummaryPanel({
         <span>Subtotal Produk</span>
         <strong>{formatCurrency(order.totalProductAmount)}</strong>
       </div>
-      {storeDiscountAmount > 0 && (
+      {discountAmount > 0 && (
         <div className="cart-summary-row">
-          <span>Diskon Toko</span>
-          <strong>-{formatCurrency(storeDiscountAmount)}</strong>
-        </div>
-      )}
-      {referralVoucherAmount > 0 && (
-        <div className="cart-summary-row">
-          <span>Voucher Referral</span>
-          <strong>-{formatCurrency(referralVoucherAmount)}</strong>
-        </div>
-      )}
-      {otherVoucherAmount > 0 && (
-        <div className="cart-summary-row">
-          <span>{voucherLabel ?? 'Voucher'}</span>
-          <strong>-{formatCurrency(otherVoucherAmount)}</strong>
+          <span>{discountLabel}</span>
+          <strong>-{formatCurrency(discountAmount)}</strong>
         </div>
       )}
       <div className="cart-summary-row">

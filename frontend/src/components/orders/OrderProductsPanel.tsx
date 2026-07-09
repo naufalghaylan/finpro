@@ -29,6 +29,7 @@ export function OrderProductsPanel({ order }: OrderProductsPanelProps) {
               <div className="checkout-product-info">
                 <strong>{item.product.name}</strong>
                 <span>{item.quantity} x {formatCurrency(item.priceAtTime)}</span>
+                <em className="checkout-product-note">Subtotal sebelum diskon</em>
               </div>
               <strong>{formatCurrency(item.subtotal)}</strong>
             </div>

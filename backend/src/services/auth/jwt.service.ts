@@ -43,6 +43,14 @@ export const verifyVerificationTokenJWT = (token: string): { email: string } => 
   return jwt.verify(token, VERIFICATION_SECRET) as { email: string };
 };
 
+export const generateEmailChangeTokenJWT = (payload: { userId: number; newEmail: string }): string => {
+  return jwt.sign(payload, VERIFICATION_SECRET, { expiresIn: VERIFICATION_EXPIRY as unknown as number });
+};
+
+export const verifyEmailChangeTokenJWT = (token: string): { userId: number; newEmail: string } => {
+  return jwt.verify(token, VERIFICATION_SECRET) as { userId: number; newEmail: string };
+};
+
 export const generateResetPasswordTokenJWT = (payload: { email: string }): string => {
   return jwt.sign(payload, RESET_PASSWORD_SECRET, { expiresIn: RESET_PASSWORD_EXPIRY as unknown as number });
 };

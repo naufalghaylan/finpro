@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useAddressStore } from '../../store/addressStore'
-import { MapPin, Plus, Star, Edit2, Trash2 } from 'lucide-react'
+import { MapPin, Plus, Star, Edit2, Trash2, AlertTriangle } from 'lucide-react'
 import { AddressFormModal } from './AddressFormModal'
 import type { UserAddress } from '../../types/address'
 import ErrorPage from '../../pages/error/ErrorPage'
+import { createPortal } from 'react-dom'
 
 export const AddressManagement = () => {
   const { addresses, fetchAddresses, deleteAddress, setPrimaryAddress, isLoading, error} = useAddressStore()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingAddress, setEditingAddress] = useState<UserAddress | null>(null)
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null)
 
-  
   useEffect(() => {
     fetchAddresses()
   }, [fetchAddresses]) 
@@ -25,10 +26,19 @@ export const AddressManagement = () => {
     setIsModalOpen(true)
   }
 
-  const handleDelete = async (id: number) => {
-    if (confirm('Apakah Anda yakin ingin menghapus alamat ini?')) {
-      await deleteAddress(id)
+  const handleDelete = (id: number) => {
+    setDeleteConfirmId(id)
+  }
+
+  const confirmDelete = async () => {
+    if (deleteConfirmId !== null) {
+      await deleteAddress(deleteConfirmId)
+      setDeleteConfirmId(null)
     }
+  }
+
+  const cancelDelete = () => {
+    setDeleteConfirmId(null)
   }
   
   if (error) {
@@ -128,6 +138,35 @@ export const AddressManagement = () => {
         onClose={() => setIsModalOpen(false)} 
         editData={editingAddress} 
       />
+
+      {deleteConfirmId !== null && createPortal(
+        <div className="fixed inset-0 bg-[#1f2a2266] backdrop-blur-[4px] flex items-center justify-center z-[1000] p-4">
+          <div className="bg-[var(--surface)] w-full max-w-[400px] rounded-[24px] shadow-[var(--shadow-strong)] animate-[fadeUp_0.3s_ease-out_forwards] p-6 text-center">
+            <div className="w-16 h-16 bg-[#fee2e2] text-[#dc2626] rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle size={32} />
+            </div>
+            <h3 className="m-0 mb-2 text-[1.25rem] text-[var(--ink)] font-semibold">Hapus Alamat?</h3>
+            <p className="m-0 mb-6 text-[var(--ink-soft)] text-[0.95rem] leading-[1.5]">
+              Apakah Anda yakin ingin menghapus alamat ini? Tindakan ini tidak dapat dibatalkan.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button 
+                onClick={cancelDelete}
+                className="px-6 py-2.5 rounded-[30px] border border-[var(--line)] bg-transparent cursor-pointer font-medium text-[var(--ink)] hover:bg-[var(--surface-muted)] transition-colors flex-1"
+              >
+                Batal
+              </button>
+              <button 
+                onClick={confirmDelete}
+                className="px-6 py-2.5 rounded-[30px] border-none bg-[#dc2626] text-white cursor-pointer font-medium hover:bg-[#b91c1c] hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(220,38,38,0.25)] transition-all flex-1"
+              >
+                Ya, Hapus
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }

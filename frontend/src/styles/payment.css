@@ -4,6 +4,7 @@
 @import './payment/manual-payment.css';
 @import './payment/bank-card.css';
 @import './payment/upload-proof.css';
+@import './payment/upload-proof-polish.css';
 @import './payment/gateway.css';
 @import './payment/summary-actions.css';
 @import './payment/responsive-layout.css';

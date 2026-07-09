@@ -89,6 +89,7 @@ function PaymentTransferTotal({ totalAmount }: { totalAmount: number }) {
     <div className="payment-bank-info-block payment-bank-total">
       <span>Nominal Transfer</span>
       <strong>{formatCurrency(totalAmount)}</strong>
+      <em className="payment-bank-total-note">Transfer tepat sesuai nominal agar verifikasi lebih cepat.</em>
     </div>
   )
 }

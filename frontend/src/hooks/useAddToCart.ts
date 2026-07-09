@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { isAxiosError } from 'axios'
-import { useNavigate } from 'react-router-dom'
 import { addCartItem } from '../api/cart.api'
 import { useToast } from '../components/common/toastContext'
 import { useAuthStore } from '../store/authStore'
@@ -10,6 +9,7 @@ type AddToCartProduct = {
   id: number
   name: string
   stocks?: Array<{
+    storeId?: number
     quantity: number
   }>
 }
@@ -25,6 +25,9 @@ const getTotalStock = (product: AddToCartProduct) =>
 const hasKnownOutOfStock = (product: AddToCartProduct) =>
   Array.isArray(product.stocks) && getTotalStock(product) <= 0
 
+const getProductStoreId = (product: AddToCartProduct, storeId?: number) =>
+  storeId ?? product.stocks?.find((stock) => stock.quantity > 0)?.storeId ?? product.stocks?.[0]?.storeId
+
 const getCartErrorMessage = (error: unknown) => {
   if (isAxiosError<CartErrorResponse>(error)) {
     const status = error.response?.status
@@ -38,15 +41,14 @@ const getCartErrorMessage = (error: unknown) => {
 }
 
 export const useAddToCart = () => {
-  const navigate = useNavigate()
   const { showToast } = useToast()
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const setCartCount = useCartStore((state) => state.setCartCount)
   const [addingProductId, setAddingProductId] = useState<number | null>(null)
 
-  const addToCart = async (product: AddToCartProduct, quantity = 1) => {
+  const addToCart = async (product: AddToCartProduct, quantity = 1, storeId?: number) => {
     if (!isAuthenticated) {
-      navigate('/login')
+      showToast('Silakan login terlebih dahulu untuk menambahkan produk.', 'warning')
       return
     }
 
@@ -63,7 +65,7 @@ export const useAddToCart = () => {
     setAddingProductId(product.id)
 
     try {
-      const result = await addCartItem(product.id, quantity)
+      const result = await addCartItem(product.id, quantity, getProductStoreId(product, storeId))
       setCartCount(result.cartCount)
       window.dispatchEvent(new Event('cartUpdated'))
       showToast(`"${product.name}" ditambahkan ke keranjang`, 'success')

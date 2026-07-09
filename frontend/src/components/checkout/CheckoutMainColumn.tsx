@@ -25,7 +25,7 @@ export function CheckoutMainColumn({ checkout }: CheckoutMainColumnProps) {
 function CheckoutAddressProductGroup({ checkout }: CheckoutMainColumnProps) {
   return (
     <>
-      <CheckoutAddressList addresses={checkout.preview!.addresses} selectedAddressId={checkout.selectedAddressId} onAddressChange={checkout.handleAddressChange} />
+      <CheckoutAddressList addresses={checkout.preview!.addresses} selectedAddressId={checkout.selectedAddressId} onAddressChange={checkout.handleAddressChange} onAddressAdded={() => { void checkout.loadPreview() }} />
       <CheckoutProductList items={checkout.preview!.cart.items} />
       <CheckoutStorePanel nearestStore={checkout.preview!.nearestStore} />
     </>
@@ -36,7 +36,7 @@ function CheckoutShippingDiscountGroup({ checkout }: CheckoutMainColumnProps) {
   return (
     <>
       <CheckoutShippingConnector checkout={checkout} />
-      <CheckoutDiscountPanel availableDiscountAmount={checkout.paymentSummary.availableStoreDiscount} discounts={checkout.preview!.storeDiscounts ?? []} isApplied={checkout.useStoreDiscount} onToggleApply={checkout.setUseStoreDiscount} />
+      <CheckoutDiscountPanel discounts={checkout.preview!.availableStoreDiscounts ?? []} selectedDiscountId={checkout.selectedDiscountId} onSelect={checkout.setSelectedDiscountId} />
       <CheckoutVoucherPanel vouchers={checkout.preview!.vouchers ?? []} items={checkout.preview!.cart.items} subtotal={checkout.paymentSummary.subtotal} shippingCost={checkout.paymentSummary.shippingCost} selectedVoucherId={checkout.selectedVoucherId} onVoucherChange={checkout.setSelectedVoucherId} />
     </>
   )

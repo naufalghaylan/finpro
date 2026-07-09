@@ -18,8 +18,6 @@ const transporter = nodemailer.createTransport({
   },
 })
 
-// Load and compile the templates
-// process.cwd() will point to the backend root directory where package.json is located
 const verificationTemplatePath = path.join(process.cwd(), 'templates', 'verification.hbs')
 const verificationTemplateSource = fs.readFileSync(verificationTemplatePath, 'utf8')
 const compiledVerificationTemplate = handlebars.compile(verificationTemplateSource)
@@ -40,11 +38,17 @@ const newsletterTemplatePath = path.join(process.cwd(), 'templates', 'newsletter
 const newsletterTemplateSource = fs.readFileSync(newsletterTemplatePath, 'utf8')
 const compiledNewsletterTemplate = handlebars.compile(newsletterTemplateSource)
 
+const emailChangeTemplatePath = path.join(process.cwd(), 'templates', 'email-change.hbs')
+const emailChangeTemplateSource = fs.readFileSync(emailChangeTemplatePath, 'utf8')
+const compiledEmailChangeTemplate = handlebars.compile(emailChangeTemplateSource)
+
 export type OrderNotificationEmailItem = {
   name: string
   quantity: number
   subtotal: string
 }
+
+export type OrderNotificationEmailSummaryRow = { label: string; value: string }
 
 export type OrderNotificationEmailParams = {
   email: string
@@ -58,6 +62,7 @@ export type OrderNotificationEmailParams = {
   actionUrl: string
   actionLabel: string
   items: OrderNotificationEmailItem[]
+  pricingSummary: OrderNotificationEmailSummaryRow[]
   paymentMethod?: string
   paymentDeadline?: string
   shippingInfo?: string
@@ -69,7 +74,6 @@ export const sendVerificationEmail = async (email: string, token: string) => {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
   const verificationLink = `${frontendUrl}/verify?token=${token}`
 
-  // Inject data into the template
   const htmlToSend = compiledVerificationTemplate({ verificationLink })
 
   const mailOptions = {
@@ -88,11 +92,32 @@ export const sendVerificationEmail = async (email: string, token: string) => {
   }
 }
 
+export const sendEmailChangeVerificationEmail = async (email: string, token: string) => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
+  const verificationLink = `${frontendUrl}/verify-email-change?token=${token}`
+
+  const htmlToSend = compiledEmailChangeTemplate({ verificationLink })
+
+  const mailOptions = {
+    from: '"PanenMart" <noreply@panenmart.com>',
+    to: email,
+    subject: 'Konfirmasi Perubahan Email PanenMart Anda',
+    html: htmlToSend,
+  }
+
+  try {
+    const info = await transporter.sendMail(mailOptions)
+    console.log('[MAILER] Email change verification email sent to:', email, 'MessageId:', info.messageId)
+  } catch (error) {
+    console.error('[MAILER] Error sending email change verification email:', error)
+    throw new Error('Failed to send email change verification email')
+  }
+}
+
 export const sendResetPasswordEmail = async (email: string, token: string) => {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
   const resetLink = `${frontendUrl}/reset-password?token=${token}`
 
-  // Inject data into the template
   const htmlToSend = compiledResetPasswordTemplate({ resetLink })
 
   const mailOptions = {
@@ -120,6 +145,9 @@ export const sendOrderNotificationEmail = async ({
   const itemSummary = templateData.items
     .map((item) => `${item.name} (${item.quantity}x) - ${item.subtotal}`)
     .join('\n')
+  const pricingSummary = templateData.pricingSummary
+    .map((row) => `${row.label}: ${row.value}`)
+    .join('\n')
 
   const mailOptions = {
     from: 'PanenMart <noreply@panenmart.com>',
@@ -131,6 +159,7 @@ export const sendOrderNotificationEmail = async ({
       `Nomor pesanan: ${templateData.orderNumber}`,
       `Status: ${templateData.statusLabel}`,
       itemSummary,
+      pricingSummary,
       `Total: ${templateData.totalAmount}`,
       templateData.cancelReason ? `Alasan pembatalan: ${templateData.cancelReason}` : null,
       `Lihat pesanan: ${templateData.actionUrl}`,

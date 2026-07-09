@@ -1,4 +1,5 @@
 import cloudinary from '../lib/cloudinary'
+import { logger } from '../utils/logger'
 
 export const uploadPaymentProofToCloudinary = async (file: Express.Multer.File) => {
   const base64File = Buffer.from(file.buffer).toString('base64')
@@ -16,6 +17,6 @@ export const removeCloudinaryAsset = async (publicId?: string) => {
   try {
     await cloudinary.uploader.destroy(publicId)
   } catch (error) {
-    console.error('[removeCloudinaryAsset]', error)
+    logger.error('Cloudinary payment proof cleanup failed', { error, publicId })
   }
 }

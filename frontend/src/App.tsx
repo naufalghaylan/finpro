@@ -16,6 +16,7 @@ import './App.css'
 import './styles/index.css'
 
 const VerifyAccountPage = lazy(() => import('./pages/auth/VerifyAccountPage'))
+const VerifyEmailChangePage = lazy(() => import('./pages/auth/VerifyEmailChangePage'))
 const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'))
 const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'))
 const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'))
@@ -96,6 +97,7 @@ function App() {
         <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
         <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
         <Route path="/verify" element={<Suspense fallback={<PageLoader />}><VerifyAccountPage /></Suspense>} />
+        <Route path="/verify-email-change" element={<Suspense fallback={<PageLoader />}><VerifyEmailChangePage /></Suspense>} />
         <Route path="/forgot-password" element={<GuestRoute><Suspense fallback={<PageLoader />}><ForgotPasswordPage /></Suspense></GuestRoute>} />
         <Route path="/reset-password" element={<GuestRoute><Suspense fallback={<PageLoader />}><ResetPasswordPage /></Suspense></GuestRoute>} />
 
