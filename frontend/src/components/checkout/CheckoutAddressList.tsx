@@ -6,7 +6,7 @@ import { CheckoutAddressCard } from './CheckoutAddressCard'
 import { CheckoutAddressPicker } from './CheckoutAddressPicker'
 import { CheckoutInlineAlert } from './CheckoutInlineAlert'
 import { CheckoutSectionTitle } from './CheckoutSectionTitle'
-import { CheckoutSelectedAddressCard } from './CheckoutSelectedAddressCard'
+
 
 interface CheckoutAddressListProps {
   addresses: CheckoutAddress[]
@@ -168,6 +168,3 @@ function EmptyAddressAlert({ onAddAddress }: { onAddAddress: () => void }) {
   )
 }
 
-function SelectAddressAlert() {
-  return <CheckoutInlineAlert icon={AlertCircle}>Pilih alamat pengiriman untuk melanjutkan checkout.</CheckoutInlineAlert>
-}
