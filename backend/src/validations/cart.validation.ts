@@ -8,6 +8,7 @@ const positiveIntegerSchema = z.coerce
 export const addToCartSchema = z.object({
   productId: positiveIntegerSchema,
   quantity: positiveIntegerSchema.default(1),
+  storeId: positiveIntegerSchema.optional(),
 })
 
 export const updateCartItemSchema = z.object({

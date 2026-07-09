@@ -20,18 +20,17 @@ const checkoutPaymentMethods = [
 ]
 
 const getCheckoutPreviewResources = async (userId: number) => {
-  const [cart, addresses, vouchers] = await Promise.all([
-    getCart(userId),
+  const [addresses, vouchers] = await Promise.all([
     getUserAddresses(userId),
     getAvailableCheckoutVouchers(userId),
   ])
 
-  return { cart, addresses, vouchers }
+  return { addresses, vouchers }
 }
 
 type CheckoutPreviewResources = Awaited<ReturnType<typeof getCheckoutPreviewResources>>
 type CheckoutAddress = CheckoutPreviewResources['addresses'][number]
-type CheckoutCart = CheckoutPreviewResources['cart']
+type CheckoutCart = Awaited<ReturnType<typeof getCart>>
 type CheckoutStore = Awaited<ReturnType<typeof getNearestActiveStore>> | null
 
 type StoreDiscountSummary = {
@@ -40,6 +39,7 @@ type StoreDiscountSummary = {
 }
 
 type CheckoutPreviewResponseParams = CheckoutPreviewResources & {
+  cart: CheckoutCart
   selectedAddress: CheckoutAddress | null
   nearestStore: CheckoutStore
   discountSummary: StoreDiscountSummary
@@ -66,6 +66,15 @@ const hasAddressCoordinates = (address: CheckoutAddress | null): address is Chec
 const resolveNearestStore = async (selectedAddress: CheckoutAddress | null) => {
   if (!hasAddressCoordinates(selectedAddress)) return null
   return getNearestActiveStore(selectedAddress.latitude, selectedAddress.longitude)
+}
+
+const resolveCheckoutCart = (userId: number, selectedAddress: CheckoutAddress | null) => {
+  if (!hasAddressCoordinates(selectedAddress)) return getCart(userId)
+  return getCart(userId, {
+    applyItemDiscounts: true,
+    lat: selectedAddress.latitude,
+    lng: selectedAddress.longitude,
+  })
 }
 
 const calculateTotalProductAmount = (cart: CheckoutCart) =>
@@ -98,6 +107,7 @@ export const getCheckoutPreview = async ({ userId, addressId }: CheckoutPreviewP
   const resources = await getCheckoutPreviewResources(userId)
   const selectedAddress = resolveSelectedAddress(resources.addresses, addressId)
   const nearestStore = await resolveNearestStore(selectedAddress)
-  const discountSummary = await resolveStoreDiscountSummary(nearestStore, resources.cart)
-  return buildCheckoutPreviewResponse({ ...resources, selectedAddress, nearestStore, discountSummary })
+  const cart = await resolveCheckoutCart(userId, selectedAddress)
+  const discountSummary = await resolveStoreDiscountSummary(nearestStore, cart)
+  return buildCheckoutPreviewResponse({ ...resources, cart, selectedAddress, nearestStore, discountSummary })
 }

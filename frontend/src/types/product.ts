@@ -25,6 +25,7 @@ export type Store = {
 // type stock
 export type Stock = {
   id: number
+  storeId?: number
   quantity: number
   store?: Store   // <-- tambah ini
 }
