@@ -42,6 +42,9 @@ export function AdminOrderItemsPanel({ order }: AdminOrderItemsPanelProps) {
                 <span className="mt-1 block text-xs text-admin-ink-muted">
                   {item.quantity} x {formatCurrency(item.priceAtTime)}
                 </span>
+                <span className="mt-1 block text-[11px] font-bold text-admin-accent-strong">
+                  Subtotal sebelum diskon
+                </span>
               </div>
               <div className="col-span-2 border-t border-admin-line-soft pt-3 text-left md:col-span-1 md:border-t-0 md:pt-0 md:text-right">
                 <span className="block text-[11px] font-semibold uppercase tracking-wider text-admin-ink-muted">

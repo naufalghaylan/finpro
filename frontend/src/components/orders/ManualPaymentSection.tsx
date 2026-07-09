@@ -5,6 +5,7 @@ import { MANUAL_PAYMENT_CHANNELS } from './manualPaymentChannels'
 import { BankAccountList } from './BankAccountList'
 import { BankDestinationInfo } from './BankDestinationInfo'
 import { UploadProofBox } from './UploadProofBox'
+import { ManualPaymentSteps } from './ManualPaymentSteps'
 
 type ManualPaymentSectionProps = {
   order: CheckoutOrder
@@ -95,13 +96,16 @@ export function ManualPaymentSection({
       </div>
 
       {shouldShowPaymentSetup && (
-        <BankAccountList
-          selectedChannelCode={selectedChannelCode}
-          selectedChannel={selectedChannel}
-          isPendingPayment={isPendingPayment}
-          canChangeMethod={canChangeMethod}
-          onChannelChange={onChannelChange}
-        />
+        <>
+          <ManualPaymentSteps selectedChannel={selectedChannel} selectedFile={selectedFile} />
+          <BankAccountList
+            selectedChannelCode={selectedChannelCode}
+            selectedChannel={selectedChannel}
+            isPendingPayment={isPendingPayment}
+            canChangeMethod={canChangeMethod}
+            onChannelChange={onChannelChange}
+          />
+        </>
       )}
 
       {shouldShowPaymentSetup && selectedChannel && (

@@ -81,16 +81,12 @@ export const getOrderItemsSummary = (order: CheckoutOrder) => {
 export const getOrderItemQuantity = (order: CheckoutOrder) =>
   order.items.reduce((sum, item) => sum + item.quantity, 0)
 
-export const getOrderDiscountBreakdown = (order: CheckoutOrder) => {
+export const getOrderDiscountSummary = (order: CheckoutOrder) => {
   const discountAmount = Math.max(0, order.discountAmount ?? 0)
-  const isReferralVoucher = order.voucher?.source === 'REFERRAL'
-  const isVoucherDiscount = Boolean(order.voucher)
 
   return {
-    storeDiscountAmount: !isVoucherDiscount ? discountAmount : 0,
-    referralVoucherAmount: isReferralVoucher ? discountAmount : 0,
-    otherVoucherAmount: isVoucherDiscount && !isReferralVoucher ? discountAmount : 0,
-    voucherLabel: order.voucher ? `${order.voucher.name} (${order.voucher.code})` : null,
+    discountAmount,
+    discountLabel: order.voucher ? 'Diskon & Voucher' : 'Diskon',
   }
 }
 

@@ -19,29 +19,64 @@
   place-items: center;
   gap: 8px;
   min-height: 190px;
-  border: 1.5px dashed rgba(232, 107, 79, 0.38);
-  border-radius: 22px;
+  border: 2px dashed rgba(232, 107, 79, 0.4);
+  border-radius: 24px;
   padding: 24px;
-  background: #fffaf2;
+  background: radial-gradient(circle at top, #ffffff, #fffaf2);
   text-align: center;
   cursor: pointer;
-  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  overflow: hidden;
+}
+
+.payment-upload-dropzone::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(232, 107, 79, 0.03);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
 .payment-upload-dropzone:hover {
-  transform: translateY(-2px);
+  transform: translateY(-4px);
   border-color: var(--accent);
-  box-shadow: 0 14px 28px rgba(232, 107, 79, 0.12);
+  box-shadow: 0 16px 32px rgba(232, 107, 79, 0.12);
+}
+
+.payment-upload-dropzone:hover::before {
+  opacity: 1;
 }
 
 .payment-upload-dropzone svg {
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
   color: var(--accent-strong);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.payment-upload-dropzone:hover svg {
+  transform: scale(1.1) translateY(-4px);
 }
 
 .payment-upload-dropzone span {
   color: var(--ink-soft);
+  position: relative;
+  z-index: 1;
+}
+
+.payment-upload-dropzone strong {
+  position: relative;
+  z-index: 1;
+}
+
+.payment-upload-button {
+  transition: all 0.3s ease;
+}
+.payment-upload-button:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(232, 107, 79, 0.25);
 }
 
 .payment-upload-dropzone input {
