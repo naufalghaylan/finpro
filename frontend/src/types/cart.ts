@@ -40,6 +40,8 @@ export type CartItem = {
   updatedAt: string
   product: CartProduct
   lineTotal: number
+  baseLineTotal?: number
+  discountAmount?: number
 }
 
 export type CartSummary = {
@@ -48,6 +50,7 @@ export type CartSummary = {
   storeDiscountAmount?: number
   voucherReferralAmount?: number
   discountAmount?: number
+  total?: number
 }
 
 export type Cart = {

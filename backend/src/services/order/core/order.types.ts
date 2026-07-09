@@ -11,7 +11,8 @@ export type CreateCheckoutOrderParams = {
   paymentMethod: PaymentMethod
   voucherId?: number
   notes?: string
-  applyStoreDiscount?: boolean
+  // Diskon toko yang dipilih user (maks 1). Diskon per-produk tetap otomatis.
+  discountId?: number
 }
 
 export type CheckoutPreviewParams = {

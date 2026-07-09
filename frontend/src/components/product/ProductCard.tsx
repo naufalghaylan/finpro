@@ -13,12 +13,16 @@ export function ProductCard({ product, onAddToCart, onClick, isAddingToCart }: P
   const primaryImage = product.images?.find(img => img.isPrimary) ?? product.images?.[0]
   const totalStock = product.stocks?.reduce((sum, s) => sum + s.quantity, 0) ?? 0
 
-  // Diskon (khusus tampilan): ambil potongan harga terbesar dari diskon aktif produk, bila ada.
+  // Diskon (khusus tampilan, asumsi beli 1 unit): mengikuti aturan checkout —
+  // potongan dibatasi oleh maxDiscount, lalu dibatasi lagi maksimal sebesar harga produk.
+  const capDiscount = (amount: number, maxDiscount?: number | null) =>
+    maxDiscount != null && maxDiscount > 0 ? Math.min(amount, maxDiscount) : amount
   const activeDiscounts = product.discounts?.filter(d => d.isActive) ?? []
   const priceCutAmount = activeDiscounts.reduce((best, d) => {
     let amount = 0
-    if (d.discountType === 'PERCENTAGE') amount = (product.basePrice * d.discountValue) / 100
-    else if (d.discountType === 'NOMINAL') amount = d.discountValue
+    if (d.discountType === 'PERCENTAGE') amount = capDiscount((product.basePrice * d.discountValue) / 100, d.maxDiscount)
+    else if (d.discountType === 'NOMINAL') amount = capDiscount(d.discountValue, d.maxDiscount)
+    else return best
     return Math.max(best, Math.min(amount, product.basePrice))
   }, 0)
   const hasBogo = activeDiscounts.some(d => d.discountType === 'BUY_ONE_GET_ONE')
