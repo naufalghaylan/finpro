@@ -52,6 +52,7 @@ export const heroSlides: PromoSlide[] = [
     ctaLabel: 'Lihat buah segar',
     note: 'Pengiriman dua jam untuk area inti',
     highlight: 'Kadar manis terukur',
+    targetCategoryId: 3,
   },
   {
     id: 'slide-protein',
@@ -62,6 +63,7 @@ export const heroSlides: PromoSlide[] = [
     ctaLabel: 'Pilih protein',
     note: 'Stok dari toko terdekat setiap pagi',
     highlight: 'Tersedia potongan hemat',
+    targetCategoryId: 5,
   },
 ]
 

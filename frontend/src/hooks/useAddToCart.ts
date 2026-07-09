@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { isAxiosError } from 'axios'
-import { useNavigate } from 'react-router-dom'
 import { addCartItem } from '../api/cart.api'
 import { useToast } from '../components/common/toastContext'
 import { useAuthStore } from '../store/authStore'
@@ -38,7 +37,6 @@ const getCartErrorMessage = (error: unknown) => {
 }
 
 export const useAddToCart = () => {
-  const navigate = useNavigate()
   const { showToast } = useToast()
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const setCartCount = useCartStore((state) => state.setCartCount)
@@ -46,7 +44,7 @@ export const useAddToCart = () => {
 
   const addToCart = async (product: AddToCartProduct, quantity = 1) => {
     if (!isAuthenticated) {
-      navigate('/login')
+      showToast('Silakan login terlebih dahulu untuk menambahkan produk.', 'warning')
       return
     }
 

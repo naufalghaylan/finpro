@@ -11,6 +11,7 @@ export type PromoSlide = {
   ctaLabel: string
   note: string
   highlight: string
+  targetCategoryId?: number
 }
 
 export type NavLink = {

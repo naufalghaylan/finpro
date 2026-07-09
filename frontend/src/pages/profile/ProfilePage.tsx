@@ -10,13 +10,13 @@ import { useProfileStore } from '../../store/profileStore'
 import { BRAND, navLinks, footerSections } from '../../data/home/homeData'
 
 export default function ProfilePage() {
-  const { fetchProfile, error } = useProfileStore()
+  const { fetchProfile, error, profile } = useProfileStore()
 
   useEffect(() => {
     fetchProfile()
   }, [fetchProfile])
 
-  if (error) {
+  if (error && !profile) {
     return (
       <ErrorPage />
     )

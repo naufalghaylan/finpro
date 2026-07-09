@@ -4,6 +4,7 @@ import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet'
 import { useAuthStore } from '../../store/authStore'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
+import MapSearchControl from '../common/MapSearchControl'
 
 delete (L.Icon.Default.prototype as L.Icon.Default & { _getIconUrl?: string })._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -126,11 +127,25 @@ export function AdminStoreDetailsForm({
             </p>
 
             <div className="h-[240px] w-full rounded-xl overflow-hidden border border-admin-line bg-admin-surface-2 mb-4 z-0 relative">
-              <MapContainer center={position} zoom={13} style={{ height: '100%', width: '100%' }}>
+              <MapContainer
+                center={position}
+                zoom={13}
+                style={{ height: '100%', width: '100%' }}
+                dragging={isSuperAdmin}
+                touchZoom={isSuperAdmin}
+                zoomControl={isSuperAdmin}
+                scrollWheelZoom={isSuperAdmin}
+                doubleClickZoom={isSuperAdmin}
+                boxZoom={isSuperAdmin}
+                keyboard={isSuperAdmin}
+              >
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
+                {isSuperAdmin && (
+                  <MapSearchControl onLocationSelect={(pos) => setPosition(pos)} />
+                )}
                 <LocationMarker position={position} setPosition={setPosition} disabled={!isSuperAdmin} />
               </MapContainer>
             </div>

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import MapSearchControl from '../common/MapSearchControl';
 import type { Store, StoreInput } from '../../types/store';
 import { createStore, updateStore } from '../../api/store';
 import { searchDestinations } from '../../api/rajaongkir';
@@ -185,6 +186,7 @@ export default function StoreFormModal({ store, onClose, onSuccess }: Props) {
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
+                <MapSearchControl onLocationSelect={(pos) => setPosition(pos)} />
                 <LocationMarker position={position} setPosition={setPosition} />
               </MapContainer>
             </div>

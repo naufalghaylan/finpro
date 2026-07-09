@@ -20,7 +20,7 @@ import {
 import { useLocationSelection } from '../../hooks/home/useLocationSelection'
 import { useHomepageData } from '../../hooks/home/useHomepageData'
 import { useState, useEffect, useMemo } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, Link } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useAddressStore } from '../../store/addressStore'
 import {
@@ -196,14 +196,14 @@ export default function HomePage() {
               <div className="w-full max-w-[1440px] mx-auto px-[clamp(16px,4vw,48px)]">
                 <div className="flex flex-wrap gap-2.5">
                   {activeNavLinks.map((link: NavLink) => (
-                    <span key={link.id} className="flex items-center px-[14px] py-[8px] rounded-full border border-[var(--line)] bg-[var(--surface)] font-medium text-sm transition-colors hover:bg-[var(--surface-muted)] cursor-pointer">
+                    <Link key={link.id} to={link.href} className="flex items-center px-[14px] py-[8px] rounded-full border border-[var(--line)] bg-[var(--surface)] font-medium text-sm transition-colors hover:bg-[var(--surface-muted)] cursor-pointer">
                       {link.icon ? (
                         <img src={link.icon} alt="" className="w-[18px] h-[18px] mr-2 rounded-full" />
                       ) : (
                         getCategoryIcon(link.label)
                       )}
                       {link.label}
-                    </span>
+                    </Link>
                   ))}
                 </div>
               </div>
