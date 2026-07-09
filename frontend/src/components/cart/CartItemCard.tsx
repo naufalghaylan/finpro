@@ -1,4 +1,5 @@
 import { AlertTriangle, Loader2, Minus, Plus, Trash2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import type { CartItem } from '../../types/cart'
 import { formatCurrency } from '../../utils/format'
 
@@ -38,21 +39,26 @@ export function CartItemCard({
 }: CartItemCardProps) {
   const image = getPrimaryImage(item)
   const isDeleting = deletingItemId === item.id
+  const productDetailPath = `/products/${item.product.id}`
 
   return (
     <article className={`cart-item ${stockUnavailable ? 'out-of-stock' : ''}`} aria-busy={itemBusy}>
       <div className="cart-item-product">
-        <div className="cart-item-image">
+        <Link to={productDetailPath} className="cart-item-image cart-item-product-link" aria-label={`Lihat detail ${item.product.name}`}>
           {image ? (
             <img src={image.imageUrl} alt={item.product.name} />
           ) : (
             <span>Tidak ada gambar</span>
           )}
-        </div>
+        </Link>
 
         <div className="cart-item-heading">
           <span className="product-tag">{item.product.category.name}</span>
-          <h3>{item.product.name}</h3>
+          <h3>
+            <Link to={productDetailPath} className="cart-item-name-link">
+              {item.product.name}
+            </Link>
+          </h3>
           {lowStock ? (
             <p className="cart-item-meta warning">
               <AlertTriangle className="button-icon" aria-hidden="true" />

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import { handleMidtransNotification } from '../services/order.service'
+import { logger } from '../utils/logger'
 
 export const handleMidtransNotificationWebhook = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -10,7 +11,7 @@ export const handleMidtransNotificationWebhook = async (req: Request, res: Respo
       data: result,
     })
   } catch (error) {
-    console.error('[handleMidtransNotificationWebhook]', error)
+    logger.error('Midtrans notification webhook failed', { error })
     res.status(500).json({ message: 'Failed to process Midtrans notification' })
   }
 }
