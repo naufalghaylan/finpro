@@ -63,7 +63,7 @@ export function AdminSidebar({ isCollapsed, toggleCollapse, isMobileOpen }: Admi
         { to: `/admin/stores/${scopedStoreId}/fulfillment`, label: 'Mutasi Stok', icon: Repeat2 },
         { to: `/admin/stores/${scopedStoreId}/sales-report`, label: 'Laporan Penjualan', icon: LineChart },
         { to: `/admin/stores/${scopedStoreId}/stock-report`, label: 'Laporan Stok', icon: BarChart3 },
-        { to: `/admin/stores/${scopedStoreId}/admins`, label: 'Admin Toko', icon: Users },
+        ...(isSuperAdmin ? [{ to: `/admin/stores/${scopedStoreId}/admins`, label: 'Admin Toko', icon: Users }] : []),
       ]
     : [];
 
