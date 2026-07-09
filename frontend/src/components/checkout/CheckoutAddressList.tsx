@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { AlertCircle, MapPin, Plus } from 'lucide-react'
+import { AlertCircle, MapPin, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { AddressFormModal } from '../profile/AddressFormModal'
 import type { CheckoutAddress } from '../../types/order'
 import { CheckoutAddressCard } from './CheckoutAddressCard'
@@ -65,6 +65,14 @@ function AddressOptions(props: AddressOptionsProps) {
 }
 
 function DesktopAddressOptions({ addresses, selectedAddressId, onAddressChange, addressCountLabel, onAddAddress }: AddressOptionsProps) {
+  const isCarousel = addresses.length > 2;
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const maxIndex = Math.max(0, addresses.length - 2);
+
+  const next = () => setCurrentIndex(prev => Math.min(prev + 1, maxIndex));
+  const prev = () => setCurrentIndex(prev => Math.max(prev - 1, 0));
+
   return (
     <>
       <div className="checkout-address-list-meta checkout-address-desktop-meta">
@@ -76,21 +84,70 @@ function DesktopAddressOptions({ addresses, selectedAddressId, onAddressChange, 
           </button>
         </div>
       </div>
-      <div className="checkout-address-grid checkout-address-desktop-grid">
-        {addresses.map((address) => <CheckoutAddressCard key={address.id} address={address} isSelected={selectedAddressId === address.id} onSelect={onAddressChange} />)}
-      </div>
+      
+      {isCarousel ? (
+        <div className="relative checkout-address-desktop-grid">
+           {currentIndex > 0 && (
+             <button type="button" onClick={prev} className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-10 bg-white shadow-[var(--shadow-soft)] border border-[var(--line)] rounded-full p-1.5 cursor-pointer text-[var(--ink)] hover:bg-[var(--surface-muted)] transition-colors">
+                <ChevronLeft size={20} />
+             </button>
+           )}
+           
+           <div className="overflow-hidden w-full py-1">
+             <div 
+                className="flex gap-3 transition-transform duration-300 ease-out"
+                style={{ transform: `translateX(calc(-${currentIndex * 50}% - ${currentIndex * 0.375}rem))` }}
+             >
+                {addresses.map(address => (
+                  <div key={address.id} className="flex-none w-[calc(50%-0.375rem)]">
+                    <CheckoutAddressCard address={address} isSelected={selectedAddressId === address.id} onSelect={onAddressChange} className="h-full w-full" />
+                  </div>
+                ))}
+             </div>
+           </div>
+
+           {currentIndex < maxIndex && (
+             <button type="button" onClick={next} className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-10 bg-white shadow-[var(--shadow-soft)] border border-[var(--line)] rounded-full p-1.5 cursor-pointer text-[var(--ink)] hover:bg-[var(--surface-muted)] transition-colors">
+                <ChevronRight size={20} />
+             </button>
+           )}
+        </div>
+      ) : (
+        <div className="checkout-address-grid checkout-address-desktop-grid">
+          {addresses.map((address) => <CheckoutAddressCard key={address.id} address={address} isSelected={selectedAddressId === address.id} onSelect={onAddressChange} />)}
+        </div>
+      )}
     </>
   )
 }
 
-function MobileAddressSelector({ selectedAddress, setIsPickerOpen, onAddAddress }: AddressOptionsProps) {
+function MobileAddressSelector({ addresses, selectedAddressId, onAddressChange, addressCountLabel, onAddAddress }: AddressOptionsProps) {
+  const isCarousel = addresses.length > 1;
+
   return (
     <div className="checkout-address-mobile-selector">
-      {selectedAddress ? <CheckoutSelectedAddressCard address={selectedAddress} /> : <SelectAddressAlert />}
-      <div className="flex gap-2 w-full mt-3">
-        <button type="button" className="checkout-address-change-button flex-1" onClick={() => setIsPickerOpen(true)}>Ganti alamat</button>
-        <button type="button" className="checkout-address-change-button flex-1 !bg-[var(--surface)] !text-[var(--accent-strong)] !border-[var(--accent-strong)]" onClick={onAddAddress}>Tambah</button>
+      <div className="flex items-center justify-between mb-2 px-1">
+        <span className="text-[0.85rem] font-medium text-[var(--ink-soft)]">{addressCountLabel}</span>
+        <button type="button" onClick={onAddAddress} className="flex items-center gap-1 text-[0.85rem] text-[var(--accent)] font-medium bg-transparent border-none cursor-pointer p-0">
+          <Plus size={14} /> Tambah
+        </button>
       </div>
+      
+      {isCarousel ? (
+        <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-2 scrollbar-hide -mx-1 px-1">
+          {addresses.map((address) => (
+            <div key={address.id} className="flex-none w-[85%] snap-center">
+              <CheckoutAddressCard address={address} isSelected={selectedAddressId === address.id} onSelect={onAddressChange} className="h-full w-full" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="w-full">
+          {addresses.map((address) => (
+             <CheckoutAddressCard key={address.id} address={address} isSelected={selectedAddressId === address.id} onSelect={onAddressChange} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

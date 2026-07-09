@@ -6,7 +6,7 @@ import type { DatabaseClient } from '../core/order.types'
 
 export const getNearestActiveStore = async (latitude: number, longitude: number, db: DatabaseClient = prisma) => {
   const stores = await db.store.findMany({
-    where: { status: true },
+    where: { status: true, deletedAt: null },
     select: {
       id: true,
       name: true,
@@ -38,7 +38,7 @@ export const getNearestActiveStore = async (latitude: number, longitude: number,
 
 export const getUserAddresses = async (userId: number) => {
   return prisma.userAddress.findMany({
-    where: { userId },
+    where: { userId, deletedAt: null },
     orderBy: [{ isPrimary: 'desc' }, { updatedAt: 'desc' }],
     select: {
       id: true,
