@@ -34,10 +34,14 @@ export type Stock = {
 // type discount
 export type Discount = {
   id: number
+  storeId?: number
+  name?: string
   discountType: string
   discountValue: number
   minPurchase?: number
   maxDiscount?: number | null
+  startDate?: string
+  endDate?: string
   isActive: boolean
 }
 
