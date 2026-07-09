@@ -1,5 +1,6 @@
 import axios from 'axios';
 import prisma from '../lib/prisma'
+import { Prisma } from '../generated/prisma/client'
 import { AppError } from '../utils/AppError'
 
 const RAJAONGKIR_API_KEY = process.env.RAJAONGKIR_API_KEY || '';
@@ -18,8 +19,8 @@ export const searchDestinationsService = async (query: string) => {
       params: { search: query }
     });
     return response.data.data || [];
-  } catch (error: any) {
-    if (error.response && error.response.status === 404) {
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error) && error.response && error.response.status === 404) {
       return [];
     }
     throw new Error(`Failed to search destinations: ${error instanceof Error ? error.message : String(error)}`);
@@ -83,7 +84,7 @@ export const calculateShippingCostService = async (userId: number, addressId: nu
         storeId,
         weight,
         courier,
-        results: results as any
+        results: results as Prisma.InputJsonValue
       }
     })
 

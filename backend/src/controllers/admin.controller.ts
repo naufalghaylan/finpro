@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import prisma from '../lib/prisma'
+import { Role } from '../generated/prisma/client'
 
 const createStoreAdminSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -27,7 +28,7 @@ function buildUserWhere(search: string, role?: string) {
         { username: { contains: search, mode: 'insensitive' as const } },
       ],
     }),
-    ...(role && { role: role as any }),
+    ...(role ? { role: role as Role } : {}),
   }
 }
 
@@ -94,8 +95,8 @@ export const createStoreAdmin = async (req: Request, res: Response): Promise<voi
       : await prisma.user.create({ data: userData, select })
 
     res.status(201).json({ message: 'Store admin created', data: user })
-  } catch (err: any) {
-    if (err?.code === 'P2002') {
+  } catch (err: unknown) {
+    if (err && typeof err === 'object' && 'code' in err && err.code === 'P2002') {
       res.status(409).json({ message: 'Email atau username sudah dipakai akun lain' })
       return
     }

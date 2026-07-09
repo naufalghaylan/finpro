@@ -32,11 +32,11 @@ export const getNearestStore = async (req: Request, res: Response): Promise<void
       data: nearestStore
     });
   } catch (error: unknown) {
-    if (error.name === 'ZodError') {
-      res.status(400).json({ message: 'Validation Error', errors: error.errors });
+    if (error instanceof Error && error.name === 'ZodError') {
+      res.status(400).json({ message: 'Validation Error', errors: (error as unknown as Record<string, unknown>).errors });
       return;
     }
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    res.status(500).json({ message: 'Internal server error', error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)) });
   }
 };
 
@@ -56,7 +56,7 @@ export const getStores = async (req: Request, res: Response): Promise<void> => {
       pagination: result.pagination
     });
   } catch (error: unknown) {
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    res.status(500).json({ message: 'Internal server error', error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)) });
   }
 };
 
@@ -87,7 +87,7 @@ export const getStoreById = async (req: Request, res: Response): Promise<void> =
       data: store
     });
   } catch (error: unknown) {
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    res.status(500).json({ message: 'Internal server error', error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)) });
   }
 };
 
@@ -101,11 +101,11 @@ export const createStore = async (req: Request, res: Response): Promise<void> =>
       data: store
     });
   } catch (error: unknown) {
-    if (error.name === 'ZodError') {
-      res.status(400).json({ message: 'Validation Error', errors: error.errors });
+    if (error instanceof Error && error.name === 'ZodError') {
+      res.status(400).json({ message: 'Validation Error', errors: (error as unknown as Record<string, unknown>).errors });
       return;
     }
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    res.status(500).json({ message: 'Internal server error', error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)) });
   }
 };
 
@@ -132,11 +132,11 @@ export const updateStore = async (req: Request, res: Response): Promise<void> =>
       data: store
     });
   } catch (error: unknown) {
-    if (error.name === 'ZodError') {
-      res.status(400).json({ message: 'Validation Error', errors: error.errors });
+    if (error instanceof Error && error.name === 'ZodError') {
+      res.status(400).json({ message: 'Validation Error', errors: (error as unknown as Record<string, unknown>).errors });
       return;
     }
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    res.status(500).json({ message: 'Internal server error', error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)) });
   }
 };
 
@@ -149,7 +149,7 @@ export const deleteStore = async (req: Request, res: Response): Promise<void> =>
       message: 'Store deleted successfully'
     });
   } catch (error: unknown) {
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    res.status(500).json({ message: 'Internal server error', error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)) });
   }
 };
 
@@ -168,14 +168,14 @@ export const createStoreAdmin = async (req: Request, res: Response): Promise<voi
       }
     });
   } catch (error: unknown) {
-    if (error.name === 'ZodError') {
-      res.status(400).json({ message: 'Validation Error', errors: error.errors });
+    if (error instanceof Error && error.name === 'ZodError') {
+      res.status(400).json({ message: 'Validation Error', errors: (error as unknown as Record<string, unknown>).errors });
       return;
     }
-    if (error.message === 'Email already registered') {
-      res.status(400).json({ message: error.message });
+    if ((error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)) === 'Email already registered') {
+      res.status(400).json({ message: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)) });
       return;
     }
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    res.status(500).json({ message: 'Internal server error', error: (error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)) });
   }
 };

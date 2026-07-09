@@ -111,7 +111,7 @@ export const deleteStoreService = async (id: number) => {
   return await deleteStoreRepository(id);
 };
 
-export const createStoreAdminService = async (storeId: number, data: any) => {
+export const createStoreAdminService = async (storeId: number, data: { name: string; email: string; password: string }) => {
   // Konflik dengan user AKTIF (belum dihapus) ditolak
   const existingUser = await prisma.user.findFirst({ where: { email: data.email, deletedAt: null } });
   if (existingUser) {

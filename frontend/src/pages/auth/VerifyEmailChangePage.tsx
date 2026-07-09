@@ -15,8 +15,10 @@ const VerifyEmailChangePage = () => {
 
   useEffect(() => {
     if (!token) {
-      setStatus('error')
-      setErrorMessage('Token verifikasi tidak ditemukan.')
+      Promise.resolve().then(() => {
+        setStatus('error')
+        setErrorMessage('Token verifikasi tidak ditemukan.')
+      })
       return
     }
 
@@ -26,10 +28,16 @@ const VerifyEmailChangePage = () => {
     const verifyToken = async () => {
       try {
         await verifyEmailChange(token)
-        setStatus('success')
-      } catch (err: any) {
-        setStatus('error')
-        setErrorMessage(err.response?.data?.message || 'Gagal memverifikasi perubahan email.')
+        Promise.resolve().then(() => setStatus('success'))
+      } catch (err: unknown) {
+        Promise.resolve().then(() => {
+          setStatus('error')
+          if (typeof err === 'object' && err !== null && 'response' in err) {
+            setErrorMessage((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Gagal memverifikasi email.')
+          } else {
+            setErrorMessage('Gagal memverifikasi email.')
+          }
+        })
       }
     }
 

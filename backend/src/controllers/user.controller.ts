@@ -10,7 +10,7 @@ export const getStoreAdmins = async (req: Request, res: Response): Promise<void>
       data: admins
     });
   } catch (error: unknown) {
-    res.status(error.statusCode || 500).json({ message: error.message || 'Internal server error' });
+    res.status(error instanceof Error && 'statusCode' in error ? Number((error as any).statusCode) : 500).json({ message: error instanceof Error ? error.message : String(error) });
   }
 };
 
@@ -24,11 +24,11 @@ export const createStoreAdmin = async (req: Request, res: Response): Promise<voi
       data: admin
     });
   } catch (error: unknown) {
-    if (error.name === 'ZodError') {
-      res.status(400).json({ message: 'Validation Error', errors: error.errors });
+    if (error instanceof Error && error.name === 'ZodError') {
+      res.status(400).json({ message: 'Validation Error', errors: (error as unknown as Record<string, unknown>).errors });
       return;
     }
-    res.status(error.statusCode || 500).json({ message: error.message || 'Internal server error' });
+    res.status(error instanceof Error && 'statusCode' in error ? Number((error as any).statusCode) : 500).json({ message: error instanceof Error ? error.message : String(error) });
   }
 };
 
@@ -44,10 +44,10 @@ export const assignStoreAdmin = async (req: Request, res: Response): Promise<voi
       data: admin
     });
   } catch (error: unknown) {
-    if (error.name === 'ZodError') {
-      res.status(400).json({ message: 'Validation Error', errors: error.errors });
+    if (error instanceof Error && error.name === 'ZodError') {
+      res.status(400).json({ message: 'Validation Error', errors: (error as unknown as Record<string, unknown>).errors });
       return;
     }
-    res.status(error.statusCode || 500).json({ message: error.message || 'Internal server error' });
+    res.status(error instanceof Error && 'statusCode' in error ? Number((error as any).statusCode) : 500).json({ message: error instanceof Error ? error.message : String(error) });
   }
 };
