@@ -56,7 +56,10 @@ export type CheckoutPreview = {
   vouchers: CheckoutVoucher[]
   selectedAddress: CheckoutAddress | null
   nearestStore: CheckoutStore | null
-  storeDiscounts: CheckoutStoreDiscount[]
+  // Diskon toko yang bisa dipilih user (maks 1); diskon produk otomatis tidak masuk sini.
+  availableStoreDiscounts: CheckoutStoreDiscount[]
+  // Total diskon per-produk yang otomatis (untuk ringkasan pembayaran).
+  productDiscountAmount: number
   paymentMethods: CheckoutPaymentMethod[]
 }
 
@@ -111,7 +114,7 @@ export type CreateCheckoutOrderPayload = {
   paymentMethod: PaymentMethod
   voucherId?: number
   notes?: string
-  applyStoreDiscount?: boolean
+  discountId?: number
 }
 
 export type CreateCheckoutOrderResult = {

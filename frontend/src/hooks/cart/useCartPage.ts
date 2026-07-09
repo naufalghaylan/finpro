@@ -28,7 +28,9 @@ const getQuantityDrafts = (cart: Cart) =>
     return drafts
   }, {})
 
-export function useCartPage() {
+type CartCoords = { lat: number; lng: number } | null
+
+export function useCartPage(coords: CartCoords = null) {
   const [cart, setCart] = useState<Cart>(emptyCart)
   const [quantityDrafts, setQuantityDrafts] = useState<Record<number, string>>({})
   const [isLoading, setIsLoading] = useState(true)
@@ -46,7 +48,7 @@ export function useCartPage() {
     }
 
     try {
-      const nextCart = await getCart()
+      const nextCart = await getCart(coords)
       setCart(nextCart)
       setQuantityDrafts(getQuantityDrafts(nextCart))
       setCartCount(nextCart.summary.totalQuantity)
@@ -58,7 +60,7 @@ export function useCartPage() {
         setIsLoading(false)
       }
     }
-  }, [setCartCount])
+  }, [setCartCount, coords?.lat, coords?.lng])
 
   useEffect(() => {
     const initialLoadId = window.setTimeout(() => {

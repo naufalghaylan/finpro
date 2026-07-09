@@ -5,12 +5,16 @@ import { formatCurrency } from '../../utils/format'
 interface CartSummaryPanelProps {
   totalQuantity: number
   subtotal: number
+  discount?: number
+  total?: number
   fulfillmentBranch?: string
 }
 
-export function CartSummaryPanel({ totalQuantity, subtotal, fulfillmentBranch }: CartSummaryPanelProps) {
+export function CartSummaryPanel({ totalQuantity, subtotal, discount = 0, total, fulfillmentBranch }: CartSummaryPanelProps) {
+  const grandTotal = total ?? subtotal - discount
   const summaryRows = [
     { label: `Total harga (${totalQuantity} item)`, value: formatCurrency(subtotal) },
+    ...(discount > 0 ? [{ label: 'Diskon produk', value: `- ${formatCurrency(discount)}` }] : []),
     { label: 'Ongkir', value: 'Pilih di checkout' },
   ]
 
@@ -52,7 +56,7 @@ export function CartSummaryPanel({ totalQuantity, subtotal, fulfillmentBranch }:
       ))}
       <div className="cart-summary-row cart-summary-total">
         <span>Total sementara</span>
-        <strong>{formatCurrency(subtotal)}</strong>
+        <strong>{formatCurrency(grandTotal)}</strong>
       </div>
       <p className="mt-3 mb-0 text-[0.86rem] leading-[1.55] text-(--ink-soft)">
         Total akhir akan diperbarui setelah voucher, ongkir, dan alamat pengiriman dipilih.

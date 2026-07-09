@@ -3,7 +3,7 @@ import { getCart } from '../../cart.service'
 import { ORDER_ERRORS, OrderServiceError } from '../../order.errors'
 import { getNearestActiveStore, getUserAddresses } from '../checkout/order-checkout-validation.service'
 import { getAvailableCheckoutVouchers } from '../checkout/order-checkout-voucher.service'
-import { getStoreDiscountBreakdownForCheckout, type AppliedCheckoutDiscount } from '../checkout/order-discount.service'
+import { getCheckoutStoreDiscountOptions, type AppliedCheckoutDiscount } from '../checkout/order-discount.service'
 import type { CheckoutPreviewParams } from '../core/order.types'
 
 const checkoutPaymentMethods = [
@@ -35,8 +35,8 @@ type CheckoutCart = CheckoutPreviewResources['cart']
 type CheckoutStore = Awaited<ReturnType<typeof getNearestActiveStore>> | null
 
 type StoreDiscountSummary = {
-  storeDiscountAmount: number
-  storeDiscounts: AppliedCheckoutDiscount[]
+  productDiscountAmount: number
+  availableStoreDiscounts: AppliedCheckoutDiscount[]
 }
 
 type CheckoutPreviewResponseParams = CheckoutPreviewResources & {
@@ -72,30 +72,25 @@ const calculateTotalProductAmount = (cart: CheckoutCart) =>
   cart.items.reduce((total, item) => total + item.quantity * item.product.basePrice, 0)
 
 const getEmptyDiscountSummary = (): StoreDiscountSummary => ({
-  storeDiscountAmount: 0,
-  storeDiscounts: [],
+  productDiscountAmount: 0,
+  availableStoreDiscounts: [],
 })
 
 const resolveStoreDiscountSummary = async (nearestStore: CheckoutStore, cart: CheckoutCart) => {
   if (!nearestStore || cart.items.length === 0) return getEmptyDiscountSummary()
   const totalProductAmount = calculateTotalProductAmount(cart)
-  const breakdown = await getStoreDiscountBreakdownForCheckout(nearestStore.id, cart.items, totalProductAmount)
-  return { storeDiscountAmount: breakdown.totalDiscount, storeDiscounts: breakdown.appliedDiscounts }
+  return getCheckoutStoreDiscountOptions(nearestStore.id, cart.items, totalProductAmount)
 }
 
-const buildCheckoutCartPreview = (cart: CheckoutCart, storeDiscountAmount: number) => ({
-  ...cart,
-  summary: { ...cart.summary, storeDiscountAmount },
-})
-
 const buildCheckoutPreviewResponse = (params: CheckoutPreviewResponseParams) => ({
-  cart: buildCheckoutCartPreview(params.cart, params.discountSummary.storeDiscountAmount),
+  cart: params.cart,
   addresses: params.addresses,
   vouchers: params.vouchers,
   selectedAddress: params.selectedAddress,
   nearestStore: params.nearestStore,
-  storeDiscounts: params.discountSummary.storeDiscounts,
-  discountAmount: params.discountSummary.storeDiscountAmount,
+  // Diskon toko yang bisa dipilih user (maks 1) + diskon produk otomatis untuk ringkasan.
+  availableStoreDiscounts: params.discountSummary.availableStoreDiscounts,
+  productDiscountAmount: params.discountSummary.productDiscountAmount,
   paymentMethods: checkoutPaymentMethods,
 })
 

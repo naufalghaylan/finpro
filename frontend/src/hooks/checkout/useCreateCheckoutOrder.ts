@@ -16,7 +16,7 @@ export function useCreateCheckoutOrder({
   paymentMethod,
   selectedVoucherId,
   notes,
-  applyStoreDiscount,
+  discountId,
 }: {
   selectedAddressId: number | null
   canCreateOrder: boolean
@@ -24,7 +24,7 @@ export function useCreateCheckoutOrder({
   paymentMethod: PaymentMethod
   selectedVoucherId: number | null
   notes: string
-  applyStoreDiscount: boolean
+  discountId: number | null
 }) {
   const [createdOrder, setCreatedOrder] = useState<CheckoutOrder | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -45,7 +45,7 @@ export function useCreateCheckoutOrder({
         paymentMethod,
         voucherId: selectedVoucherId ?? undefined,
         notes: notes.trim() || undefined,
-        applyStoreDiscount,
+        discountId: discountId ?? undefined,
       })
 
       setCreatedOrder(result.order)
