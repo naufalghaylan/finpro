@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { PackageCheck, ShoppingCart, UserRound } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useCartCount } from '../../hooks/home/useCartCount'
+import { useToast } from './toastContext'
 import type { NavLink } from '../../types/home/home'
 
 type NavbarProps = {
@@ -13,6 +14,7 @@ type NavbarProps = {
 export const Navbar = ({ brandName, links }: NavbarProps) => {
   const { user, isAuthenticated, logout } = useAuthStore()
   const { cartCount, isLoadingCartCount } = useCartCount()
+  const { showToast } = useToast()
   const navigate = useNavigate()
 
   const [isScrolled, setIsScrolled] = useState(false)
@@ -22,7 +24,7 @@ export const Navbar = ({ brandName, links }: NavbarProps) => {
 
   const handleCartClick = () => {
     if (!isAuthenticated) {
-      navigate('/login')
+      showToast('Silakan login terlebih dahulu untuk mengakses keranjang atau checkout.', 'warning')
     } else {
       navigate('/cart')
     }

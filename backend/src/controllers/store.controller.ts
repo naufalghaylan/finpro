@@ -31,7 +31,7 @@ export const getNearestStore = async (req: Request, res: Response): Promise<void
       message: 'Nearest store fetched successfully',
       data: nearestStore
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error.name === 'ZodError') {
       res.status(400).json({ message: 'Validation Error', errors: error.errors });
       return;
@@ -55,7 +55,7 @@ export const getStores = async (req: Request, res: Response): Promise<void> => {
       data: result.stores,
       pagination: result.pagination
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
@@ -86,7 +86,7 @@ export const getStoreById = async (req: Request, res: Response): Promise<void> =
       message: 'Store fetched successfully',
       data: store
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
@@ -100,7 +100,7 @@ export const createStore = async (req: Request, res: Response): Promise<void> =>
       message: 'Store created successfully',
       data: store
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error.name === 'ZodError') {
       res.status(400).json({ message: 'Validation Error', errors: error.errors });
       return;
@@ -131,7 +131,7 @@ export const updateStore = async (req: Request, res: Response): Promise<void> =>
       message: 'Store updated successfully',
       data: store
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error.name === 'ZodError') {
       res.status(400).json({ message: 'Validation Error', errors: error.errors });
       return;
@@ -148,7 +148,7 @@ export const deleteStore = async (req: Request, res: Response): Promise<void> =>
     res.status(200).json({
       message: 'Store deleted successfully'
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
@@ -167,7 +167,7 @@ export const createStoreAdmin = async (req: Request, res: Response): Promise<voi
         email: admin.email
       }
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error.name === 'ZodError') {
       res.status(400).json({ message: 'Validation Error', errors: error.errors });
       return;

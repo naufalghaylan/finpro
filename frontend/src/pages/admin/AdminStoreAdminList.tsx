@@ -26,6 +26,7 @@ export default function AdminStoreAdminList() {
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [createForm, setCreateForm] = useState({ name: '', email: '', password: '', storeId: '' as number | '' });
+  const [createFormErrors, setCreateFormErrors] = useState<{name?: string; email?: string; password?: string}>({});
   const [isCreating, setIsCreating] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -81,8 +82,18 @@ export default function AdminStoreAdminList() {
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!createForm.name || !createForm.email || !createForm.password) {
-      alert('Nama, Email, dan Password wajib diisi');
+    setCreateFormErrors({});
+    let hasError = false;
+    const errors: {name?: string; email?: string; password?: string} = {};
+
+    if (!createForm.name?.trim()) { errors.name = 'Nama lengkap harus diisi'; hasError = true; }
+    if (!createForm.email?.trim()) { errors.email = 'Email harus diisi'; hasError = true; }
+    else if (!/\S+@\S+\.\S+/.test(createForm.email)) { errors.email = 'Format email tidak valid'; hasError = true; }
+    if (!createForm.password) { errors.password = 'Password harus diisi'; hasError = true; }
+    else if (createForm.password.length < 6) { errors.password = 'Password minimal 6 karakter'; hasError = true; }
+
+    if (hasError) {
+      setCreateFormErrors(errors);
       return;
     }
     
@@ -99,7 +110,12 @@ export default function AdminStoreAdminList() {
       fetchAdmins();
     } catch (e) {
       const error = e as AxiosError<{ message?: string }>;
-      alert(error.response?.data?.message ?? 'Gagal membuat admin');
+      const errorMessage = error.response?.data?.message ?? 'Gagal membuat admin';
+      if (errorMessage.toLowerCase().includes('email')) {
+        setCreateFormErrors({ email: errorMessage });
+      } else {
+        alert(errorMessage);
+      }
     } finally {
       setIsCreating(false);
     }
@@ -315,22 +331,20 @@ export default function AdminStoreAdminList() {
                   <label className="block text-xs font-semibold text-admin-ink-soft uppercase tracking-wider mb-2">Nama Lengkap</label>
                   <input
                     value={createForm.name}
-                    onChange={e => setCreateForm({...createForm, name: e.target.value})}
-                    className="w-full px-4 py-3 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink
-                               focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all"
-                    required
+                    onChange={e => { setCreateForm({...createForm, name: e.target.value}); if(createFormErrors.name) setCreateFormErrors({...createFormErrors, name: ''}); }}
+                    className={`w-full px-4 py-3 rounded-xl border ${createFormErrors.name ? 'border-[#dc2626]' : 'border-admin-line'} bg-admin-surface text-sm text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all`}
                   />
+                  {createFormErrors.name && <span className="text-[#dc2626] text-xs mt-1 block">{createFormErrors.name}</span>}
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-admin-ink-soft uppercase tracking-wider mb-2">Email</label>
                   <input
                     type="email"
                     value={createForm.email}
-                    onChange={e => setCreateForm({...createForm, email: e.target.value})}
-                    className="w-full px-4 py-3 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink
-                               focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all"
-                    required
+                    onChange={e => { setCreateForm({...createForm, email: e.target.value}); if(createFormErrors.email) setCreateFormErrors({...createFormErrors, email: ''}); }}
+                    className={`w-full px-4 py-3 rounded-xl border ${createFormErrors.email ? 'border-[#dc2626]' : 'border-admin-line'} bg-admin-surface text-sm text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all`}
                   />
+                  {createFormErrors.email && <span className="text-[#dc2626] text-xs mt-1 block">{createFormErrors.email}</span>}
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-admin-ink-soft uppercase tracking-wider mb-2">Password Sementara</label>
@@ -338,10 +352,8 @@ export default function AdminStoreAdminList() {
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={createForm.password}
-                      onChange={e => setCreateForm({...createForm, password: e.target.value})}
-                      className="w-full px-4 py-3 pr-12 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink
-                                 focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all"
-                      required minLength={6}
+                      onChange={e => { setCreateForm({...createForm, password: e.target.value}); if(createFormErrors.password) setCreateFormErrors({...createFormErrors, password: ''}); }}
+                      className={`w-full px-4 py-3 pr-12 rounded-xl border ${createFormErrors.password ? 'border-[#dc2626]' : 'border-admin-line'} bg-admin-surface text-sm text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all`}
                     />
                     <button
                       type="button"
@@ -351,6 +363,7 @@ export default function AdminStoreAdminList() {
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
+                  {createFormErrors.password && <span className="text-[#dc2626] text-xs mt-1 block">{createFormErrors.password}</span>}
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-admin-ink-soft uppercase tracking-wider mb-2">Penugasan Toko (Opsional)</label>

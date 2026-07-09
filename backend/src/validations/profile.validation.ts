@@ -18,3 +18,7 @@ export const updateProfileSchema = z.object({
 export const updateEmailSchema = z.object({
   email: z.string().email('Invalid email address')
 })
+
+export const verifyEmailChangeSchema = z.object({
+  token: z.string().min(1, 'Token is required')
+})

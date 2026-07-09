@@ -25,7 +25,7 @@ export function CheckoutMainColumn({ checkout }: CheckoutMainColumnProps) {
 function CheckoutAddressProductGroup({ checkout }: CheckoutMainColumnProps) {
   return (
     <>
-      <CheckoutAddressList addresses={checkout.preview!.addresses} selectedAddressId={checkout.selectedAddressId} onAddressChange={checkout.handleAddressChange} />
+      <CheckoutAddressList addresses={checkout.preview!.addresses} selectedAddressId={checkout.selectedAddressId} onAddressChange={checkout.handleAddressChange} onAddressAdded={() => { void checkout.loadPreview() }} />
       <CheckoutProductList items={checkout.preview!.cart.items} />
       <CheckoutStorePanel nearestStore={checkout.preview!.nearestStore} />
     </>

@@ -51,6 +51,7 @@ export function useCheckout() {
     selectedShippingService,
     setSelectedShippingService,
     fetchingCouriers,
+    shippingError,
     fetchShippingForCourier,
   } = useCheckoutShippingOptions(preview, selectedAddressId, totalWeight)
 
@@ -106,6 +107,7 @@ export function useCheckout() {
     courierServices,
     selectedShippingService,
     fetchingCouriers,
+    shippingError,
     paymentSummary,
     canCreateOrder,
     isCartEmpty,

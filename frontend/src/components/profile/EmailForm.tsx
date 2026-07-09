@@ -41,7 +41,7 @@ export const EmailForm = () => {
 
     try {
       await updateEmail(email)
-      setSuccessMsg('Email berhasil diperbarui. Silakan cek inbox Anda untuk memverifikasi email baru.')
+      setSuccessMsg('Konfirmasi perubahan email telah dikirim. Silakan cek inbox Anda untuk memverifikasi email baru sebelum perubahan disimpan.')
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       setLocalError(error.response?.data?.message || 'Gagal mengubah email.');

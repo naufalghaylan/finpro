@@ -40,6 +40,10 @@ const newsletterTemplatePath = path.join(process.cwd(), 'templates', 'newsletter
 const newsletterTemplateSource = fs.readFileSync(newsletterTemplatePath, 'utf8')
 const compiledNewsletterTemplate = handlebars.compile(newsletterTemplateSource)
 
+const emailChangeTemplatePath = path.join(process.cwd(), 'templates', 'email-change.hbs')
+const emailChangeTemplateSource = fs.readFileSync(emailChangeTemplatePath, 'utf8')
+const compiledEmailChangeTemplate = handlebars.compile(emailChangeTemplateSource)
+
 export type OrderNotificationEmailItem = {
   name: string
   quantity: number
@@ -85,6 +89,29 @@ export const sendVerificationEmail = async (email: string, token: string) => {
   } catch (error) {
     console.error('[MAILER] Error sending email:', error)
     throw new Error('Failed to send verification email')
+  }
+}
+
+export const sendEmailChangeVerificationEmail = async (email: string, token: string) => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
+  const verificationLink = `${frontendUrl}/verify-email-change?token=${token}`
+
+  // Inject data into the template
+  const htmlToSend = compiledEmailChangeTemplate({ verificationLink })
+
+  const mailOptions = {
+    from: '"PanenMart" <noreply@panenmart.com>',
+    to: email,
+    subject: 'Konfirmasi Perubahan Email PanenMart Anda',
+    html: htmlToSend,
+  }
+
+  try {
+    const info = await transporter.sendMail(mailOptions)
+    console.log('[MAILER] Email change verification email sent to:', email, 'MessageId:', info.messageId)
+  } catch (error) {
+    console.error('[MAILER] Error sending email change verification email:', error)
+    throw new Error('Failed to send email change verification email')
   }
 }
 

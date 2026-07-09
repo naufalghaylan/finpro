@@ -9,7 +9,7 @@ export const getStoreAdmins = async (req: Request, res: Response): Promise<void>
       message: 'Admins fetched successfully',
       data: admins
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     res.status(error.statusCode || 500).json({ message: error.message || 'Internal server error' });
   }
 };
@@ -23,7 +23,7 @@ export const createStoreAdmin = async (req: Request, res: Response): Promise<voi
       message: 'Admin created successfully',
       data: admin
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error.name === 'ZodError') {
       res.status(400).json({ message: 'Validation Error', errors: error.errors });
       return;
@@ -43,7 +43,7 @@ export const assignStoreAdmin = async (req: Request, res: Response): Promise<voi
       message: 'Admin assigned successfully',
       data: admin
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error.name === 'ZodError') {
       res.status(400).json({ message: 'Validation Error', errors: error.errors });
       return;

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { updateProfileSchema, updateEmailSchema } from '../validations/profile.validation'
+import { updateProfileSchema, updateEmailSchema, verifyEmailChangeSchema } from '../validations/profile.validation'
 import { AppError } from '../utils/AppError'
 import * as profileService from '../services/profile.service'
 
@@ -37,7 +37,7 @@ export const updateEmail = async (req: Request, res: Response): Promise<void> =>
       return
     }
     await profileService.updateEmailService(req.user!.userId, parsed.data.email)
-    res.json({ message: 'Email updated successfully. Please check your new email to verify it.' })
+    res.json({ message: 'Konfirmasi perubahan email telah dikirim. Silakan cek inbox Anda.' })
   } catch (err) { handleError(res, err, 'updateEmail') }
 }
 
@@ -46,4 +46,16 @@ export const reverifyEmail = async (req: Request, res: Response): Promise<void> 
     await profileService.reverifyEmailService(req.user!.userId)
     res.json({ message: 'Verification email resent successfully. Please check your email.' })
   } catch (err) { handleError(res, err, 'reverifyEmail') }
+}
+
+export const verifyEmailChange = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const parsed = verifyEmailChangeSchema.safeParse(req.body)
+    if (!parsed.success) {
+      res.status(400).json({ message: 'Validation failed', errors: parsed.error.issues })
+      return
+    }
+    await profileService.verifyEmailChangeService(parsed.data.token)
+    res.json({ message: 'Email berhasil diperbarui dan diverifikasi.' })
+  } catch (err) { handleError(res, err, 'verifyEmailChange') }
 }
