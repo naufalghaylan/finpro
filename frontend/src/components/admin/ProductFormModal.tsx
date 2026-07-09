@@ -170,7 +170,7 @@ export default function ProductFormModal({ editing, onClose, onSaved }: Props) {
             <span className="px-4 py-2 rounded-xl text-sm font-medium text-admin-ink-soft bg-admin-surface border border-admin-line hover:bg-admin-line-soft transition-all">{uploading ? 'Mengupload...' : '+ Upload Foto'}</span>
             <input type="file" accept=".jpg,.jpeg,.png,.gif" multiple={!editing} onChange={editing ? handleUpload : handleStageFiles} disabled={uploading} className="hidden" />
           </label>
-          <p className="text-xs text-admin-ink-muted mt-2">Maks 1MB · .jpg .jpeg .png .gif · bisa lebih dari satu</p>
+          <p className="text-xs text-admin-ink-muted mt-2">.jpg .jpeg .png .gif · maksimal 3 foto</p>
         </div>
 
         <div className="flex justify-end gap-3 mt-8">
