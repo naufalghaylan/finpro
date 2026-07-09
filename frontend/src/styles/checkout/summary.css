@@ -127,6 +127,26 @@
   font-size: 0.88rem;
 }
 
+.checkout-product-unit-price {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.checkout-price-original {
+  text-decoration: line-through;
+}
+
+.checkout-price-current {
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.checkout-summary-discount strong {
+  color: var(--accent-strong);
+}
+
 .checkout-summary-image {
   width: 72px;
   height: 72px;
