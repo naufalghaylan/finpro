@@ -39,7 +39,7 @@ const matchesMenuItem = (currentPath: string, item: { to: string; exact?: boolea
   return currentPath === item.to || currentPath.startsWith(`${item.to}/`);
 };
 
-export function AdminSidebar({ isCollapsed, toggleCollapse, isMobileOpen, setIsMobileOpen }: AdminSidebarProps) {
+export function AdminSidebar({ isCollapsed, toggleCollapse, isMobileOpen }: AdminSidebarProps) {
   const { user } = useAuthStore();
   const location = useLocation();
   const currentPath = location.pathname;
