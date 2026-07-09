@@ -1,4 +1,4 @@
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, CheckCircle2 } from 'lucide-react'
 import { MANUAL_PAYMENT_CHANNELS, type ManualPaymentChannel } from './manualPaymentChannels'
 
 type BankAccountListProps = {
@@ -42,6 +42,12 @@ export function BankAccountList({
             >
               <ChannelIcon aria-hidden="true" />
               <strong>{channel.label}</strong>
+              {selectedChannelCode === channel.code && (
+                <span className="manual-payment-option-status">
+                  <CheckCircle2 aria-hidden="true" />
+                  Dipilih
+                </span>
+              )}
             </button>
           )
         })}

@@ -26,7 +26,12 @@
           <td style='border-bottom:1px solid #e2dbcf;font-weight:600;padding:9px 0;text-align:right'>{{subtotal}}</td>
         </tr>
         {{/each}}
-        <tr><td style='font-weight:700;padding-top:12px'>Total</td><td style='color:#315c3b;font-weight:700;padding-top:12px;text-align:right'>{{totalAmount}}</td></tr>
+        {{#each pricingSummary}}
+        <tr>
+          <td style='color:#6d756e;padding-top:9px'>{{label}}</td>
+          <td style='font-weight:700;padding-top:9px;text-align:right'>{{value}}</td>
+        </tr>
+        {{/each}}
       </table>
 
       {{#if recipientAddress}}

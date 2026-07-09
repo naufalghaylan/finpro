@@ -13,6 +13,12 @@ type ManualProofUploadFormProps = {
   onUploadProof: (event: FormEvent<HTMLFormElement>) => void
 }
 
+const formatFileSize = (sizeInBytes: number) => {
+  if (sizeInBytes < 1024) return `${sizeInBytes} B`
+  if (sizeInBytes < 1024 * 1024) return `${Math.round(sizeInBytes / 1024)} KB`
+  return `${(sizeInBytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 export function ManualProofUploadForm({
   selectedChannel,
   selectedFile,
@@ -23,29 +29,51 @@ export function ManualProofUploadForm({
   onFileChange,
   onUploadProof,
 }: ManualProofUploadFormProps) {
+  const isUploadDisabled = !selectedChannel || isPaymentExpired || isUploading
+  const dropzoneClassName = [
+    'payment-upload-dropzone',
+    selectedFile ? 'has-file' : '',
+    isUploadDisabled ? 'disabled' : '',
+  ].filter(Boolean).join(' ')
+  const uploadButtonLabel = selectedFile
+    ? 'Unggah Bukti Bayar'
+    : selectedChannel ? 'Pilih File Dulu' : 'Pilih Bank Dulu'
+
   return (
     <form className="payment-upload-form" onSubmit={onUploadProof}>
-      <label className="payment-upload-dropzone">
+      <label className={dropzoneClassName}>
         <UploadCloud aria-hidden="true" />
         <strong>
           {selectedFile
-            ? selectedFile.name
+            ? 'File siap diunggah'
             : selectedChannel
               ? 'Pilih file bukti bayar'
               : 'Pilih bank tujuan dulu'}
         </strong>
         <span>
-          {selectedChannel
+          {selectedFile
+            ? `${selectedFile.name} - ${formatFileSize(selectedFile.size)}`
+            : selectedChannel
             ? 'Format JPG, JPEG, atau PNG. Maksimal 1MB.'
             : 'Unggah bukti baru bisa dilakukan setelah detail rekening muncul.'}
         </span>
         <input
           type="file"
           accept=".jpg,.jpeg,.png,image/jpeg,image/png"
-          disabled={!selectedChannel || isPaymentExpired || isUploading}
+          disabled={isUploadDisabled}
           onChange={onFileChange}
         />
       </label>
+
+      {selectedFile && (
+        <div className="payment-upload-file-card">
+          <FileImage aria-hidden="true" />
+          <div>
+            <strong>{selectedFile.name}</strong>
+            <span>{formatFileSize(selectedFile.size)} siap diunggah</span>
+          </div>
+        </div>
+      )}
 
       {previewUrl && (
         <div className="payment-proof-preview">
@@ -69,7 +97,7 @@ export function ManualProofUploadForm({
         ) : (
           <>
             <FileImage className="button-icon" aria-hidden="true" />
-            Unggah Bukti Bayar
+            {uploadButtonLabel}
           </>
         )}
       </button>

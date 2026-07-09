@@ -17,6 +17,7 @@ type EventContent = Pick<
   OrderNotificationEmailParams,
   'subject' | 'title' | 'message' | 'statusLabel' | 'actionLabel'
 >
+type OrderPricingSnapshot = { totalProductAmount: number; discountAmount: number; shippingCost: number; totalAmount: number }
 
 const getEventContent = (
   event: OrderNotificationEvent,
@@ -100,6 +101,13 @@ const getRecipientAddress = (address: {
   address.postalCode,
 ].filter(Boolean).join(', ')
 
+const getOrderPricingSummary = (order: OrderPricingSnapshot) => [
+  { label: 'Subtotal Produk', value: formatCurrency(order.totalProductAmount) },
+  ...(order.discountAmount > 0 ? [{ label: 'Diskon', value: `-${formatCurrency(order.discountAmount)}` }] : []),
+  { label: 'Ongkir', value: order.shippingCost > 0 ? formatCurrency(order.shippingCost) : 'Rp 0' },
+  { label: 'Total Bayar', value: formatCurrency(order.totalAmount) },
+]
+
 export const notifyOrderStatusChange = async (
   orderId: number,
   event: OrderNotificationEvent,
@@ -110,7 +118,10 @@ export const notifyOrderStatusChange = async (
       select: {
         id: true,
         orderNumber: true,
+        totalProductAmount: true,
         totalAmount: true,
+        shippingCost: true,
+        discountAmount: true,
         paymentMethod: true,
         paymentDeadline: true,
         shippingMethod: true,
@@ -160,6 +171,7 @@ export const notifyOrderStatusChange = async (
       orderNumber: order.orderNumber,
       totalAmount: formatCurrency(order.totalAmount),
       actionUrl: `${getFrontendUrl()}/orders/${order.id}`,
+      pricingSummary: getOrderPricingSummary(order),
       items: order.items.map((item) => ({
         name: item.product.name,
         quantity: item.quantity,
