@@ -1,7 +1,9 @@
 import { useProfileStore } from '../../store/profileStore'
+import { useToast } from '../common/toastContext'
 
 export const VoucherSection = () => {
   const { profile } = useProfileStore()
+  const { showToast } = useToast()
 
   if (!profile) return null
 
@@ -22,10 +24,10 @@ export const VoucherSection = () => {
               onClick={async () => {
                 try {
                   await navigator.clipboard.writeText(profile.referralCode?.code || '');
-                  alert('Kode referral berhasil disalin!');
+                  showToast('Kode referral berhasil disalin!', 'success');
                 } catch (err) {
                   console.error('Failed to copy code', err);
-                  alert('Gagal menyalin kode. Silakan salin secara manual.');
+                  showToast('Gagal menyalin kode. Silakan salin secara manual.', 'error');
                 }
               }}
             >

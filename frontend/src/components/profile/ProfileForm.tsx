@@ -20,6 +20,12 @@ const profileSchema = z.object({
   message: 'Password saat ini harus diisi jika ingin mengubah password',
   path: ['currentPassword'],
 }).refine(data => {
+  if (data.currentPassword && !data.newPassword) return false;
+  return true;
+}, {
+  message: 'Password baru harus diisi jika Anda memasukkan password saat ini',
+  path: ['newPassword'],
+}).refine(data => {
   if (data.newPassword && data.newPassword.length < 6) return false;
   return true;
 }, {
@@ -31,7 +37,7 @@ type ProfileErrors = Partial<Record<'name' | 'phone' | 'newPassword' | 'currentP
 
 export const ProfileForm = () => {
   const { showToast } = useToast()
-  const { profile, updateProfile, isUpdating, error } = useProfileStore()
+  const { profile, updateProfile, isUpdating } = useProfileStore()
   const { checkAuth, logout } = useAuthStore()
   const [successMsg, setSuccessMsg] = useState('')
   const [localError, setLocalError] = useState('')
@@ -74,6 +80,12 @@ export const ProfileForm = () => {
     const file = e.target.files?.[0]
     setLocalError('')
     if (file) {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        setLocalError('Format file tidak didukung. Harap upload file JPG, PNG, atau GIF.');
+        return;
+      }
+      
       if (file.size > 1024 * 1024) {
         setLocalError('Ukuran file maksimal 1MB.')
         return
@@ -138,7 +150,16 @@ export const ProfileForm = () => {
       }, 1500)
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      showToast(error.response?.data?.message || 'Gagal mengupdate profil', 'error');
+      const errorMessage = error.response?.data?.message || 'Gagal mengupdate profil';
+      
+      const lowerError = errorMessage.toLowerCase();
+      if (lowerError.includes('current password') || lowerError.includes('password saat ini') || lowerError.includes('invalid current')) {
+        setFormErrors(prev => ({ ...prev, currentPassword: errorMessage }));
+      } else if (lowerError.includes('password') || lowerError.includes('sandi')) {
+        setFormErrors(prev => ({ ...prev, newPassword: errorMessage }));
+      } else {
+        showToast(errorMessage, 'error');
+      }
       // Error is handled in the store
     }
   }
@@ -167,9 +188,9 @@ export const ProfileForm = () => {
       <h3 className="m-0 text-[#111] font-[family-name:var(--font-display)] font-normal tracking-normal text-[1.6rem] mb-1">Detail Profil</h3>
       <p className="m-0 text-[0.95rem] text-[var(--ink-soft)] leading-[1.6] mb-6">Perbarui informasi pribadi dan keamanan akun Anda.</p>
       
-      {(error || localError) && (
+      {localError && (
         <div className="mb-5 p-3 bg-[#fdf2f2] rounded-xl text-[#dc2626]">
-          {error || localError}
+          {localError}
         </div>
       )}
       

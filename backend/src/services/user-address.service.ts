@@ -1,4 +1,5 @@
 import prisma from '../lib/prisma'
+import { Prisma } from '../generated/prisma/client'
 import { AppError } from '../utils/AppError'
 
 export const getUserAddressesService = async (userId: number) => {
@@ -16,7 +17,7 @@ export const getAddressByIdService = async (userId: number, addressId: number) =
   return address
 }
 
-export const createUserAddressService = async (userId: number, data: any) => {
+export const createUserAddressService = async (userId: number, data: Omit<Prisma.UserAddressUncheckedCreateInput, 'userId'>) => {
   return await prisma.$transaction(async (tx) => {
     // If this is the first address, force it to be primary
     const addressCount = await tx.userAddress.count({ where: { userId, deletedAt: null } })
@@ -41,7 +42,7 @@ export const createUserAddressService = async (userId: number, data: any) => {
   })
 }
 
-export const updateUserAddressService = async (userId: number, addressId: number, data: any) => {
+export const updateUserAddressService = async (userId: number, addressId: number, data: Omit<Prisma.UserAddressUncheckedUpdateInput, 'userId'>) => {
   return await prisma.$transaction(async (tx) => {
     const address = await tx.userAddress.findFirst({
       where: { id: addressId, userId, deletedAt: null }

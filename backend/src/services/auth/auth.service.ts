@@ -74,6 +74,22 @@ export class AuthService {
       }
     }
 
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [{ email }, { username }],
+      },
+    });
+
+    if (existingUser) {
+      if (existingUser.email === email && existingUser.username === username) {
+        throw new AppError(400, 'Email dan Username sudah terdaftar.');
+      } else if (existingUser.email === email) {
+        throw new AppError(400, 'Email sudah terdaftar.');
+      } else if (existingUser.username === username) {
+        throw new AppError(400, 'Username sudah digunakan.');
+      }
+    }
+
     const user = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
         data: { name, username, email, password: null, role: (role || 'CUSTOMER') as import('../../generated/prisma/client').Role, emailVerified: false },

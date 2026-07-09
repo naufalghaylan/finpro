@@ -105,7 +105,24 @@ export default function StoreFormModal({ store, onClose, onSuccess }: Props) {
     setShowSuggestions(false);
   };
 
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof StoreInput, string>>>({});
+
   const handleSubmit = async () => {
+    setFormErrors({});
+    let hasError = false;
+    const errors: Partial<Record<keyof StoreInput, string>> = {};
+
+    if (!form.name?.trim()) { errors.name = 'Nama toko harus diisi'; hasError = true; }
+    if (!form.phone?.trim()) { errors.phone = 'No. telepon harus diisi'; hasError = true; }
+    if (!form.cityId) { errors.cityId = 'Lokasi kecamatan/kota harus dipilih'; hasError = true; }
+    if (!form.address?.trim()) { errors.address = 'Alamat lengkap harus diisi'; hasError = true; }
+    if (!form.serviceRadius || form.serviceRadius <= 0) { errors.serviceRadius = 'Radius layanan harus lebih besar dari 0'; hasError = true; }
+
+    if (hasError) {
+      setFormErrors(errors);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -117,7 +134,13 @@ export default function StoreFormModal({ store, onClose, onSuccess }: Props) {
       onSuccess();
       onClose();
     } catch (e: any) {
-      setError(e?.response?.data?.message || 'Terjadi kesalahan');
+      const errorMessage = e?.response?.data?.message || 'Terjadi kesalahan';
+      if (errorMessage.toLowerCase() === 'validation error') {
+        // If it's a generic validation error from backend that our frontend missed
+        setError('Mohon periksa kembali isian formulir Anda.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -132,8 +155,15 @@ export default function StoreFormModal({ store, onClose, onSuccess }: Props) {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="flex flex-col gap-3">
-            <input placeholder="Nama Toko" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all" />
-            <input placeholder="No. Telepon" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all" />
+            <div>
+              <input placeholder="Nama Toko" value={form.name} onChange={e => { setForm({ ...form, name: e.target.value }); if(formErrors.name) setFormErrors({...formErrors, name: ''}); }} className={`w-full px-4 py-2.5 rounded-xl border ${formErrors.name ? 'border-[#dc2626]' : 'border-admin-line'} bg-admin-surface text-sm text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all`} />
+              {formErrors.name && <span className="text-[#dc2626] text-xs mt-1 block">{formErrors.name}</span>}
+            </div>
+            
+            <div>
+              <input placeholder="No. Telepon" value={form.phone} onChange={e => { setForm({ ...form, phone: e.target.value }); if(formErrors.phone) setFormErrors({...formErrors, phone: ''}); }} className={`w-full px-4 py-2.5 rounded-xl border ${formErrors.phone ? 'border-[#dc2626]' : 'border-admin-line'} bg-admin-surface text-sm text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all`} />
+              {formErrors.phone && <span className="text-[#dc2626] text-xs mt-1 block">{formErrors.phone}</span>}
+            </div>
             
             <div className="relative">
               <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-admin-ink-soft" />
@@ -144,8 +174,9 @@ export default function StoreFormModal({ store, onClose, onSuccess }: Props) {
                 onChange={handleSearchChange}
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all"
+                className={`w-full pl-10 pr-4 py-2.5 rounded-xl border ${formErrors.cityId ? 'border-[#dc2626]' : 'border-admin-line'} bg-admin-surface text-sm text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all`}
               />
+              {formErrors.cityId && <span className="text-[#dc2626] text-xs mt-1 block">{formErrors.cityId}</span>}
               {isSearching && (
                 <Loader2 size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-admin-ink-soft animate-spin" />
               )}
@@ -154,7 +185,7 @@ export default function StoreFormModal({ store, onClose, onSuccess }: Props) {
                   {destinations.map(dest => (
                     <div 
                       key={dest.id}
-                      onClick={() => handleSelectDestination(dest)}
+                      onClick={() => { handleSelectDestination(dest); if(formErrors.cityId) setFormErrors({...formErrors, cityId: ''}); }}
                       className="px-4 py-3 cursor-pointer border-b border-admin-line last:border-0 text-sm hover:bg-admin-surface-hover transition-colors"
                     >
                       <strong>{dest.subdistrict_name}</strong> - {dest.city_name}, {dest.province_name} ({dest.zip_code})
@@ -164,11 +195,17 @@ export default function StoreFormModal({ store, onClose, onSuccess }: Props) {
               )}
             </div>
 
-            <textarea placeholder="Alamat Lengkap" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all min-h-[80px]" />
+            <div>
+              <textarea placeholder="Alamat Lengkap" value={form.address} onChange={e => { setForm({ ...form, address: e.target.value }); if(formErrors.address) setFormErrors({...formErrors, address: ''}); }} className={`w-full px-4 py-2.5 rounded-xl border ${formErrors.address ? 'border-[#dc2626]' : 'border-admin-line'} bg-admin-surface text-sm text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all min-h-[80px]`} />
+              {formErrors.address && <span className="text-[#dc2626] text-xs mt-1 block">{formErrors.address}</span>}
+            </div>
             
-            <div className="flex gap-3 items-center">
-              <label className="text-sm font-medium text-admin-ink-soft">Radius Layanan (km):</label>
-              <input type="number" value={form.serviceRadius} onChange={e => setForm({ ...form, serviceRadius: Number(e.target.value) })} className="w-24 px-4 py-2 rounded-xl border border-admin-line bg-admin-surface text-sm text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all" />
+            <div>
+              <div className="flex gap-3 items-center">
+                <label className="text-sm font-medium text-admin-ink-soft">Radius Layanan (km):</label>
+                <input type="number" value={form.serviceRadius} onChange={e => { setForm({ ...form, serviceRadius: Number(e.target.value) }); if(formErrors.serviceRadius) setFormErrors({...formErrors, serviceRadius: ''}); }} className={`w-24 px-4 py-2 rounded-xl border ${formErrors.serviceRadius ? 'border-[#dc2626]' : 'border-admin-line'} bg-admin-surface text-sm text-admin-ink focus:outline-none focus:ring-2 focus:ring-admin-accent/30 focus:border-admin-accent transition-all`} />
+              </div>
+              {formErrors.serviceRadius && <span className="text-[#dc2626] text-xs mt-1 block">{formErrors.serviceRadius}</span>}
             </div>
 
             <div className="flex gap-3 items-center mt-1">

@@ -24,6 +24,7 @@ import { AppError } from '../utils/AppError'
 
 export const calculateShippingCost = async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log('[calculateShippingCost] req.body:', req.body)
     const parsed = calculateShippingCostSchema.parse(req.body)
     const cost = await calculateShippingCostService(
       req.user!.userId,
@@ -38,13 +39,16 @@ export const calculateShippingCost = async (req: Request, res: Response): Promis
     });
   } catch (error: unknown) {
     if (error instanceof AppError) {
+      console.error('[calculateShippingCost] AppError:', error.message)
       res.status(error.statusCode).json({ message: error.message });
       return;
     }
     if (error instanceof Error && error.name === 'ZodError') {
+      console.error('[calculateShippingCost] ZodError:', error.message)
       res.status(400).json({ message: 'Validation failed', errors: JSON.parse(error.message) })
       return;
     }
+    console.error('[calculateShippingCost] Internal server error:', error)
     res.status(500).json({ message: 'Internal server error', error: error instanceof Error ? error.message : String(error) });
   }
 }

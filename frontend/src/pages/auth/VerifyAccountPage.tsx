@@ -16,6 +16,7 @@ export default function VerifyAccountPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
+  const [formErrors, setFormErrors] = useState<{ password?: string; confirmPassword?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -27,8 +28,22 @@ export default function VerifyAccountPage() {
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormErrors({});
+    let hasError = false;
+    const errors: { password?: string; confirmPassword?: string } = {};
+
+    if (password.length < 6) {
+      errors.password = 'Password minimal 6 karakter';
+      hasError = true;
+    }
+
     if (password !== confirmPassword) {
-      setError('Password dan konfirmasi password tidak cocok.');
+      errors.confirmPassword = 'Password dan konfirmasi password tidak cocok.';
+      hasError = true;
+    }
+
+    if (hasError) {
+      setFormErrors(errors);
       return;
     }
     
@@ -113,11 +128,12 @@ export default function VerifyAccountPage() {
                           id="password"
                           type={showPassword ? "text" : "password"}
                           value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          className="w-full rounded-[14px] border border-[var(--line)] p-[14px_48px_14px_18px] bg-white text-[1rem] transition-all duration-200 outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_4px_var(--accent-soft)]"
+                          onChange={(e) => {
+                            setPassword(e.target.value);
+                            if (formErrors.password) setFormErrors(prev => ({ ...prev, password: '' }));
+                          }}
+                          className={`w-full rounded-[14px] border ${formErrors.password ? 'border-[#dc2626]' : 'border-[var(--line)]'} p-[14px_48px_14px_18px] bg-white text-[1rem] transition-all duration-200 outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_4px_var(--accent-soft)]`}
                           placeholder="Minimal 6 karakter"
-                          required
-                          minLength={6}
                         />
                         <button
                           type="button"
@@ -128,6 +144,7 @@ export default function VerifyAccountPage() {
                           {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                         </button>
                       </div>
+                      {formErrors.password && <span className="text-[#dc2626] text-[0.8rem]">{formErrors.password}</span>}
                     </div>
 
                     <div className="flex flex-col gap-[8px]">
@@ -137,11 +154,12 @@ export default function VerifyAccountPage() {
                           id="confirmPassword"
                           type={showConfirmPassword ? "text" : "password"}
                           value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="w-full rounded-[14px] border border-[var(--line)] p-[14px_48px_14px_18px] bg-white text-[1rem] transition-all duration-200 outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_4px_var(--accent-soft)]"
+                          onChange={(e) => {
+                            setConfirmPassword(e.target.value);
+                            if (formErrors.confirmPassword) setFormErrors(prev => ({ ...prev, confirmPassword: '' }));
+                          }}
+                          className={`w-full rounded-[14px] border ${formErrors.confirmPassword ? 'border-[#dc2626]' : 'border-[var(--line)]'} p-[14px_48px_14px_18px] bg-white text-[1rem] transition-all duration-200 outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_4px_var(--accent-soft)]`}
                           placeholder="Ulangi password baru"
-                          required
-                          minLength={6}
                         />
                         <button
                           type="button"
@@ -152,6 +170,7 @@ export default function VerifyAccountPage() {
                           {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                         </button>
                       </div>
+                      {formErrors.confirmPassword && <span className="text-[#dc2626] text-[0.8rem]">{formErrors.confirmPassword}</span>}
                     </div>
                     
                     <button 

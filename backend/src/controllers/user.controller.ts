@@ -9,8 +9,8 @@ export const getStoreAdmins = async (req: Request, res: Response): Promise<void>
       message: 'Admins fetched successfully',
       data: admins
     });
-  } catch (error: any) {
-    res.status(error.statusCode || 500).json({ message: error.message || 'Internal server error' });
+  } catch (error: unknown) {
+    res.status(error instanceof Error && 'statusCode' in error ? Number((error as any).statusCode) : 500).json({ message: error instanceof Error ? error.message : String(error) });
   }
 };
 
@@ -23,12 +23,12 @@ export const createStoreAdmin = async (req: Request, res: Response): Promise<voi
       message: 'Admin created successfully',
       data: admin
     });
-  } catch (error: any) {
-    if (error.name === 'ZodError') {
-      res.status(400).json({ message: 'Validation Error', errors: error.errors });
+  } catch (error: unknown) {
+    if (error instanceof Error && error.name === 'ZodError') {
+      res.status(400).json({ message: 'Validation Error', errors: (error as unknown as Record<string, unknown>).errors });
       return;
     }
-    res.status(error.statusCode || 500).json({ message: error.message || 'Internal server error' });
+    res.status(error instanceof Error && 'statusCode' in error ? Number((error as any).statusCode) : 500).json({ message: error instanceof Error ? error.message : String(error) });
   }
 };
 
@@ -43,11 +43,11 @@ export const assignStoreAdmin = async (req: Request, res: Response): Promise<voi
       message: 'Admin assigned successfully',
       data: admin
     });
-  } catch (error: any) {
-    if (error.name === 'ZodError') {
-      res.status(400).json({ message: 'Validation Error', errors: error.errors });
+  } catch (error: unknown) {
+    if (error instanceof Error && error.name === 'ZodError') {
+      res.status(400).json({ message: 'Validation Error', errors: (error as unknown as Record<string, unknown>).errors });
       return;
     }
-    res.status(error.statusCode || 500).json({ message: error.message || 'Internal server error' });
+    res.status(error instanceof Error && 'statusCode' in error ? Number((error as any).statusCode) : 500).json({ message: error instanceof Error ? error.message : String(error) });
   }
 };
