@@ -28,8 +28,22 @@ const cartStateIconClassName = [
   '[&>svg]:size-7.5',
 ].join(' ')
 
-const getDisplayUnitPrice = (item: CartItem) =>
-  item.quantity > 0 ? item.lineTotal / item.quantity : item.product.basePrice
+const getDisplayUnitPrice = (item: CartItem) => {
+  const activeDiscounts = item.product.discounts?.filter((discount) => discount.isActive) ?? []
+  const priceCutAmount = activeDiscounts.reduce((bestAmount, discount) => {
+    let amount = 0
+
+    if (discount.discountType === 'PERCENTAGE') {
+      amount = (item.product.basePrice * discount.discountValue) / 100
+    } else if (discount.discountType === 'NOMINAL') {
+      amount = discount.discountValue
+    }
+
+    return Math.max(bestAmount, Math.min(amount, item.product.basePrice))
+  }, 0)
+
+  return Math.max(0, item.product.basePrice - priceCutAmount)
+}
 
 const getDisplayQuantity = (item: CartItem, drafts: Record<number, string>) => {
   const draft = drafts[item.id]

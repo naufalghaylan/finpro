@@ -16,6 +16,13 @@ export type CartProductStock = {
   }
 }
 
+export type CartProductDiscount = {
+  id: number
+  discountType: 'PERCENTAGE' | 'NOMINAL' | 'BUY_ONE_GET_ONE'
+  discountValue: number
+  isActive: boolean
+}
+
 export type CartProduct = {
   id: number
   name: string
@@ -29,6 +36,7 @@ export type CartProduct = {
   }
   images: CartProductImage[]
   stocks: CartProductStock[]
+  discounts?: CartProductDiscount[]
   totalStock: number
 }
 

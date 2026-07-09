@@ -45,7 +45,7 @@ export const createCheckoutOrder = async ({
 
     const { latitude, longitude } = getAddressCoordinates(address)
     const nearestStore = await getNearestActiveStore(latitude, longitude, tx)
-    const cart = await getCheckoutCart(userId, tx)
+    const cart = await getCheckoutCart(userId, tx, nearestStore.id)
     await assertGlobalStockAvailable(cart.items, tx)
 
     const orderNumber = await generateOrderNumber(userId, tx)
@@ -60,6 +60,7 @@ export const createCheckoutOrder = async ({
           cart.items,
           totalProductAmount,
           tx,
+          { scope: 'store-wide' },
         )
       : 0
 

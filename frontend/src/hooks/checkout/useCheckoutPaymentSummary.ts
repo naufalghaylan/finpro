@@ -11,6 +11,9 @@ export function useCheckoutPaymentSummary(
 ) {
   return useMemo(() => {
     const subtotal = preview?.cart.summary.subtotal ?? 0
+    const productOriginalSubtotal =
+      preview?.cart.items.reduce((total, item) => total + item.quantity * item.product.basePrice, 0) ?? 0
+    const productDiscountAmount = Math.max(0, productOriginalSubtotal - subtotal)
     const shippingCost = selectedShippingService?.cost ?? 0
     // Diskon toko yang tersedia dari backend; hanya dipakai bila user memilih (opt-in).
     const availableStoreDiscount = preview?.cart.summary.storeDiscountAmount ?? 0
@@ -27,6 +30,8 @@ export function useCheckoutPaymentSummary(
 
     return {
       subtotal,
+      productOriginalSubtotal,
+      productDiscountAmount,
       shippingCost,
       storeDiscountAmount,
       availableStoreDiscount,

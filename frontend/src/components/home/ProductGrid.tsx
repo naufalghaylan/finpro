@@ -30,6 +30,8 @@ export const ProductGrid = ({ products: initialProducts, storeId }: ProductGridP
   }, [initialProducts, fetchedProducts, loading])
 
   const { addToCart, addingProductId } = useAddToCart()
+  const numericStoreId = storeId ? Number(storeId) : undefined
+  const activeStoreId = Number.isFinite(numericStoreId) ? numericStoreId : undefined
 
   if (displayProducts.length === 0 && loading) return (
     <section className="py-[28px]" id="products">
@@ -112,7 +114,7 @@ export const ProductGrid = ({ products: initialProducts, storeId }: ProductGridP
                 key={product.id}
                 product={product}
                 isAddingToCart={addingProductId === product.id}
-                onAddToCart={() => void addToCart(product)}
+                onAddToCart={() => void addToCart(product, 1, activeStoreId)}
                 onClick={() => navigate(`/products/${product.id}`)}
               />
             ))}

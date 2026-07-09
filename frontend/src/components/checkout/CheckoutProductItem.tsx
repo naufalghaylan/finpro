@@ -21,11 +21,25 @@ function CheckoutProductImage({ item }: CheckoutProductItemProps) {
 }
 
 function CheckoutProductInfo({ item }: CheckoutProductItemProps) {
+  const originalUnitPrice = getOriginalUnitPrice(item)
+  const finalUnitPrice = getFinalUnitPrice(item)
+  const hasProductDiscount = finalUnitPrice < originalUnitPrice
+
   return (
     <div className="checkout-product-info">
       <strong>{item.product.name}</strong>
       <span>{item.product.category.name}</span>
-      <span>{item.quantity} x {formatCurrency(getItemUnitPrice(item))}</span>
+      <span className="checkout-product-unit-price">
+        <span>{item.quantity} x</span>
+        {hasProductDiscount ? (
+          <>
+            <span className="checkout-price-original">{formatCurrency(originalUnitPrice)}</span>
+            <span className="checkout-price-current">{formatCurrency(finalUnitPrice)}</span>
+          </>
+        ) : (
+          <span>{formatCurrency(finalUnitPrice)}</span>
+        )}
+      </span>
     </div>
   )
 }
@@ -33,5 +47,7 @@ function CheckoutProductInfo({ item }: CheckoutProductItemProps) {
 const getPrimaryImage = (item: CartItem) =>
   item.product.images.find((image) => image.isPrimary) ?? item.product.images[0]
 
-const getItemUnitPrice = (item: CartItem) =>
+const getOriginalUnitPrice = (item: CartItem) => item.product.basePrice
+
+const getFinalUnitPrice = (item: CartItem) =>
   item.quantity > 0 ? item.lineTotal / item.quantity : item.product.basePrice

@@ -2,6 +2,7 @@ import type { UserAddress } from '../../../generated/prisma/client'
 import prisma from '../../../lib/prisma'
 import { getDistanceFromLatLonInKm } from '../../../utils/geo.util'
 import { ORDER_ERRORS, OrderServiceError } from '../../order.errors'
+import { getDiscountedProductUnitPrice } from '../../product-price-discount.service'
 import type { DatabaseClient } from '../core/order.types'
 
 export const getNearestActiveStore = async (latitude: number, longitude: number, db: DatabaseClient = prisma) => {
@@ -73,7 +74,16 @@ export const getAddressCoordinates = (address: Pick<UserAddress, 'latitude' | 'l
   }
 }
 
-export const getCheckoutCart = async (userId: number, db: DatabaseClient) => {
+const getActiveDiscountWhere = (storeId: number, now: Date) => ({
+  storeId,
+  isActive: true,
+  deletedAt: null,
+  startDate: { lte: now },
+  endDate: { gte: now },
+})
+
+export const getCheckoutCart = async (userId: number, db: DatabaseClient, storeId: number) => {
+  const now = new Date()
   const cart = await db.cart.findUnique({
     where: { userId },
     select: {
@@ -89,6 +99,14 @@ export const getCheckoutCart = async (userId: number, db: DatabaseClient) => {
               id: true,
               name: true,
               basePrice: true,
+              discounts: {
+                where: getActiveDiscountWhere(storeId, now),
+                select: {
+                  discountType: true,
+                  discountValue: true,
+                  isActive: true,
+                },
+              },
             },
           },
         },
@@ -100,7 +118,17 @@ export const getCheckoutCart = async (userId: number, db: DatabaseClient) => {
     throw new OrderServiceError(ORDER_ERRORS.EMPTY_CART, 'Cart is empty', 400)
   }
 
-  return cart
+  return {
+    ...cart,
+    items: cart.items.map((item) => ({
+      ...item,
+      product: {
+        id: item.product.id,
+        name: item.product.name,
+        basePrice: getDiscountedProductUnitPrice(item.product.basePrice, item.product.discounts),
+      },
+    })),
+  }
 }
 
 const getOrderNumberDatePart = (date: Date) => {

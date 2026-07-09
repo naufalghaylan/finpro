@@ -7,8 +7,8 @@ export async function getCart(): Promise<Cart> {
   return data.data
 }
 
-export async function addCartItem(productId: number, quantity = 1): Promise<CartMutationResult> {
-  const { data } = await api.post<ApiData<CartMutationResult>>('/cart/items', { productId, quantity })
+export async function addCartItem(productId: number, quantity = 1, storeId?: number): Promise<CartMutationResult> {
+  const { data } = await api.post<ApiData<CartMutationResult>>('/cart/items', { productId, quantity, storeId })
   return data.data
 }
 

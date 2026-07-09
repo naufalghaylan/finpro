@@ -1,5 +1,6 @@
 import { Prisma } from '../generated/prisma/client'
 import prisma from '../lib/prisma'
+import { getDiscountedProductUnitPrice } from './product-price-discount.service'
 
 type DatabaseClient = Prisma.TransactionClient
 
@@ -20,11 +21,11 @@ export const createCart = async (userId: number, db: DatabaseClient = prisma) =>
   })
 }
 
-export const getOrCreateCart = async (userId: number, db: DatabaseClient = prisma) => {
+export const getOrCreateCart = async (userId: number, db: DatabaseClient = prisma, storeId?: number) => {
   return db.cart.upsert({
     where: { userId },
-    create: { userId },
-    update: {},
+    create: { userId, ...(storeId ? { storeId } : {}) },
+    update: storeId ? { storeId } : {},
     select: { id: true },
   })
 }
@@ -38,7 +39,7 @@ export const getCartItemCount = async (cartId: number, db: DatabaseClient = pris
   return countAgg._sum.quantity ?? 0
 }
 
-const getProductStockTotals = async (productIds: number[], db: DatabaseClient = prisma) => {
+const getProductStockTotals = async (productIds: number[], db: DatabaseClient = prisma, storeId?: number) => {
   if (productIds.length === 0) {
     return new Map<number, number>()
   }
@@ -47,6 +48,7 @@ const getProductStockTotals = async (productIds: number[], db: DatabaseClient = 
     by: ['productId'],
     where: {
       productId: { in: productIds },
+      ...(storeId ? { storeId } : {}),
     },
     _sum: { quantity: true },
   })
@@ -54,7 +56,15 @@ const getProductStockTotals = async (productIds: number[], db: DatabaseClient = 
   return new Map(stockTotals.map((stock) => [stock.productId, stock._sum.quantity ?? 0]))
 }
 
-export const getCart = async (userId: number) => {
+const getActiveDiscountWhere = (now: Date) => ({
+  isActive: true,
+  deletedAt: null,
+  startDate: { lte: now },
+  endDate: { gte: now },
+})
+
+export const getCart = async (userId: number, pricingStoreId?: number) => {
+  const now = new Date()
   const cart = await prisma.cart.findUnique({
     where: { userId },
     select: {
@@ -113,6 +123,16 @@ export const getCart = async (userId: number) => {
                   },
                 },
               },
+              discounts: {
+                where: getActiveDiscountWhere(now),
+                select: {
+                  id: true,
+                  storeId: true,
+                  discountType: true,
+                  discountValue: true,
+                  isActive: true,
+                },
+              },
             },
           },
         },
@@ -124,16 +144,29 @@ export const getCart = async (userId: number) => {
     return emptyCart
   }
 
+  const activePricingStoreId = pricingStoreId ?? cart.store?.id
   const productIds = cart.items.map((item) => item.productId)
-  const stockTotals = await getProductStockTotals(productIds)
+  const stockTotals = await getProductStockTotals(productIds, prisma, activePricingStoreId)
   const items = cart.items.map((item) => {
     const totalStock = stockTotals.get(item.productId) ?? 0
-    const lineTotal = item.quantity * item.product.basePrice
+    const discounts = activePricingStoreId
+      ? item.product.discounts.filter((discount) => discount.storeId === activePricingStoreId)
+      : []
+    const discountedUnitPrice = getDiscountedProductUnitPrice(item.product.basePrice, discounts)
+    const lineTotal = item.quantity * discountedUnitPrice
+    const displayDiscounts = discounts
+      .map((discount) => ({
+        id: discount.id,
+        discountType: discount.discountType,
+        discountValue: discount.discountValue,
+        isActive: discount.isActive,
+      }))
 
     return {
       ...item,
       product: {
         ...item.product,
+        discounts: displayDiscounts,
         totalStock,
       },
       lineTotal,

@@ -10,6 +10,7 @@ type AddToCartProduct = {
   id: number
   name: string
   stocks?: Array<{
+    storeId?: number
     quantity: number
   }>
 }
@@ -24,6 +25,9 @@ const getTotalStock = (product: AddToCartProduct) =>
 
 const hasKnownOutOfStock = (product: AddToCartProduct) =>
   Array.isArray(product.stocks) && getTotalStock(product) <= 0
+
+const getProductStoreId = (product: AddToCartProduct, storeId?: number) =>
+  storeId ?? product.stocks?.find((stock) => stock.quantity > 0)?.storeId ?? product.stocks?.[0]?.storeId
 
 const getCartErrorMessage = (error: unknown) => {
   if (isAxiosError<CartErrorResponse>(error)) {
@@ -44,7 +48,7 @@ export const useAddToCart = () => {
   const setCartCount = useCartStore((state) => state.setCartCount)
   const [addingProductId, setAddingProductId] = useState<number | null>(null)
 
-  const addToCart = async (product: AddToCartProduct, quantity = 1) => {
+  const addToCart = async (product: AddToCartProduct, quantity = 1, storeId?: number) => {
     if (!isAuthenticated) {
       navigate('/login')
       return
@@ -63,7 +67,7 @@ export const useAddToCart = () => {
     setAddingProductId(product.id)
 
     try {
-      const result = await addCartItem(product.id, quantity)
+      const result = await addCartItem(product.id, quantity, getProductStoreId(product, storeId))
       setCartCount(result.cartCount)
       window.dispatchEvent(new Event('cartUpdated'))
       showToast(`"${product.name}" ditambahkan ke keranjang`, 'success')

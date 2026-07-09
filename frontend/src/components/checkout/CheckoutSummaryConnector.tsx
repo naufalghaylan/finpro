@@ -23,6 +23,8 @@ function getCheckoutSummaryProps(checkout: CheckoutController): CheckoutSummaryP
 function getSummaryMoneyProps({ paymentSummary }: CheckoutController) {
   return {
     subtotal: paymentSummary.subtotal,
+    productOriginalSubtotal: paymentSummary.productOriginalSubtotal,
+    productDiscountAmount: paymentSummary.productDiscountAmount,
     storeDiscountAmount: paymentSummary.storeDiscountAmount,
     voucherReferralAmount: paymentSummary.voucherReferralAmount,
     discountAmount: paymentSummary.discountAmount,

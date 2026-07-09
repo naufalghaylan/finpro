@@ -76,7 +76,7 @@ export async function getAllProducts(filters: ProductFilters) {
         // Jika ada toko (terdekat/eksplisit), batasi ke toko itu; selain itu jumlahkan semua toko.
         stocks: {
           where: stockStoreId ? { storeId: stockStoreId, deletedAt: null } : { deletedAt: null },
-          select: { id: true, quantity: true }
+          select: { id: true, storeId: true, quantity: true }
         },
         // Diskon produk yang sedang berlaku, untuk menampilkan harga coret di kartu.
         discounts: {
@@ -145,7 +145,7 @@ export async function searchProducts(keyword: string, filters: SearchFilters) {
           where: stockStoreId
             ? { storeId: stockStoreId, deletedAt: null }
             : { deletedAt: null },
-          select: { id: true, quantity: true }
+          select: { id: true, storeId: true, quantity: true }
         },
         // Diskon produk yang sedang berlaku, untuk menampilkan harga coret di kartu.
         discounts: {

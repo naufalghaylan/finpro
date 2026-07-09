@@ -7,6 +7,8 @@ import { getOtherDiscountAmount, getReadinessItems } from './checkoutSummaryDisp
 export interface CheckoutSummaryPanelProps {
   totalQuantity: number
   subtotal: number
+  productOriginalSubtotal: number
+  productDiscountAmount: number
   storeDiscountAmount?: number
   voucherReferralAmount?: number
   discountAmount?: number
@@ -69,7 +71,7 @@ type CheckoutSummaryRowsProps = CheckoutSummaryPanelProps & { otherDiscountAmoun
 function CheckoutSummaryRows(props: CheckoutSummaryRowsProps) {
   return (
     <>
-      <SummaryRow label={`Total Harga (${props.totalQuantity} item)`} value={formatCurrency(props.subtotal)} />
+      <ProductPriceRows {...props} />
       <DiscountRows {...props} />
       <SummaryRow label="Ongkir" value={props.selectedShippingService ? formatCurrency(props.selectedShippingService.cost) : 'Pilih pengiriman'} />
       <SummaryRow label="Total Bayar" value={formatCurrency(props.totalPayment)} className="checkout-summary-total" />
@@ -77,12 +79,26 @@ function CheckoutSummaryRows(props: CheckoutSummaryRowsProps) {
   )
 }
 
+function ProductPriceRows({ totalQuantity, subtotal, productOriginalSubtotal, productDiscountAmount }: CheckoutSummaryRowsProps) {
+  if (productDiscountAmount <= 0) {
+    return <SummaryRow label={`Total Harga (${totalQuantity} item)`} value={formatCurrency(subtotal)} />
+  }
+
+  return (
+    <>
+      <SummaryRow label={`Subtotal Produk (${totalQuantity} item)`} value={formatCurrency(productOriginalSubtotal)} />
+      <SummaryRow label="Diskon Produk" value={`-${formatCurrency(productDiscountAmount)}`} className="checkout-summary-discount" />
+      <SummaryRow label="Total Harga" value={formatCurrency(subtotal)} />
+    </>
+  )
+}
+
 function DiscountRows({ storeDiscountAmount = 0, voucherReferralAmount = 0, otherDiscountAmount }: CheckoutSummaryRowsProps) {
   return (
     <>
-      {storeDiscountAmount > 0 && <SummaryRow label="Diskon PanenMart" value={`-${formatCurrency(storeDiscountAmount)}`} />}
-      {voucherReferralAmount > 0 && <SummaryRow label="Voucher Referral" value={`-${formatCurrency(voucherReferralAmount)}`} />}
-      {otherDiscountAmount > 0 && <SummaryRow label="Potongan Lainnya" value={`-${formatCurrency(otherDiscountAmount)}`} />}
+      {storeDiscountAmount > 0 && <SummaryRow label="Diskon PanenMart" value={`-${formatCurrency(storeDiscountAmount)}`} className="checkout-summary-discount" />}
+      {voucherReferralAmount > 0 && <SummaryRow label="Voucher Referral" value={`-${formatCurrency(voucherReferralAmount)}`} className="checkout-summary-discount" />}
+      {otherDiscountAmount > 0 && <SummaryRow label="Potongan Lainnya" value={`-${formatCurrency(otherDiscountAmount)}`} className="checkout-summary-discount" />}
     </>
   )
 }

@@ -3,6 +3,10 @@ import prisma from '../../../lib/prisma'
 import type { DatabaseClient } from '../core/order.types'
 
 type DiscountDb = DatabaseClient | typeof prisma
+type DiscountScope = 'all' | 'store-wide'
+type ActiveDiscountOptions = {
+  scope?: DiscountScope
+}
 
 type DiscountCartItem = {
   productId: number
@@ -46,18 +50,23 @@ const checkoutDiscountSelect = {
   endDate: true,
 } as const
 
-const getActiveDiscountWhere = (storeId: number, now: Date) => ({
+const getActiveDiscountWhere = (storeId: number, now: Date, options?: ActiveDiscountOptions) => ({
   storeId,
   isActive: true,
   deletedAt: null,
   startDate: { lte: now },
   endDate: { gte: now },
+  ...(options?.scope === 'store-wide' ? { productId: null } : {}),
 })
 
 // Ambil diskon toko yang sedang berlaku (aktif & dalam rentang tanggal)
-export const getActiveStoreDiscounts = async (storeId: number, db: DiscountDb = prisma) =>
+export const getActiveStoreDiscounts = async (
+  storeId: number,
+  db: DiscountDb = prisma,
+  options?: ActiveDiscountOptions,
+) =>
   db.discount.findMany({
-    where: getActiveDiscountWhere(storeId, new Date()),
+    where: getActiveDiscountWhere(storeId, new Date(), options),
     select: checkoutDiscountSelect,
   })
 
@@ -176,9 +185,10 @@ export const calculateStoreDiscountForCheckout = async (
   items: DiscountCartItem[],
   totalProductAmount: number,
   db: DiscountDb = prisma,
+  options?: ActiveDiscountOptions,
 ) => {
   if (items.length === 0 || totalProductAmount <= 0) return 0
-  const activeDiscounts = await getActiveStoreDiscounts(storeId, db)
+  const activeDiscounts = await getActiveStoreDiscounts(storeId, db, options)
   return calculateOrderDiscount(items, activeDiscounts, totalProductAmount)
 }
 
@@ -187,11 +197,12 @@ export const getStoreDiscountBreakdownForCheckout = async (
   items: DiscountCartItem[],
   totalProductAmount: number,
   db: DiscountDb = prisma,
+  options?: ActiveDiscountOptions,
 ) => {
   if (items.length === 0 || totalProductAmount <= 0) {
     return { totalDiscount: 0, appliedDiscounts: [] }
   }
 
-  const activeDiscounts = await getActiveStoreDiscounts(storeId, db)
+  const activeDiscounts = await getActiveStoreDiscounts(storeId, db, options)
   return calculateOrderDiscountBreakdown(items, activeDiscounts, totalProductAmount)
 }

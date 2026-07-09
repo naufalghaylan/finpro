@@ -55,6 +55,7 @@ export const addToCart = async (req: Request, res: Response): Promise<void> => {
       userId,
       productId: parsed.data.productId,
       quantity: parsed.data.quantity,
+      storeId: parsed.data.storeId,
     })
 
     res.status(200).json({
