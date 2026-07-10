@@ -7,6 +7,7 @@ import { CheckoutAddressPicker } from './CheckoutAddressPicker'
 import { CheckoutInlineAlert } from './CheckoutInlineAlert'
 import { CheckoutSectionTitle } from './CheckoutSectionTitle'
 
+
 interface CheckoutAddressListProps {
   addresses: CheckoutAddress[]
   selectedAddressId: number | null
@@ -87,7 +88,7 @@ function DesktopAddressOptions({ addresses, selectedAddressId, onAddressChange, 
       {isCarousel ? (
         <div className="relative checkout-address-desktop-grid">
            {currentIndex > 0 && (
-             <button type="button" onClick={prev} className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-10 bg-white shadow-[var(--shadow-soft)] border border-[var(--line)] rounded-full p-1.5 cursor-pointer text-[var(--ink)] hover:bg-[var(--surface-muted)] transition-colors">
+             <button type="button" onClick={prev} className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-10 bg-white shadow-(--shadow-soft) border border-(--line) rounded-full p-1.5 cursor-pointer text-(--ink) hover:bg-(--surface-muted) transition-colors">
                 <ChevronLeft size={20} />
              </button>
            )}
@@ -106,7 +107,7 @@ function DesktopAddressOptions({ addresses, selectedAddressId, onAddressChange, 
            </div>
 
            {currentIndex < maxIndex && (
-             <button type="button" onClick={next} className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-10 bg-white shadow-[var(--shadow-soft)] border border-[var(--line)] rounded-full p-1.5 cursor-pointer text-[var(--ink)] hover:bg-[var(--surface-muted)] transition-colors">
+             <button type="button" onClick={next} className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-10 bg-white shadow-(--shadow-soft) border border-(--line) rounded-full p-1.5 cursor-pointer text-(--ink) hover:bg-(--surface-muted) transition-colors">
                 <ChevronRight size={20} />
              </button>
            )}

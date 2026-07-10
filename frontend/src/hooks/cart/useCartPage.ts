@@ -58,7 +58,7 @@ export function useCartPage(context: CartContext | null = null) {
         setIsLoading(false)
       }
     }
-  }, [setCartCount, context?.lat, context?.lng, context?.storeId])
+  }, [setCartCount, context])
 
   useEffect(() => {
     const initialLoadId = window.setTimeout(() => {

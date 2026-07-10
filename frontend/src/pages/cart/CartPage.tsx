@@ -76,7 +76,7 @@ function CartPage() {
               <div>
                 <p className="section-kicker">Keranjang</p>
                 <h2 className="section-title">Keranjang Belanja</h2>
-                <p className="mt-2 mb-0 max-w-[540px] text-(--ink-soft) leading-[1.6]">
+                <p className="mt-2 mb-0 max-w-135 text-(--ink-soft) leading-[1.6]">
                   Periksa produk dan jumlah belanja sebelum lanjut ke checkout.
                 </p>
               </div>
@@ -88,7 +88,7 @@ function CartPage() {
 
             {error && (
               <div
-                className="cart-alert error mb-4 flex items-start gap-2.5 rounded-2xl px-3.5 py-3 font-semibold leading-[1.5] [&>svg]:mt-0.5 [&>svg]:size-5 [&>svg]:shrink-0"
+                className="cart-alert error mb-4 flex items-start gap-2.5 rounded-2xl px-3.5 py-3 font-semibold leading-normal [&>svg]:mt-0.5 [&>svg]:size-5 [&>svg]:shrink-0"
                 role="alert"
               >
                 <AlertCircle aria-hidden="true" />
@@ -97,7 +97,7 @@ function CartPage() {
             )}
 
             {isLoading && (
-              <div className={`${cartEmptyClassName} min-h-[260px]`} aria-live="polite">
+              <div className={`${cartEmptyClassName} min-h-65`} aria-live="polite">
                 <span className={cartStateIconClassName}>
                   <Loader2 className="spin" aria-hidden="true" />
                 </span>
