@@ -16,6 +16,7 @@ type LocationPanelProps = {
   isFallback: boolean
   onRequestLocation: () => void
   onUseMainStore: () => void
+  onDeliveryLocationChange: () => void
 }
 
 const getStatusLabel = (status: LocationStatus, isFallback: boolean, isAddressSelected: boolean) => {
@@ -50,6 +51,7 @@ export const LocationPanel = ({
   isFallback,
   onRequestLocation,
   onUseMainStore,
+  onDeliveryLocationChange,
 }: LocationPanelProps) => {
   const { isAuthenticated } = useAuthStore()
   const { selectedAddressId, selectAddress } = useAddressStore()
@@ -112,6 +114,7 @@ export const LocationPanel = ({
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSelectAddress={(id) => {
+          onDeliveryLocationChange()
           selectAddress(id)
           if (id === null) {
             onRequestLocation()

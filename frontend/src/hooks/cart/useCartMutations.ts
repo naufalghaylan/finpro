@@ -19,7 +19,8 @@ export function useCartMutations(
   quantityDrafts: Record<number, string>,
   setQuantityDrafts: React.Dispatch<React.SetStateAction<Record<number, string>>>,
   setError: (error: string | null) => void,
-  loadCart: (showLoading?: boolean) => Promise<void>
+  loadCart: (showLoading?: boolean) => Promise<void>,
+  storeId?: number,
 ) {
   const [savingItemIds, setSavingItemIds] = useState<Record<number, boolean>>({})
   const [deletingItemId, setDeletingItemId] = useState<number | null>(null)
@@ -75,7 +76,7 @@ export function useCartMutations(
       setError(null)
 
       try {
-        const result = await updateCartItem(item.id, nextQuantity)
+        const result = await updateCartItem(item.id, nextQuantity, storeId)
         setCartCount(result.cartCount)
         await loadCart(false)
       } catch (updateError) {
@@ -87,7 +88,7 @@ export function useCartMutations(
         setItemSaving(item.id, false)
       }
     },
-    [clearPendingQuantitySave, loadCart, setCartCount, setItemSaving, showToast, setError, setQuantityDrafts],
+    [clearPendingQuantitySave, loadCart, setCartCount, setItemSaving, showToast, setError, setQuantityDrafts, storeId],
   )
 
   const scheduleQuantityUpdate = useCallback(

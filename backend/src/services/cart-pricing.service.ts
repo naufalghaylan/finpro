@@ -6,6 +6,7 @@ export type GetCartOptions = {
   applyItemDiscounts?: boolean
   lat?: number
   lng?: number
+  storeId?: number
 }
 
 export const getActiveProductDiscounts = async (productIds: number[], storeId?: number) => {
@@ -47,6 +48,10 @@ const resolveUserStoreId = async (userId: number): Promise<number | undefined> =
 }
 
 export const resolveDiscountStoreId = async (userId: number, options: GetCartOptions): Promise<number | undefined> => {
+  if (options.storeId) {
+    return options.storeId
+  }
+
   if (options.lat !== undefined && options.lng !== undefined) {
     const nearest = await getNearestStoreService(options.lat, options.lng)
     if (nearest) return nearest.id

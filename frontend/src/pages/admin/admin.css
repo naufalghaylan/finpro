@@ -107,6 +107,23 @@
   }
 }
 
+/* --- Dashboard modal and drawer layout --- */
+.admin-modal-viewport {
+  top: var(--admin-topbar-height, 72px);
+  right: 0;
+  bottom: 0;
+  left: var(--admin-sidebar-width, 260px);
+}
+
+.admin-modal-card {
+  max-height: min(720px, 100%);
+}
+
+.admin-modal-card-large {
+  height: min(760px, 100%);
+  max-height: min(760px, 100%);
+}
+
 /* --- Responsive Overrides --- */
 @media (max-width: 1023px) {
   .admin-mobile-ml-0 {
@@ -115,8 +132,35 @@
   .admin-mobile-left-0 {
     left: 0 !important;
   }
+  .admin-modal-viewport {
+    left: 0;
+  }
+  .admin-drawer-backdrop {
+    top: var(--admin-topbar-height, 72px) !important;
+  }
   .admin-sidebar-mobile {
-    width: 260px !important;
+    top: var(--admin-topbar-height, 72px) !important;
+    width: min(360px, calc(100vw - 24px)) !important;
+    height: calc(100svh - var(--admin-topbar-height, 72px)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-modal-frame {
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 1rem !important;
+  }
+
+  .admin-modal-card {
+    max-width: min(100%, 520px) !important;
+    max-height: 100%;
+    border-radius: 1rem;
+  }
+
+  .admin-modal-card-large {
+    height: 100%;
+    max-height: 100%;
   }
 }
 

@@ -6,7 +6,9 @@ type DatabaseClient = Prisma.TransactionClient
 
 export const CART_ITEM_ERRORS = {
   PRODUCT_NOT_FOUND: 'PRODUCT_NOT_FOUND',
+  STORE_NOT_FOUND: 'STORE_NOT_FOUND',
   INSUFFICIENT_STOCK: 'INSUFFICIENT_STOCK',
+  PRODUCT_NOT_AVAILABLE_IN_STORE: 'PRODUCT_NOT_AVAILABLE_IN_STORE',
   CART_ITEM_NOT_FOUND: 'CART_ITEM_NOT_FOUND',
 } as const
 
@@ -14,12 +16,14 @@ type AddCartItemParams = {
   userId: number
   productId: number
   quantity: number
+  storeId?: number
 }
 
 type UpdateCartItemParams = {
   userId: number
   itemId: number
   quantity: number
+  storeId?: number
 }
 
 type DeleteCartItemParams = {
@@ -29,15 +33,66 @@ type DeleteCartItemParams = {
 
 const getProductTotalStock = async (productId: number, db: DatabaseClient) => {
   const stockAgg = await db.stock.aggregate({
-    where: { productId },
+    where: {
+      productId,
+      deletedAt: null,
+      store: {
+        status: true,
+        deletedAt: null,
+      },
+    },
     _sum: { quantity: true },
   })
 
   return stockAgg._sum.quantity ?? 0
 }
 
-export const addCartItem = async ({ userId, productId, quantity }: AddCartItemParams) => {
+const assertProductListedInStore = async (
+  productId: number,
+  storeId: number | undefined,
+  db: DatabaseClient,
+) => {
+  if (!storeId) return
+
+  const stock = await db.stock.findFirst({
+    where: {
+      productId,
+      storeId,
+      deletedAt: null,
+      store: {
+        status: true,
+        deletedAt: null,
+      },
+    },
+    select: { id: true },
+  })
+
+  if (!stock) {
+    throw new Error(CART_ITEM_ERRORS.PRODUCT_NOT_AVAILABLE_IN_STORE)
+  }
+}
+
+const assertActiveStore = async (storeId: number | undefined, db: DatabaseClient) => {
+  if (!storeId) return
+
+  const store = await db.store.findFirst({
+    where: {
+      id: storeId,
+      status: true,
+      deletedAt: null,
+    },
+    select: { id: true },
+  })
+
+  if (!store) {
+    throw new Error(CART_ITEM_ERRORS.STORE_NOT_FOUND)
+  }
+}
+
+export const addCartItem = async ({ userId, productId, quantity, storeId }: AddCartItemParams) => {
   return prisma.$transaction(async (tx) => {
+    await assertActiveStore(storeId, tx)
+
     const product = await tx.product.findUnique({
       where: { id: productId },
       select: { id: true },
@@ -46,6 +101,8 @@ export const addCartItem = async ({ userId, productId, quantity }: AddCartItemPa
     if (!product) {
       throw new Error(CART_ITEM_ERRORS.PRODUCT_NOT_FOUND)
     }
+
+    await assertProductListedInStore(productId, storeId, tx)
 
     const cart = await getOrCreateCart(userId, tx)
     const existingItem = await tx.cartItem.findUnique({
@@ -61,10 +118,18 @@ export const addCartItem = async ({ userId, productId, quantity }: AddCartItemPa
       },
     })
 
-    const totalStock = await getProductTotalStock(productId, tx)
+    const availableStock = await getProductTotalStock(productId, tx)
     const nextQuantity = (existingItem?.quantity ?? 0) + quantity
-    if (nextQuantity > totalStock) {
+    if (nextQuantity > availableStock) {
       throw new Error(CART_ITEM_ERRORS.INSUFFICIENT_STOCK)
+    }
+
+    if (storeId) {
+      await tx.cart.update({
+        where: { id: cart.id },
+        data: { storeId },
+        select: { id: true },
+      })
     }
 
     const cartItem = existingItem
@@ -101,8 +166,10 @@ export const addCartItem = async ({ userId, productId, quantity }: AddCartItemPa
   })
 }
 
-export const updateCartItem = async ({ userId, itemId, quantity }: UpdateCartItemParams) => {
+export const updateCartItem = async ({ userId, itemId, quantity, storeId }: UpdateCartItemParams) => {
   return prisma.$transaction(async (tx) => {
+    await assertActiveStore(storeId, tx)
+
     const existingItem = await tx.cartItem.findFirst({
       where: {
         id: itemId,
@@ -112,6 +179,9 @@ export const updateCartItem = async ({ userId, itemId, quantity }: UpdateCartIte
         id: true,
         cartId: true,
         productId: true,
+        cart: {
+          select: { storeId: true },
+        },
       },
     })
 
@@ -119,9 +189,19 @@ export const updateCartItem = async ({ userId, itemId, quantity }: UpdateCartIte
       throw new Error(CART_ITEM_ERRORS.CART_ITEM_NOT_FOUND)
     }
 
+    const activeStoreId = storeId ?? existingItem.cart.storeId ?? undefined
+    await assertProductListedInStore(existingItem.productId, activeStoreId, tx)
     const totalStock = await getProductTotalStock(existingItem.productId, tx)
     if (quantity > totalStock) {
       throw new Error(CART_ITEM_ERRORS.INSUFFICIENT_STOCK)
+    }
+
+    if (storeId) {
+      await tx.cart.update({
+        where: { id: existingItem.cartId },
+        data: { storeId },
+        select: { id: true },
+      })
     }
 
     const cartItem = await tx.cartItem.update({

@@ -12,11 +12,33 @@ export default function AdminDashboardLayout() {
   const { user, isAuthenticated } = useAuthStore();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [activeModalCount, setActiveModalCount] = useState(0);
   const location = useLocation();
 
   useEffect(() => {
     setIsMobileOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    const handleModalOpen = () => setActiveModalCount((count) => count + 1);
+    const handleModalClose = () => setActiveModalCount((count) => Math.max(0, count - 1));
+
+    window.addEventListener('admin-modal-open', handleModalOpen);
+    window.addEventListener('admin-modal-close', handleModalClose);
+
+    return () => {
+      window.removeEventListener('admin-modal-open', handleModalOpen);
+      window.removeEventListener('admin-modal-close', handleModalClose);
+    };
+  }, []);
+
+  const hasActiveAdminModal = activeModalCount > 0;
+
+  useEffect(() => {
+    if (hasActiveAdminModal) {
+      setIsMobileOpen(false);
+    }
+  }, [hasActiveAdminModal]);
 
   const sidebarWidth = isSidebarCollapsed
     ? ADMIN_SIDEBAR_COLLAPSED_WIDTH
@@ -46,7 +68,7 @@ export default function AdminDashboardLayout() {
       {/* Mobile Overlay */}
       {isMobileOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-[55] lg:hidden admin-backdrop-in" 
+          className="admin-drawer-backdrop fixed inset-0 bg-black/50 z-[55] lg:hidden admin-backdrop-in" 
           onClick={() => setIsMobileOpen(false)} 
         />
       )}
@@ -62,7 +84,14 @@ export default function AdminDashboardLayout() {
         className="flex flex-col flex-1 transition-all duration-300 min-h-[100svh] admin-mobile-ml-0"
         style={{ marginLeft: sidebarWidth, paddingTop: ADMIN_TOPBAR_HEIGHT }}
       >
-        <AdminTopbar onMenuClick={() => setIsMobileOpen(true)} />
+        <AdminTopbar
+          onMenuClick={() => {
+            if (!hasActiveAdminModal) {
+              setIsMobileOpen(true);
+            }
+          }}
+          menuDisabled={hasActiveAdminModal}
+        />
 
         <main className="flex-1 p-6 lg:p-8 bg-transparent overflow-x-hidden">
           <Outlet />

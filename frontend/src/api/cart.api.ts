@@ -2,10 +2,14 @@ import api from './axios'
 import type { ApiData } from './api.types'
 import type { Cart, CartMutationResult } from '../types/cart'
 
-type CartCoords = { lat: number; lng: number }
+export type CartContext = {
+  lat?: number
+  lng?: number
+  storeId?: number
+}
 
-export async function getCart(coords?: CartCoords | null): Promise<Cart> {
-  const params = coords ? { lat: coords.lat, lng: coords.lng } : undefined
+export async function getCart(context?: CartContext | null): Promise<Cart> {
+  const params = context ?? undefined
   const { data } = await api.get<ApiData<Cart>>('/cart', { params })
   return data.data
 }
@@ -15,8 +19,8 @@ export async function addCartItem(productId: number, quantity = 1, storeId?: num
   return data.data
 }
 
-export async function updateCartItem(itemId: number, quantity: number): Promise<CartMutationResult> {
-  const { data } = await api.patch<ApiData<CartMutationResult>>(`/cart/items/${itemId}`, { quantity })
+export async function updateCartItem(itemId: number, quantity: number, storeId?: number): Promise<CartMutationResult> {
+  const { data } = await api.patch<ApiData<CartMutationResult>>(`/cart/items/${itemId}`, { quantity, storeId })
   return data.data
 }
 

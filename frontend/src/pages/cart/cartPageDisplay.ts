@@ -78,4 +78,4 @@ export const getCartCoords = (
 }
 
 export const getFulfillmentBranch = (cart: Cart) =>
-  cart.store?.city ? `Cabang ${cart.store.city}` : 'cabang terdekat'
+  cart.store?.name ?? (cart.store?.city ? `Cabang ${cart.store.city}` : 'cabang terdekat')
