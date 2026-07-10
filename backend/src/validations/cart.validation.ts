@@ -13,6 +13,7 @@ export const addToCartSchema = z.object({
 
 export const updateCartItemSchema = z.object({
   quantity: positiveIntegerSchema,
+  storeId: positiveIntegerSchema.optional(),
 })
 
 export const cartItemParamsSchema = z.object({

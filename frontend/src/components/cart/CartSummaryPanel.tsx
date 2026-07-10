@@ -8,10 +8,13 @@ interface CartSummaryPanelProps {
   discount?: number
   total?: number
   fulfillmentBranch?: string
+  canCheckout?: boolean
+  checkoutBlockedReason?: string | null
 }
 
-export function CartSummaryPanel({ totalQuantity, subtotal, discount = 0, total, fulfillmentBranch }: CartSummaryPanelProps) {
+export function CartSummaryPanel({ totalQuantity, subtotal, discount = 0, total, fulfillmentBranch, canCheckout = true, checkoutBlockedReason = null }: CartSummaryPanelProps) {
   const grandTotal = total ?? subtotal - discount
+  const isCheckoutEnabled = canCheckout && totalQuantity > 0
   const summaryRows = [
     { label: `Total harga (${totalQuantity} item)`, value: formatCurrency(subtotal) },
     ...(discount > 0 ? [{ label: 'Diskon produk', value: `- ${formatCurrency(discount)}` }] : []),
@@ -32,7 +35,7 @@ export function CartSummaryPanel({ totalQuantity, subtotal, discount = 0, total,
         <div className="flex min-w-0 flex-col gap-0.75">
           <span className="text-[0.86rem] text-(--ink-soft)">Pengiriman PanenMart</span>
           <strong className="text-[0.94rem] leading-[1.35] text-(--ink)">
-            Dikirim dari {fulfillmentBranch ?? 'cabang terdekat'}
+            Estimasi diproses dari {fulfillmentBranch ?? 'cabang terdekat'}
           </strong>
         </div>
       </div>
@@ -61,10 +64,22 @@ export function CartSummaryPanel({ totalQuantity, subtotal, discount = 0, total,
       <p className="mt-3 mb-0 text-[0.86rem] leading-[1.55] text-(--ink-soft)">
         Total akhir akan diperbarui setelah voucher, ongkir, dan alamat pengiriman dipilih.
       </p>
-      <Link to="/checkout" className="button primary cart-checkout-button">
-        <span>Checkout ({totalQuantity})</span>
-        <ArrowRight className="button-icon" aria-hidden="true" />
-      </Link>
+      {checkoutBlockedReason && (
+        <p className="cart-checkout-blocked-note" role="alert">
+          {checkoutBlockedReason}
+        </p>
+      )}
+      {isCheckoutEnabled ? (
+        <Link to="/checkout" className="button primary cart-checkout-button">
+          <span>Checkout ({totalQuantity})</span>
+          <ArrowRight className="button-icon" aria-hidden="true" />
+        </Link>
+      ) : (
+        <button type="button" className="button primary cart-checkout-button" disabled>
+          <span>Checkout ({totalQuantity})</span>
+          <ArrowRight className="button-icon" aria-hidden="true" />
+        </button>
+      )}
     </aside>
   )
 }

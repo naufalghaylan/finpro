@@ -69,7 +69,7 @@ export function AdminStoreFulfillmentDetailModal({ group, onClose }: Props) {
             </div>
 
             <div className="overflow-hidden rounded-2xl border border-admin-line-soft bg-admin-surface">
-              <div className="grid grid-cols-[minmax(0,1fr)_90px_130px] gap-3 border-b border-admin-line-soft bg-admin-surface-2/45 px-4 py-3 text-xs font-bold uppercase tracking-wider text-admin-ink-soft">
+              <div className="hidden grid-cols-[minmax(0,1fr)_90px_130px] gap-3 border-b border-admin-line-soft bg-admin-surface-2/45 px-4 py-3 text-xs font-bold uppercase tracking-wider text-admin-ink-soft md:grid">
                 <span>Produk</span>
                 <span className="text-right">Jumlah</span>
                 <span>Status</span>

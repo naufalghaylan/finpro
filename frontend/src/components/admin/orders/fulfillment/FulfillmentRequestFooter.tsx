@@ -18,7 +18,7 @@ export function FulfillmentRequestFooter({
   if (requestCount === 0) return null
 
   return (
-    <footer className="sticky bottom-0 z-10 flex shrink-0 flex-col gap-3 border-t border-admin-line-soft bg-admin-surface/95 px-5 py-4 backdrop-blur md:flex-row md:items-center md:justify-between md:px-6">
+    <footer className="sticky bottom-0 z-10 flex shrink-0 flex-col gap-3 border-t border-admin-line-soft bg-admin-surface/95 px-5 py-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between md:px-6">
       <div>
         <strong className="block text-sm text-admin-ink">
           {requestCount} produk - {totalRequestQuantity} item
@@ -31,7 +31,7 @@ export function FulfillmentRequestFooter({
         type="button"
         onClick={() => void onSubmit()}
         disabled={Boolean(submittingKey) || !canSubmitRequests}
-        className="inline-flex min-w-[220px] cursor-pointer items-center justify-center gap-2 rounded-xl border-none bg-admin-accent px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-admin-accent-strong disabled:cursor-not-allowed disabled:opacity-40"
+        className="inline-flex w-full min-w-0 cursor-pointer items-center justify-center gap-2 rounded-xl border-none bg-admin-accent px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-admin-accent-strong disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto sm:min-w-[220px]"
       >
         {submittingKey === 'request-batch' ? (
           <Loader2 className="h-4 w-4 admin-spin" />

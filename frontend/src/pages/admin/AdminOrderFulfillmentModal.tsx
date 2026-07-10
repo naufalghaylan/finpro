@@ -23,7 +23,7 @@ export default function AdminOrderFulfillmentModal({
       closeOnBackdrop={false}
       labelledBy="order-fulfillment-modal-title"
       maxWidthClassName="max-w-6xl"
-      cardClassName="h-full"
+      cardClassName="admin-modal-card-large"
     >
       {(closeModal) => (
         <AdminOrderFulfillmentModalContent
@@ -53,7 +53,7 @@ function AdminOrderFulfillmentModalContent({
       />
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain xl:overflow-hidden">
         <div className="grid min-h-0 grid-cols-1 xl:h-full xl:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)]">
-          <div className="flex min-h-0 min-w-0 flex-col overflow-hidden xl:h-full">
+          <div className="flex min-h-0 min-w-0 flex-col xl:h-full xl:overflow-hidden">
             <FulfillmentRequirementList
               requestRequirements={fulfillment.requestRequirements}
               requestDrafts={fulfillment.requestDrafts}
@@ -68,7 +68,7 @@ function AdminOrderFulfillmentModalContent({
               onSubmit={fulfillment.handleRequestFulfillments}
             />
           </div>
-          <div className="flex min-h-0 min-w-0 flex-col overflow-hidden border-t border-admin-line-soft xl:h-full xl:border-t-0">
+          <div className="flex min-h-0 min-w-0 flex-col border-t border-admin-line-soft xl:h-full xl:overflow-hidden xl:border-t-0">
             <FulfillmentHistoryColumn
               order={order}
               actionNotes={fulfillment.actionNotes}

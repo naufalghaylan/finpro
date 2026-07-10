@@ -37,5 +37,6 @@ function getSummaryReadinessProps(checkout: CheckoutController) {
     hasSelectedAddress: Boolean(checkout.selectedAddress),
     hasNearestBranch: Boolean(checkout.preview!.nearestStore),
     canCreateOrder: checkout.canCreateOrder,
+    cartBlockingReason: checkout.cartBlockingReason,
   }
 }

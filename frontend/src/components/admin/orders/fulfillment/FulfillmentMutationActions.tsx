@@ -19,7 +19,7 @@ export function FulfillmentMutationActions({
   onReceive,
 }: Props) {
   return (
-    <div className="flex items-center justify-end gap-2">
+    <div className="flex flex-wrap items-center justify-end gap-2">
       {mutation.status === 'PENDING' && canActForStore(mutation.sourceStoreId) && (
         <>
           <button

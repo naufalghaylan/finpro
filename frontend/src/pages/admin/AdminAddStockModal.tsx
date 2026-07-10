@@ -104,8 +104,8 @@ export default function AdminAddStockModal({ existingStocks, onClose, onSubmit }
         <>
 
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-admin-line-soft">
-          <h2 id="admin-add-stock-title" className="text-xl font-bold text-admin-ink m-0 font-[family-name:var(--font-admin)]">
+        <div className="flex items-center justify-between gap-3 p-5 border-b border-admin-line-soft sm:p-6">
+          <h2 id="admin-add-stock-title" className="min-w-0 text-lg font-bold text-admin-ink m-0 font-[family-name:var(--font-admin)] sm:text-xl">
             Tambah Produk ke Toko
           </h2>
           <button
@@ -117,7 +117,7 @@ export default function AdminAddStockModal({ existingStocks, onClose, onSubmit }
         </div>
 
         {/* Form Body */}
-        <div className="min-h-0 p-6 overflow-y-auto overscroll-contain font-[family-name:var(--font-admin)] flex-1">
+        <div className="min-h-0 p-5 overflow-y-auto overscroll-contain font-[family-name:var(--font-admin)] flex-1 sm:p-6">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
               <Loader2 className="w-8 h-8 text-admin-accent admin-spin" />
@@ -128,7 +128,7 @@ export default function AdminAddStockModal({ existingStocks, onClose, onSubmit }
 
               {/* Product Selection */}
               <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <label className="text-sm font-semibold text-admin-ink">
                     Pilih Produk <span className="text-admin-red">*</span>
                   </label>
@@ -171,8 +171,8 @@ export default function AdminAddStockModal({ existingStocks, onClose, onSubmit }
                           onChange={() => toggleProduct(p.id)}
                           className="w-4 h-4 rounded text-admin-accent focus:ring-admin-accent/30 cursor-pointer"
                         />
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium text-admin-ink">{p.name}</span>
+                        <div className="flex min-w-0 flex-col">
+                          <span className="truncate text-sm font-medium text-admin-ink">{p.name}</span>
                           <span className="text-xs text-admin-ink-muted">Rp {p.basePrice.toLocaleString('id-ID')}</span>
                         </div>
                       </label>
@@ -180,7 +180,7 @@ export default function AdminAddStockModal({ existingStocks, onClose, onSubmit }
                   )}
                 </div>
 
-                <div className="flex justify-between items-center mt-1 gap-3">
+                <div className="flex flex-col gap-2 mt-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                   <p className="text-xs text-admin-ink-muted m-0">
                     Produk tidak ditemukan? <Link to="/admin/stores/products" className="text-admin-accent font-semibold hover:underline">Buat Produk Baru</Link>
                   </p>
@@ -277,11 +277,11 @@ export default function AdminAddStockModal({ existingStocks, onClose, onSubmit }
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-admin-line-soft bg-admin-surface-2/30 flex justify-end gap-3 font-[family-name:var(--font-admin)] rounded-b-2xl">
+        <div className="p-5 border-t border-admin-line-soft bg-admin-surface-2/30 flex flex-col-reverse gap-3 font-[family-name:var(--font-admin)] rounded-b-2xl sm:flex-row sm:justify-end sm:p-6">
           <button
             type="button"
             onClick={closeModal}
-            className="px-5 py-2.5 rounded-xl text-sm font-medium text-admin-ink-soft bg-admin-surface border border-admin-line hover:bg-admin-line-soft hover:text-admin-ink transition-all cursor-pointer"
+            className="w-full px-5 py-2.5 rounded-xl text-sm font-medium text-admin-ink-soft bg-admin-surface border border-admin-line hover:bg-admin-line-soft hover:text-admin-ink transition-all cursor-pointer sm:w-auto"
           >
             Batal
           </button>
@@ -289,7 +289,7 @@ export default function AdminAddStockModal({ existingStocks, onClose, onSubmit }
             form="add-stock-form"
             type="submit"
             disabled={submitting || selectedProductIds.length === 0}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-admin-accent hover:bg-admin-accent-strong transition-all cursor-pointer border-none disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            className="inline-flex w-full items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-admin-accent hover:bg-admin-accent-strong transition-all cursor-pointer border-none disabled:opacity-50 disabled:cursor-not-allowed shadow-sm sm:w-auto"
           >
             {submitting ? (
               <Loader2 className="w-4 h-4 animate-spin" />
