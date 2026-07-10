@@ -31,12 +31,12 @@ export function AdminCancelOrderModal({
     >
       {(closeModal) => (
         <>
-        <div className="flex items-start justify-between gap-4 px-6 py-5 border-b border-admin-line-soft">
-          <div>
+        <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-admin-line-soft sm:px-6 sm:py-5">
+          <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-wider text-admin-red m-0">
               Batalkan Pesanan
             </p>
-            <h3 id="admin-cancel-order-title" className="text-lg font-bold text-admin-ink m-0 mt-1">{order.orderNumber}</h3>
+            <h3 id="admin-cancel-order-title" className="text-lg font-bold text-admin-ink m-0 mt-1 wrap-break-word">{order.orderNumber}</h3>
             <p className="text-sm text-admin-ink-muted m-0 mt-1">
               Pesanan dapat dibatalkan selama belum dikirim.
             </p>
@@ -53,7 +53,7 @@ export function AdminCancelOrderModal({
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 sm:p-6">
           <div className="rounded-xl border border-admin-red/20 bg-admin-red-soft p-4">
             <div className="flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-admin-red shrink-0 mt-0.5" />
@@ -66,7 +66,7 @@ export function AdminCancelOrderModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 my-5 text-sm">
+          <div className="grid grid-cols-1 gap-3 my-5 text-sm sm:grid-cols-2">
             <div className="rounded-xl border border-admin-line-soft bg-admin-surface-2/30 p-3">
               <span className="block text-admin-ink-muted">Pelanggan</span>
               <strong className="text-admin-ink">{order.user.name}</strong>
@@ -91,12 +91,13 @@ export function AdminCancelOrderModal({
                        disabled:opacity-60 disabled:cursor-not-allowed transition-all"
           />
 
-          <div className="flex justify-end gap-2 mt-5">
+          <div className="flex flex-col-reverse gap-2 mt-5 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={closeModal}
               disabled={isCancellingOrder}
-              className="px-4 py-2.5 rounded-xl text-sm font-semibold text-admin-ink-soft bg-admin-surface border border-admin-line-soft
+              className="w-full px-4 py-2.5 rounded-xl text-sm font-semibold text-admin-ink-soft bg-admin-surface border border-admin-line-soft
+                         sm:w-auto
                          cursor-pointer hover:bg-admin-surface-2 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
               Batal
@@ -105,7 +106,8 @@ export function AdminCancelOrderModal({
               type="button"
               onClick={onConfirm}
               disabled={isCancellingOrder}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-admin-red border-none
+              className="inline-flex w-full items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-admin-red border-none
+                         sm:w-auto
                          cursor-pointer hover:brightness-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
               {isCancellingOrder && <Loader2 className="w-4 h-4 admin-spin" />}

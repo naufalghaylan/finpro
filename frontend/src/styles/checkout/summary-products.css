@@ -72,3 +72,10 @@
   height: 100%;
   object-fit: cover;
 }
+.checkout-product-note.info {
+  color: var(--green);
+}
+
+.checkout-product-note.danger {
+  color: #b91c1c;
+}

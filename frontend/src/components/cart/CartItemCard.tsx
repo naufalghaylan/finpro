@@ -1,4 +1,4 @@
-import { AlertTriangle, Loader2, Minus, Plus, Trash2 } from 'lucide-react'
+import { AlertTriangle, Loader2, Minus, PackageCheck, Plus, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { CartItem } from '../../types/cart'
 import { formatCurrency } from '../../utils/format'
@@ -14,6 +14,8 @@ interface CartItemCardProps {
   itemBusy: boolean
   stockUnavailable: boolean
   lowStock: boolean
+  fulfilledFromOtherBranch: boolean
+  availabilityMessage: string
   quantityDraft: string
   onDelete: (item: CartItem) => void
   onQuantityUpdate: (item: CartItem, quantity: number) => void
@@ -30,6 +32,8 @@ export function CartItemCard({
   itemBusy,
   stockUnavailable,
   lowStock,
+  fulfilledFromOtherBranch,
+  availabilityMessage,
   quantityDraft,
   onDelete,
   onQuantityUpdate,
@@ -59,16 +63,18 @@ export function CartItemCard({
               {item.product.name}
             </Link>
           </h3>
-          {lowStock ? (
-            <p className="cart-item-meta warning">
-              <AlertTriangle className="button-icon" aria-hidden="true" />
-              <span>Stok sisa {item.product.totalStock}</span>
+          {lowStock || fulfilledFromOtherBranch ? (
+            <p className={`cart-item-meta ${fulfilledFromOtherBranch ? 'info' : 'warning'}`}>
+              {fulfilledFromOtherBranch ? (
+                <PackageCheck className="button-icon" aria-hidden="true" />
+              ) : (
+                <AlertTriangle className="button-icon" aria-hidden="true" />
+              )}
+              <span>{availabilityMessage}</span>
             </p>
           ) : (
             <p className={`cart-item-meta ${stockUnavailable ? 'danger' : ''}`}>
-              {stockUnavailable
-                ? 'Stok habis'
-                : `${item.product.totalStock} stok tersedia`}
+              {availabilityMessage}
             </p>
           )}
         </div>

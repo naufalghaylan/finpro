@@ -18,6 +18,7 @@ export interface CheckoutSummaryPanelProps {
   hasNearestBranch: boolean
   canCreateOrder: boolean
   isSubmitting: boolean
+  cartBlockingReason?: string | null
   onCreateOrder: () => void
 }
 
@@ -30,6 +31,7 @@ export function CheckoutSummaryPanel(props: CheckoutSummaryPanelProps) {
       <CheckoutReadinessList {...props} />
       <CheckoutSummaryRows {...props} otherDiscountAmount={otherDiscountAmount} />
       <AddressCoordinateAlert {...props} />
+      <CartAvailabilityAlert {...props} />
       <CheckoutCreateButton canCreateOrder={props.canCreateOrder} isSubmitting={props.isSubmitting} onCreateOrder={props.onCreateOrder} />
     </aside>
   )
@@ -45,7 +47,7 @@ function CheckoutSummaryHeader({ totalQuantity }: Pick<CheckoutSummaryPanelProps
 }
 
 function CheckoutReadinessList(props: CheckoutSummaryPanelProps) {
-  const items = getReadinessItems(props.hasSelectedAddress && props.hasSelectedAddressCoordinates, props.hasNearestBranch, Boolean(props.selectedShippingService))
+  const items = getReadinessItems(props.hasSelectedAddress && props.hasSelectedAddressCoordinates, props.hasNearestBranch, Boolean(props.selectedShippingService), !props.cartBlockingReason)
 
   return (
     <div className="checkout-readiness-list" aria-label="Kelengkapan checkout">
@@ -108,6 +110,11 @@ function SummaryRow({ label, value, className = '' }: { label: string; value: st
 function AddressCoordinateAlert({ hasSelectedAddress, hasSelectedAddressCoordinates }: CheckoutSummaryPanelProps) {
   if (hasSelectedAddressCoordinates || !hasSelectedAddress) return null
   return <CheckoutInlineAlert icon={AlertCircle} compact>Alamat terpilih belum punya koordinat.</CheckoutInlineAlert>
+}
+
+function CartAvailabilityAlert({ cartBlockingReason }: CheckoutSummaryPanelProps) {
+  if (!cartBlockingReason) return null
+  return <CheckoutInlineAlert icon={AlertCircle} compact>{cartBlockingReason}</CheckoutInlineAlert>
 }
 
 function CheckoutCreateButton({ canCreateOrder, isSubmitting, onCreateOrder }: Pick<CheckoutSummaryPanelProps, 'canCreateOrder' | 'isSubmitting' | 'onCreateOrder'>) {

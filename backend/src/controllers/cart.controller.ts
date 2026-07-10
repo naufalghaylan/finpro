@@ -27,6 +27,11 @@ const handleCartItemError = (error: unknown, res: Response) => {
     return true
   }
 
+  if (error.message === CART_ITEM_ERRORS.STORE_NOT_FOUND) {
+    res.status(404).json({ message: 'Store not found' })
+    return true
+  }
+
   if (error.message === CART_ITEM_ERRORS.CART_ITEM_NOT_FOUND) {
     res.status(404).json({ message: 'Cart item not found' })
     return true
@@ -37,6 +42,10 @@ const handleCartItemError = (error: unknown, res: Response) => {
     return true
   }
 
+  if (error.message === CART_ITEM_ERRORS.PRODUCT_NOT_AVAILABLE_IN_STORE) {
+    res.status(400).json({ message: 'Produk tidak tersedia di cabang aktif' })
+    return true
+  }
   return false
 }
 
@@ -55,6 +64,7 @@ export const addToCart = async (req: Request, res: Response): Promise<void> => {
       userId,
       productId: parsed.data.productId,
       quantity: parsed.data.quantity,
+      storeId: parsed.data.storeId,
     })
 
     res.status(200).json({
@@ -77,9 +87,12 @@ export const getCart = async (req: Request, res: Response): Promise<void> => {
     // lat/lng dikirim frontend (alamat terpilih/geolokasi) agar konsisten dengan katalog.
     const lat = req.query.lat !== undefined ? Number(req.query.lat) : undefined
     const lng = req.query.lng !== undefined ? Number(req.query.lng) : undefined
+    const storeId = req.query.storeId !== undefined ? Number(req.query.storeId) : undefined
     const hasCoords = lat !== undefined && lng !== undefined && !Number.isNaN(lat) && !Number.isNaN(lng)
+    const hasStoreId = storeId !== undefined && !Number.isNaN(storeId)
     const cart = await getCartService(userId, {
       applyItemDiscounts: true,
+      ...(hasStoreId ? { storeId } : {}),
       ...(hasCoords ? { lat, lng } : {}),
     })
     res.json({ data: cart })
@@ -122,6 +135,7 @@ export const updateCartItem = async (req: Request, res: Response): Promise<void>
       userId,
       itemId: parsedParams.data.id,
       quantity: parsedBody.data.quantity,
+      storeId: parsedBody.data.storeId,
     })
 
     res.json({

@@ -1,7 +1,7 @@
 import { OrderStatus, PaymentMethod } from '../../../generated/prisma/client'
 import prisma from '../../../lib/prisma'
 import { ORDER_ERRORS, OrderServiceError } from '../../order.errors'
-import { allocateStockForOrder, assertGlobalStockAvailable } from '../../order-stock.service'
+import { allocateStockForOrder, assertGlobalStockAvailable, assertProductsAvailableInStore } from '../../order-stock.service'
 import { PAYMENT_DEADLINE_IN_MS } from '../core/order.constants'
 import { orderSelect } from '../core/order.select'
 import {
@@ -46,6 +46,7 @@ export const createCheckoutOrder = async ({
     const { latitude, longitude } = getAddressCoordinates(address)
     const nearestStore = await getNearestActiveStore(latitude, longitude, tx)
     const cart = await getCheckoutCart(userId, tx)
+    await assertProductsAvailableInStore(cart.items, nearestStore.id, tx)
     await assertGlobalStockAvailable(cart.items, tx)
 
     const orderNumber = await generateOrderNumber(userId, tx)

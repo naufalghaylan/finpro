@@ -16,7 +16,7 @@ export function AdminOrderFulfillmentModalHeader({
   return (
     <header className="flex shrink-0 items-start justify-between gap-4 border-b border-admin-line-soft bg-admin-surface px-5 py-5 md:px-6">
       <div className="min-w-0">
-        <div className="mb-1.5 flex items-center gap-2">
+        <div className="mb-1.5 flex flex-wrap items-center gap-2">
           <span className="text-xs font-bold uppercase tracking-[0.14em] text-admin-accent-strong">
             Mutasi Stok Pesanan
           </span>
@@ -26,7 +26,7 @@ export function AdminOrderFulfillmentModalHeader({
             </span>
           )}
         </div>
-        <h3 id="order-fulfillment-modal-title" className="m-0 truncate text-xl font-bold text-admin-ink">{orderNumber}</h3>
+        <h3 id="order-fulfillment-modal-title" className="m-0 truncate text-lg font-bold text-admin-ink sm:text-xl">{orderNumber}</h3>
         <p className="m-0 mt-1 text-sm text-admin-ink-muted">
           Tentukan toko sumber untuk setiap produk, lalu kirim semua permintaan sekaligus.
         </p>

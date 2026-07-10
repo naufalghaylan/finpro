@@ -23,18 +23,18 @@ export function FulfillmentMutationCard({
   return (
     <div className="rounded-2xl border border-admin-line-soft bg-admin-surface p-4">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <h5 className="m-0 text-sm font-bold text-admin-ink">{mutation.product.name}</h5>
+        <div className="min-w-0">
+          <h5 className="m-0 truncate text-sm font-bold text-admin-ink">{mutation.product.name}</h5>
           <p className="m-0 mt-1 text-xs text-admin-ink-muted">
             {mutation.sourceStore.name} ke {mutation.destinationStore.name}
           </p>
         </div>
-        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold ${mutationStatusClass[mutation.status]}`}>
+        <span className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-bold ${mutationStatusClass[mutation.status]}`}>
           {mutationStatusLabel[mutation.status]}
         </span>
       </div>
 
-      <div className="my-4 grid grid-cols-2 gap-3 text-xs md:grid-cols-4">
+      <div className="my-4 grid grid-cols-1 gap-3 text-xs sm:grid-cols-2 md:grid-cols-4">
         <div>
           <span className="block text-admin-ink-muted">Jumlah</span>
           <strong className="text-admin-ink">{mutation.quantity}</strong>

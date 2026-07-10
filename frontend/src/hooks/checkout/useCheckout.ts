@@ -4,6 +4,7 @@ import { useCheckoutPreview } from './useCheckoutPreview'
 import { useCheckoutShippingOptions } from './useCheckoutShippingOptions'
 import { useCheckoutPaymentSummary } from './useCheckoutPaymentSummary'
 import { useCreateCheckoutOrder } from './useCreateCheckoutOrder'
+import { getCartBlockingReason } from '../../utils/cartAvailability'
 
 export function useCheckout() {
   const {
@@ -34,6 +35,7 @@ export function useCheckout() {
     selectedAddress.longitude !== null &&
     selectedAddress.longitude !== undefined
   const isCartEmpty = (preview?.cart.items.length ?? 0) === 0
+  const cartBlockingReason = useMemo(() => getCartBlockingReason(preview?.cart.items ?? []), [preview?.cart.items])
   const selectedVoucher = useMemo(
     () => (preview?.vouchers ?? []).find((voucher) => voucher.id === selectedVoucherId) ?? null,
     [preview?.vouchers, selectedVoucherId],
@@ -75,6 +77,7 @@ export function useCheckout() {
       Boolean(preview?.nearestStore) &&
       !isCartEmpty &&
       !isRefreshingPreview &&
+      !cartBlockingReason &&
       Boolean(selectedShippingService), // isSubmitting is managed inside
     selectedShippingService,
     paymentMethod,
@@ -91,6 +94,7 @@ export function useCheckout() {
     !isCartEmpty &&
     !isRefreshingPreview &&
     !isSubmitting &&
+    !cartBlockingReason &&
     Boolean(selectedShippingService)
 
   const handleAddressChange = (addressId: number) => {
@@ -117,6 +121,7 @@ export function useCheckout() {
     shippingError,
     paymentSummary,
     canCreateOrder,
+    cartBlockingReason,
     isCartEmpty,
     hasSelectedAddressCoordinates,
     selectedDiscountId: activeSelectedDiscountId,

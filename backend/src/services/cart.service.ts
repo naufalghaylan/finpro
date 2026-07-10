@@ -1,7 +1,7 @@
 import { Prisma } from '../generated/prisma/client'
 import prisma from '../lib/prisma'
 import { getActiveProductDiscounts, resolveDiscountStoreId, type GetCartOptions } from './cart-pricing.service'
-import { getProductStockTotals } from './cart-stock.service'
+import { getProductListingSet, getProductStockTotals } from './cart-stock.service'
 import { getBestProductDiscount } from './order/checkout/order-discount.service'
 
 type DatabaseClient = Prisma.TransactionClient
@@ -17,6 +17,13 @@ const emptyCart = {
     total: 0,
   },
 }
+
+const cartStoreSelect = {
+  id: true,
+  name: true,
+  address: true,
+  city: true,
+} as const
 
 export const createCart = async (userId: number, db: DatabaseClient = prisma) => {
   return db.cart.create({
@@ -48,14 +55,6 @@ export const getCart = async (userId: number, options: GetCartOptions = {}) => {
     where: { userId },
     select: {
       id: true,
-      store: {
-        select: {
-          id: true,
-          name: true,
-          address: true,
-          city: true,
-        },
-      },
       items: {
         orderBy: { updatedAt: 'desc' },
         select: {
@@ -115,14 +114,40 @@ export const getCart = async (userId: number, options: GetCartOptions = {}) => {
 
   const applyItemDiscounts = options.applyItemDiscounts ?? false
   const productIds = cart.items.map((item) => item.productId)
-  const discountStoreId = applyItemDiscounts ? await resolveDiscountStoreId(userId, options) : undefined
-  const [stockTotals, activeDiscounts] = await Promise.all([
+  const fulfillmentStoreId = applyItemDiscounts || options.storeId
+    ? await resolveDiscountStoreId(userId, options)
+    : undefined
+  const [
+    globalStockTotals,
+    fulfillmentStockTotals,
+    listedProductIds,
+    activeDiscounts,
+    fulfillmentStore,
+  ] = await Promise.all([
     getProductStockTotals(productIds),
-    applyItemDiscounts ? getActiveProductDiscounts(productIds, discountStoreId) : Promise.resolve([]),
+    fulfillmentStoreId
+      ? getProductStockTotals(productIds, fulfillmentStoreId)
+      : Promise.resolve(new Map<number, number>()),
+    fulfillmentStoreId
+      ? getProductListingSet(productIds, fulfillmentStoreId)
+      : Promise.resolve(new Set<number>()),
+    applyItemDiscounts ? getActiveProductDiscounts(productIds, fulfillmentStoreId) : Promise.resolve([]),
+    fulfillmentStoreId
+      ? prisma.store.findFirst({
+          where: { id: fulfillmentStoreId, status: true, deletedAt: null },
+          select: cartStoreSelect,
+        })
+      : Promise.resolve(null),
   ])
 
   const items = cart.items.map((item) => {
-    const totalStock = stockTotals.get(item.productId) ?? 0
+    const totalStock = globalStockTotals.get(item.productId) ?? 0
+    const activeStoreStock = fulfillmentStoreId
+      ? fulfillmentStockTotals.get(item.productId) ?? 0
+      : totalStock
+    const isListedInFulfillmentStore = fulfillmentStoreId
+      ? listedProductIds.has(item.productId)
+      : true
     const baseLineTotal = item.quantity * item.product.basePrice
     const bestDiscount = getBestProductDiscount(
       { productId: item.productId, quantity: item.quantity, product: { basePrice: item.product.basePrice } },
@@ -136,6 +161,8 @@ export const getCart = async (userId: number, options: GetCartOptions = {}) => {
       product: {
         ...item.product,
         totalStock,
+        activeStoreStock,
+        isListedInFulfillmentStore,
       },
       baseLineTotal,
       discountAmount,
@@ -155,7 +182,7 @@ export const getCart = async (userId: number, options: GetCartOptions = {}) => {
 
   return {
     id: cart.id,
-    store: cart.store,
+    store: fulfillmentStore,
     items,
     summary,
   }
