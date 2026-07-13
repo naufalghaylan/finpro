@@ -1,7 +1,8 @@
-import { OrderStatus } from '../../../generated/prisma/client'
+import { OrderStatus, StockJournalType } from '../../../generated/prisma/client'
 import prisma from '../../../lib/prisma'
 import { assertAdminCanAccessStore } from '../../order-admin-access.service'
 import { ORDER_ERRORS, OrderServiceError } from '../../order.errors'
+import { adjustStockWithJournal, stockJournalSnapshotSelect } from '../../order-stock-journal.service'
 import { getOrderStockFulfillment } from '../fulfillment/order-fulfillment-state.service'
 import { fulfillmentMutationInclude } from '../fulfillment/order-fulfillment.utils'
 
@@ -21,6 +22,10 @@ type RequestFulfillmentsParams = {
   userId: number
   orderId: number
   requests: RequestFulfillmentItem[]
+}
+
+type ValidatedFulfillmentRequest = RequestFulfillmentItem & {
+  reserveQuantity: number
 }
 
 export const requestOrderFulfillments = async ({
@@ -61,6 +66,7 @@ export const requestOrderFulfillments = async ({
     const fulfillment = await getOrderStockFulfillment(order.id, tx)
     const orderProductIds = new Set(order.items.map((item) => item.productId))
     const requestedProductIds = new Set<number>()
+    const validatedRequests: ValidatedFulfillmentRequest[] = []
 
     for (const request of requests) {
       if (requestedProductIds.has(request.productId)) {
@@ -118,10 +124,15 @@ export const requestOrderFulfillments = async ({
           400,
         )
       }
+
+      validatedRequests.push({
+        ...request,
+        reserveQuantity: Math.max(0, request.quantity - selectedSource.reservedQuantity),
+      })
     }
 
     const mutations = []
-    for (const request of requests) {
+    for (const request of validatedRequests) {
       const mutation = await tx.stockMutation.create({
         data: {
           orderId: order.id,
@@ -134,6 +145,40 @@ export const requestOrderFulfillments = async ({
         },
         include: fulfillmentMutationInclude,
       })
+
+      if (request.reserveQuantity > 0) {
+        const sourceStock = await tx.stock.findUnique({
+          where: {
+            productId_storeId: {
+              productId: request.productId,
+              storeId: request.sourceStoreId,
+            },
+          },
+          select: stockJournalSnapshotSelect,
+        })
+
+        if (!sourceStock) {
+          throw new OrderServiceError(
+            ORDER_ERRORS.STOCK_NOT_FOUND,
+            'Stok toko sumber tidak ditemukan',
+            404,
+          )
+        }
+
+        await adjustStockWithJournal({
+          db: tx,
+          stock: sourceStock,
+          orderId: order.id,
+          stockMutationId: mutation.id,
+          quantityChange: -request.reserveQuantity,
+          type: StockJournalType.MUTATION_OUT,
+          userId,
+          description: `Reservasi fulfillment #${mutation.id}`,
+          notes: request.notes || `Stok dialokasikan untuk fulfillment pesanan ${order.orderNumber}`,
+          insufficientStockMessage: 'Stok toko sumber berubah saat permintaan fulfillment dibuat. Silakan coba kembali.',
+        })
+      }
+
       mutations.push(mutation)
     }
 
