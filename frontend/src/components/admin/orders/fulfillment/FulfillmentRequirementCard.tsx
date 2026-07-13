@@ -27,6 +27,9 @@ export function FulfillmentRequirementCard({
     (source) => source.storeId === draft?.sourceStoreId,
   )
   const maxQuantity = getFulfillmentRequestQuantityLimit(requirement, draft)
+  const getSourceOptionLabel = (source: FulfillmentRequirement['sources'][number]) => (
+    `${source.storeName} - ${source.distanceKm} km - tersedia ${source.availableQuantity} item`
+  )
 
   return (
     <article className="rounded-2xl border border-admin-line-soft bg-admin-surface-2/35 p-4 transition-colors focus-within:border-admin-accent/40 md:p-5">
@@ -74,10 +77,10 @@ export function FulfillmentRequirementCard({
               )}
               className={fieldControlClassName}
             >
-              <option value="">Pilih toko sumber terdekat</option>
+              <option value="">Pilih toko sumber</option>
               {requirement.sources.map((source) => (
                 <option key={source.storeId} value={source.storeId}>
-                  {source.storeName} - {source.distanceKm} km - {source.availableQuantity} item
+                  {getSourceOptionLabel(source)}
                 </option>
               ))}
             </select>

@@ -6,8 +6,6 @@ export const getReservedQuantities = (order: FulfillmentStateOrder) => {
   const reservedByProductAndStore = new Map<string, number>()
 
   for (const journal of order.stockJournals) {
-    if (journal.type === StockJournalType.MUTATION_OUT) continue
-
     const key = `${journal.stock.productId}:${journal.stock.storeId}`
     const currentQuantity = reservedByProductAndStore.get(key) ?? 0
     reservedByProductAndStore.set(key, currentQuantity - journal.quantityChange)
@@ -35,7 +33,11 @@ export const getReservedQuantityForSource = async ({
         storeId: sourceStoreId,
       },
       type: {
-        in: [StockJournalType.ORDER, StockJournalType.CANCEL_RETURN],
+        in: [
+          StockJournalType.ORDER,
+          StockJournalType.MUTATION_OUT,
+          StockJournalType.CANCEL_RETURN,
+        ],
       },
     },
     select: {
