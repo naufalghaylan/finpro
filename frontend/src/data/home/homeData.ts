@@ -18,8 +18,8 @@ export const SERVICE_RANGE_KM = 12
 
 export const navLinks: NavLink[] = [
   { id: 'katalog', label: 'Katalog', href: '/catalog' },
-  { id: 'promo', label: 'Produk Harian', href: '/home#deals' },
   { id: 'toko', label: 'Toko', href: '/home#stores' },
+  { id: 'promo', label: 'Produk Harian', href: '/home#products' },
   { id: 'bantuan', label: 'Bantuan', href: '/help' },
 ]
 

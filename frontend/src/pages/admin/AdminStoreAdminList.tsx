@@ -4,6 +4,7 @@ import { Eye, EyeOff, Plus, UserCog, Loader2 } from 'lucide-react';
 import { getStoreAdmins, assignStoreAdmin, createStoreAdmin } from '../../api/user';
 import { getStores } from '../../api/store';
 import type { Store } from '../../types/store';
+import { useToast } from '../../components/common/Toast';
 
 type StoreAdmin = {
   id: number;
@@ -29,6 +30,8 @@ export default function AdminStoreAdminList() {
   const [createFormErrors, setCreateFormErrors] = useState<{name?: string; email?: string; password?: string}>({});
   const [isCreating, setIsCreating] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const { showToast } = useToast();
 
   const fetchAdmins = async () => {
     setLoading(true);
@@ -72,9 +75,10 @@ export default function AdminStoreAdminList() {
       await assignStoreAdmin(selectedAdmin.id, selectedStoreId === '' ? null : Number(selectedStoreId));
       setAssignModalOpen(false);
       fetchAdmins();
+      showToast('Berhasil mengubah penugasan admin', 'success');
     } catch (e) {
       const error = e as AxiosError<{ message?: string }>;
-      alert(error.response?.data?.message ?? 'Gagal menugaskan admin');
+      showToast(error.response?.data?.message ?? 'Gagal menugaskan admin', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -108,13 +112,14 @@ export default function AdminStoreAdminList() {
       setCreateModalOpen(false);
       setCreateForm({ name: '', email: '', password: '', storeId: '' });
       fetchAdmins();
+      showToast('Berhasil membuat admin baru', 'success');
     } catch (e) {
       const error = e as AxiosError<{ message?: string }>;
       const errorMessage = error.response?.data?.message ?? 'Gagal membuat admin';
       if (errorMessage.toLowerCase().includes('email')) {
         setCreateFormErrors({ email: errorMessage });
       } else {
-        alert(errorMessage);
+        showToast(errorMessage, 'error');
       }
     } finally {
       setIsCreating(false);

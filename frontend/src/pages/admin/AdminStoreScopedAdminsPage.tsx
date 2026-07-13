@@ -5,6 +5,8 @@ import { UserCog, Loader2 } from 'lucide-react';
 import { getStoreAdmins, assignStoreAdmin } from '../../api/user';
 import { getStores } from '../../api/store';
 import type { Store } from '../../types/store';
+import { useToast } from '../../components/common/Toast';
+import ConfirmationModal from '../../components/modal/ConfirmationModal';
 
 type StoreAdmin = {
   id: number;
@@ -26,6 +28,9 @@ export default function AdminStoreScopedAdminsPage() {
   const [selectedAdminId, setSelectedAdminId] = useState<number | ''>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { showToast } = useToast();
+  const [adminToUnassign, setAdminToUnassign] = useState<number | null>(null);
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -43,6 +48,7 @@ export default function AdminStoreScopedAdminsPage() {
       if (currentStore) setStore(currentStore);
     } catch (error) {
       console.error('Failed to fetch data', error);
+      showToast('Gagal memuat data', 'error');
     } finally {
       setLoading(false);
     }
@@ -66,27 +72,34 @@ export default function AdminStoreScopedAdminsPage() {
       setAssignModalOpen(false);
       setSelectedAdminId('');
       fetchData();
+      showToast('Berhasil menugaskan admin', 'success');
     } catch (e) {
       const error = e as AxiosError<{ message?: string }>;
-      alert(error.response?.data?.message ?? 'Gagal menugaskan admin');
+      showToast(error.response?.data?.message ?? 'Gagal menugaskan admin', 'error');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleUnassign = async (adminId: number) => {
-    if (!confirm('Lepas penugasan admin ini dari toko ini?')) return;
+  const executeUnassign = async () => {
+    if (!adminToUnassign) return;
     
     setIsSubmitting(true);
     try {
-      await assignStoreAdmin(adminId, null);
+      await assignStoreAdmin(adminToUnassign, null);
       fetchData();
+      showToast('Berhasil melepas penugasan admin', 'success');
     } catch (e) {
       const error = e as AxiosError<{ message?: string }>;
-      alert(error.response?.data?.message ?? 'Gagal melepas admin');
+      showToast(error.response?.data?.message ?? 'Gagal melepas admin', 'error');
     } finally {
       setIsSubmitting(false);
+      setAdminToUnassign(null);
     }
+  };
+
+  const handleUnassign = (adminId: number) => {
+    setAdminToUnassign(adminId);
   };
 
   // Filter admins that are not currently assigned to this store
@@ -216,6 +229,17 @@ export default function AdminStoreScopedAdminsPage() {
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        open={adminToUnassign !== null}
+        title="Lepas Penugasan Admin"
+        message="Lepas penugasan admin ini dari toko ini? Admin tidak akan dapat mengakses data toko ini lagi."
+        iconName="user-minus"
+        confirmLabel="Lepas Penugasan"
+        loading={isSubmitting}
+        onConfirm={executeUnassign}
+        onCancel={() => setAdminToUnassign(null)}
+      />
     </div>
   );
 }
