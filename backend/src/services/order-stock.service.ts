@@ -32,11 +32,63 @@ export type ReservedStockOrder = {
 const getStockTotals = async (productIds: number[], db: DatabaseClient) => {
   const stockTotals = await db.stock.groupBy({
     by: ['productId'],
-    where: { productId: { in: productIds } },
+    where: {
+      productId: { in: productIds },
+      deletedAt: null,
+      store: {
+        status: true,
+        deletedAt: null,
+      },
+    },
     _sum: { quantity: true },
   })
 
   return new Map(stockTotals.map((stock) => [stock.productId, stock._sum.quantity ?? 0]))
+}
+
+const getProductListingSet = async (productIds: number[], storeId: number, db: DatabaseClient) => {
+  if (productIds.length === 0) {
+    return new Set<number>()
+  }
+
+  const stocks = await db.stock.findMany({
+    where: {
+      productId: { in: productIds },
+      storeId,
+      deletedAt: null,
+      store: {
+        status: true,
+        deletedAt: null,
+      },
+    },
+    select: { productId: true },
+  })
+
+  return new Set(stocks.map((stock) => stock.productId))
+}
+
+export const assertProductsAvailableInStore = async (
+  items: StockAvailabilityItem[],
+  storeId: number,
+  db: DatabaseClient,
+) => {
+  const productIds = [...new Set(items.map((item) => item.productId))]
+  const listedProductIds = await getProductListingSet(productIds, storeId, db)
+  const unavailableItems = items
+    .map((item) => ({
+      productId: item.productId,
+      productName: item.product.name,
+    }))
+    .filter((item) => !listedProductIds.has(item.productId))
+
+  if (unavailableItems.length > 0) {
+    throw new OrderServiceError(
+      ORDER_ERRORS.PRODUCT_NOT_AVAILABLE_IN_STORE,
+      'Beberapa produk tidak tersedia di cabang pengiriman',
+      400,
+      { items: unavailableItems },
+    )
+  }
 }
 
 export const assertGlobalStockAvailable = async (
@@ -102,6 +154,11 @@ export const allocateStockForOrder = async ({
       where: {
         productId: item.productId,
         quantity: { gt: 0 },
+        deletedAt: null,
+        store: {
+          status: true,
+          deletedAt: null,
+        },
       },
       select: {
         ...stockJournalSnapshotSelect,

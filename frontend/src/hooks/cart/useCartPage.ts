@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { getCart } from '../../api/cart.api'
+import { getCart, type CartContext } from '../../api/cart.api'
 import { useCartStore } from '../../store/cartStore'
 import type { Cart } from '../../types/cart'
 import { getApiFetchError, type ApiFetchError } from '../../utils/apiError'
@@ -28,9 +28,7 @@ const getQuantityDrafts = (cart: Cart) =>
     return drafts
   }, {})
 
-type CartCoords = { lat: number; lng: number } | null
-
-export function useCartPage(coords: CartCoords = null) {
+export function useCartPage(context: CartContext | null = null) {
   const [cart, setCart] = useState<Cart>(emptyCart)
   const [quantityDrafts, setQuantityDrafts] = useState<Record<number, string>>({})
   const [isLoading, setIsLoading] = useState(true)
@@ -48,7 +46,7 @@ export function useCartPage(coords: CartCoords = null) {
     }
 
     try {
-      const nextCart = await getCart(coords)
+      const nextCart = await getCart(context)
       setCart(nextCart)
       setQuantityDrafts(getQuantityDrafts(nextCart))
       setCartCount(nextCart.summary.totalQuantity)
@@ -60,7 +58,7 @@ export function useCartPage(coords: CartCoords = null) {
         setIsLoading(false)
       }
     }
-  }, [setCartCount, coords?.lat, coords?.lng])
+  }, [setCartCount, context])
 
   useEffect(() => {
     const initialLoadId = window.setTimeout(() => {
@@ -79,7 +77,7 @@ export function useCartPage(coords: CartCoords = null) {
     handleQuantityUpdate,
     handleQuantitySubmit,
     handleDeleteItem,
-  } = useCartMutations(quantityDrafts, setQuantityDrafts, setInlineError, loadCart)
+  } = useCartMutations(quantityDrafts, setQuantityDrafts, setInlineError, loadCart, context?.storeId)
 
   return {
     cart,

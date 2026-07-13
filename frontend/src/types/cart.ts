@@ -38,6 +38,8 @@ export type CartProduct = {
   stocks: CartProductStock[]
   discounts?: CartProductDiscount[]
   totalStock: number
+  activeStoreStock?: number
+  isListedInFulfillmentStore?: boolean
 }
 
 export type CartItem = {

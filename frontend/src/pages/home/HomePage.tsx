@@ -19,16 +19,17 @@ import {
 } from '../../data/home/homeData'
 import { useLocationSelection } from '../../hooks/home/useLocationSelection'
 import { useHomepageData } from '../../hooks/home/useHomepageData'
-import { useState, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useLocation, Link } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useAddressStore } from '../../store/addressStore'
+import { useFulfillmentStore, type FulfillmentSource } from '../../store/fulfillmentStore'
 import {
   ShoppingBag, Tag, MapPin, HelpCircle,
   Carrot, Apple, Beef, Milk, Flame, ChefHat, LayoutGrid, Loader2
 } from 'lucide-react'
 import type { HomepageStore, HomepageBanner, HomepageCategory, HomepageFooterSocial } from '../../types/home/homepage'
-import type { NavLink } from '../../types/home/home'
+import type { NavLink, StoreLocation } from '../../types/home/home'
 
 const getCategoryIcon = (label: string) => {
   const normalizedLabel = label.toLowerCase()
@@ -46,7 +47,10 @@ const getCategoryIcon = (label: string) => {
 }
 
 export default function HomePage() {
-  const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null)
+  const selectedStoreId = useFulfillmentStore((state) => state.selectedStoreId)
+  const setSelectedStoreId = useFulfillmentStore((state) => state.setSelectedStoreId)
+  const setActiveStore = useFulfillmentStore((state) => state.setActiveStore)
+  const clearSelectedStore = useFulfillmentStore((state) => state.clearSelectedStore)
   const { isAuthenticated } = useAuthStore()
   const { addresses, selectedAddressId, fetchAddresses } = useAddressStore()
 
@@ -114,6 +118,45 @@ export default function HomePage() {
 
   const distanceKm = isManuallySelected ? null : (data?.storeInfo?.distance ?? null)
   const serviceable = isManuallySelected ? true : (data?.storeInfo ? !data.storeInfo.isOutOfRange : true)
+
+  const setFulfillmentStore = useCallback((store: StoreLocation, source: FulfillmentSource) => {
+    const numericStoreId = Number(store.id)
+
+    if (!Number.isFinite(numericStoreId)) {
+      setActiveStore(null, null)
+      return
+    }
+
+    setActiveStore(
+      {
+        id: numericStoreId,
+        name: store.name,
+        city: store.city,
+        address: store.address,
+        latitude: store.lat,
+        longitude: store.lng,
+      },
+      source,
+    )
+  }, [setActiveStore])
+
+  useEffect(() => {
+    setFulfillmentStore(activeStore, isManuallySelected ? 'manual_store' : isFallback ? 'fallback' : 'nearest_location')
+  }, [activeStore, isFallback, isManuallySelected, setFulfillmentStore])
+
+  const handleSelectStore = (storeId: string) => {
+    setSelectedStoreId(storeId)
+    const selectedStore = activeStores.find((store: StoreLocation) => store.id === storeId)
+    if (selectedStore) {
+      setFulfillmentStore(selectedStore, 'manual_store')
+    }
+  }
+
+  const handleUseMainStore = () => {
+    setSelectedStoreId(mainStore.id)
+    setFulfillmentStore(mainStore, 'fallback')
+    fallbackToMainStore()
+  }
 
   // Fallbacks if data is missing
   const activeBanners = data?.banners && data.banners.length > 0 
@@ -217,13 +260,14 @@ export default function HomePage() {
           error={error || apiError}
           isFallback={isFallback}
           onRequestLocation={requestLocation}
-          onUseMainStore={fallbackToMainStore}
+          onUseMainStore={handleUseMainStore}
+          onDeliveryLocationChange={clearSelectedStore}
         />
         <ValueStrip items={valueProps} sectionId="deals" />
         <StoreShowcase
           stores={activeStores}
           activeStoreId={activeStore.id}
-          onSelectStore={setSelectedStoreId}
+          onSelectStore={handleSelectStore}
           error={apiError}
         />
         

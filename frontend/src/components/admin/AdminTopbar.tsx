@@ -4,9 +4,10 @@ import { useNavigate } from 'react-router-dom';
 
 interface AdminTopbarProps {
   onMenuClick: () => void;
+  menuDisabled?: boolean;
 }
 
-export function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
+export function AdminTopbar({ onMenuClick, menuDisabled = false }: AdminTopbarProps) {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
 
@@ -27,8 +28,12 @@ export function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
     >
       <div className="flex items-center gap-3">
         <button
+          type="button"
           onClick={onMenuClick}
-          className="lg:hidden p-2 -ml-2 text-admin-ink hover:bg-admin-surface-2 rounded-lg transition-colors border-none cursor-pointer bg-transparent shrink-0"
+          disabled={menuDisabled}
+          aria-label={menuDisabled ? 'Menu admin tidak tersedia saat modal terbuka' : 'Buka menu admin'}
+          title={menuDisabled ? 'Tutup modal terlebih dahulu' : 'Buka menu admin'}
+          className="lg:hidden p-2 -ml-2 text-admin-ink hover:bg-admin-surface-2 rounded-lg transition-colors border-none cursor-pointer bg-transparent shrink-0 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
         >
           <Menu className="w-6 h-6" />
         </button>

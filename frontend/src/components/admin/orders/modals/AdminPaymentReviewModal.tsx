@@ -37,12 +37,12 @@ export function AdminPaymentReviewModal({
     >
       {(closeModal) => (
         <>
-        <div className="flex items-start justify-between gap-4 px-6 py-5 border-b border-admin-line-soft">
-          <div>
+        <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-admin-line-soft sm:px-6 sm:py-5">
+          <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-wider text-admin-accent-strong m-0">
               Tinjau Pembayaran Manual
             </p>
-            <h3 id="admin-payment-review-title" className="text-lg font-bold text-admin-ink m-0 mt-1">{order.orderNumber}</h3>
+            <h3 id="admin-payment-review-title" className="text-lg font-bold text-admin-ink m-0 mt-1 wrap-break-word">{order.orderNumber}</h3>
             <p className="text-sm text-admin-ink-muted m-0 mt-1">
               Periksa bukti bayar sebelum menerima atau menolak pembayaran.
             </p>
@@ -59,7 +59,7 @@ export function AdminPaymentReviewModal({
           </button>
         </div>
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-6 overflow-y-auto overscroll-contain p-6 lg:grid-cols-[1fr_280px]">
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-5 overflow-y-auto overscroll-contain p-5 sm:gap-6 sm:p-6 lg:grid-cols-[1fr_280px]">
           <div>
             <div className="rounded-xl border border-admin-line-soft bg-admin-surface-2/30 overflow-hidden">
               {selectedPaymentProofUrl ? (
@@ -153,12 +153,13 @@ export function AdminPaymentReviewModal({
                     </p>
                   </div>
                 </div>
-                <div className="flex justify-end gap-2 mt-4">
+                <div className="flex flex-col-reverse gap-2 mt-4 sm:flex-row sm:justify-end">
                   <button
                     type="button"
                     onClick={() => onSetPendingAction(null)}
                     disabled={isConfirmingPayment}
-                    className="px-3 py-2 rounded-lg text-xs font-semibold text-admin-ink-soft bg-admin-surface border border-admin-line-soft
+                    className="w-full px-3 py-2 rounded-lg text-xs font-semibold text-admin-ink-soft bg-admin-surface border border-admin-line-soft
+                               sm:w-auto
                                cursor-pointer hover:bg-admin-surface-2 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                   >
                     Batal
@@ -167,9 +168,9 @@ export function AdminPaymentReviewModal({
                     type="button"
                     onClick={onConfirm}
                     disabled={isConfirmingPayment}
-                    className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-white border-none
+                    className={`inline-flex w-full items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-white border-none
                                 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-all
-                                ${pendingAction === 'approve' ? 'bg-admin-green' : 'bg-admin-red'}`}
+                                sm:w-auto ${pendingAction === 'approve' ? 'bg-admin-green' : 'bg-admin-red'}`}
                   >
                     {isConfirmingPayment && <Loader2 className="w-3.5 h-3.5 admin-spin" />}
                     {pendingAction === 'approve' ? 'Ya, Terima' : 'Ya, Tolak'}

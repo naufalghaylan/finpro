@@ -4,6 +4,7 @@ import { addCartItem } from '../api/cart.api'
 import { useToast } from '../components/common/toastContext'
 import { useAuthStore } from '../store/authStore'
 import { useCartStore } from '../store/cartStore'
+import { useFulfillmentStore } from '../store/fulfillmentStore'
 
 type AddToCartProduct = {
   id: number
@@ -44,6 +45,7 @@ export const useAddToCart = () => {
   const { showToast } = useToast()
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const setCartCount = useCartStore((state) => state.setCartCount)
+  const activeStoreId = useFulfillmentStore((state) => state.activeStore?.id)
   const [addingProductId, setAddingProductId] = useState<number | null>(null)
 
   const addToCart = async (product: AddToCartProduct, quantity = 1, storeId?: number) => {
@@ -65,7 +67,7 @@ export const useAddToCart = () => {
     setAddingProductId(product.id)
 
     try {
-      const result = await addCartItem(product.id, quantity, getProductStoreId(product, storeId))
+      const result = await addCartItem(product.id, quantity, getProductStoreId(product, storeId ?? activeStoreId))
       setCartCount(result.cartCount)
       window.dispatchEvent(new Event('cartUpdated'))
       showToast(`"${product.name}" ditambahkan ke keranjang`, 'success')

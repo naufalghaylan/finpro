@@ -1,5 +1,6 @@
 import type { CartItem } from '../../types/cart'
 import { formatCurrency } from '../../utils/format'
+import { getCartItemAvailability } from '../../utils/cartAvailability'
 
 type CheckoutProductItemProps = {
   item: CartItem
@@ -24,6 +25,7 @@ function CheckoutProductInfo({ item }: CheckoutProductItemProps) {
   const originalUnitPrice = getOriginalUnitPrice(item)
   const finalUnitPrice = getFinalUnitPrice(item)
   const hasProductDiscount = finalUnitPrice < originalUnitPrice
+  const availability = getCartItemAvailability(item)
 
   return (
     <div className="checkout-product-info">
@@ -40,6 +42,11 @@ function CheckoutProductInfo({ item }: CheckoutProductItemProps) {
           <span>{formatCurrency(finalUnitPrice)}</span>
         )}
       </span>
+      {(availability.blocksCheckout || availability.fulfilledFromOtherBranch) && (
+        <em className={`checkout-product-note ${availability.blocksCheckout ? 'danger' : 'info'}`}>
+          {availability.message}
+        </em>
+      )}
     </div>
   )
 }

@@ -18,7 +18,7 @@ type Props = {
 
 export function FulfillmentHistoryColumn(props: Props) {
   return (
-    <div className="flex-1 min-h-0 min-w-0 bg-admin-surface px-5 py-5 md:px-6 overflow-y-auto overscroll-contain">
+    <div className="min-h-0 min-w-0 flex-1 bg-admin-surface px-5 py-5 md:px-6 xl:overflow-y-auto xl:overscroll-contain">
       <AdminOrderFulfillmentHistory {...props} />
     </div>
   )

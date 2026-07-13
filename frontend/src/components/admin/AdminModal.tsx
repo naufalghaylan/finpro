@@ -3,7 +3,6 @@ import {
   useEffect,
   useRef,
   useState,
-  type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from 'react'
@@ -18,13 +17,6 @@ type AdminModalProps = {
   labelledBy?: string
   maxWidthClassName?: string
   cardClassName?: string
-}
-
-const ADMIN_MODAL_VIEWPORT_STYLE: CSSProperties = {
-  top: 'var(--admin-topbar-height, 72px)',
-  right: '0',
-  bottom: '0',
-  left: 'var(--admin-sidebar-width, 260px)',
 }
 
 const getFocusableElements = (container: HTMLElement) => Array.from(
@@ -47,6 +39,13 @@ export function AdminModal({
   const [closing, setClosing] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
+
+  useEffect(() => {
+    window.dispatchEvent(new Event('admin-modal-open'))
+    return () => {
+      window.dispatchEvent(new Event('admin-modal-close'))
+    }
+  }, [])
 
   const closeModal = useCallback(() => {
     if (busy || closing) return
@@ -130,14 +129,12 @@ export function AdminModal({
       <div
         aria-hidden="true"
         onMouseDown={closeOnBackdrop ? closeModal : undefined}
-        style={ADMIN_MODAL_VIEWPORT_STYLE}
-        className={`fixed z-[40] bg-black/45 backdrop-blur-[2px]
+        className={`admin-modal-viewport fixed z-[40] bg-black/45 backdrop-blur-[2px]
                     transition-opacity duration-200 ease-out motion-reduce:transition-none
                     ${visible ? 'opacity-100' : 'opacity-0'}`}
       />
       <div
-        style={ADMIN_MODAL_VIEWPORT_STYLE}
-        className="fixed pointer-events-none z-[45] flex items-center justify-center overflow-hidden p-4 md:p-8 md:py-10"
+        className="admin-modal-viewport admin-modal-frame fixed pointer-events-none z-[45] flex items-center justify-center overflow-hidden p-4 md:p-8 md:py-10"
       >
         <div
           ref={cardRef}
@@ -146,7 +143,7 @@ export function AdminModal({
           aria-labelledby={labelledBy}
           tabIndex={-1}
           onKeyDown={handleDialogKeyDown}
-          className={`pointer-events-auto flex max-h-full w-full flex-col overflow-hidden
+          className={`admin-modal-card pointer-events-auto flex max-h-full w-full flex-col overflow-hidden
                       rounded-2xl border border-admin-line-soft bg-admin-surface shadow-2xl outline-none
                       transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none
                       ${maxWidthClassName} ${cardClassName}
