@@ -1,5 +1,4 @@
 import { Prisma, StockJournalType } from '../generated/prisma/client'
-import { getDistanceFromLatLonInKm } from '../utils/geo.util'
 import { ORDER_ERRORS, OrderServiceError } from './order.errors'
 import {
   adjustStockWithJournal,
@@ -116,19 +115,6 @@ export const assertGlobalStockAvailable = async (
   }
 }
 
-const getStockPriority = (
-  stock: { storeId: number; store: { latitude: number; longitude: number } },
-  nearestStoreId: number,
-  latitude: number,
-  longitude: number,
-) => {
-  if (stock.storeId === nearestStoreId) {
-    return -1
-  }
-
-  return getDistanceFromLatLonInKm(latitude, longitude, stock.store.latitude, stock.store.longitude)
-}
-
 export const allocateStockForOrder = async ({
   db,
   items,
@@ -136,8 +122,6 @@ export const allocateStockForOrder = async ({
   orderNumber,
   userId,
   nearestStoreId,
-  latitude,
-  longitude,
 }: {
   db: DatabaseClient
   items: StockAvailabilityItem[]
@@ -145,14 +129,12 @@ export const allocateStockForOrder = async ({
   orderNumber: string
   userId: number
   nearestStoreId: number
-  latitude: number
-  longitude: number
 }) => {
   for (const item of items) {
-    let remainingQuantity = item.quantity
-    const availableStocks = await db.stock.findMany({
+    const destinationStock = await db.stock.findFirst({
       where: {
         productId: item.productId,
+        storeId: nearestStoreId,
         quantity: { gt: 0 },
         deletedAt: null,
         store: {
@@ -160,53 +142,26 @@ export const allocateStockForOrder = async ({
           deletedAt: null,
         },
       },
-      select: {
-        ...stockJournalSnapshotSelect,
-        storeId: true,
-      },
-    }) as (StockWithJournalSnapshots & { storeId: number })[]
+      select: stockJournalSnapshotSelect,
+    }) as StockWithJournalSnapshots | null
 
-    const prioritizedStocks = availableStocks.sort((firstStock, secondStock) => {
-      const firstPriority = getStockPriority(firstStock, nearestStoreId, latitude, longitude)
-      const secondPriority = getStockPriority(secondStock, nearestStoreId, latitude, longitude)
+    if (!destinationStock) {
+      continue
+    }
 
-      return firstPriority - secondPriority
+    const quantityTaken = Math.min(item.quantity, destinationStock.quantity)
+
+    await adjustStockWithJournal({
+      db,
+      stock: destinationStock,
+      orderId,
+      quantityChange: -quantityTaken,
+      type: StockJournalType.ORDER,
+      userId,
+      description: `Reservasi pesanan ${orderNumber}`,
+      notes: 'Stok toko tujuan dialokasikan otomatis untuk pesanan pelanggan',
+      insufficientStockMessage: 'Stock changed while creating order. Please try again.',
     })
-
-    for (const stock of prioritizedStocks) {
-      if (remainingQuantity <= 0) break
-
-      const quantityTaken = Math.min(remainingQuantity, stock.quantity)
-
-      await adjustStockWithJournal({
-        db,
-        stock,
-        orderId,
-        quantityChange: -quantityTaken,
-        type: StockJournalType.ORDER,
-        userId,
-        description: `Reservasi pesanan ${orderNumber}`,
-        notes: 'Stok dialokasikan otomatis untuk pesanan pelanggan',
-        insufficientStockMessage: 'Stock changed while creating order. Please try again.',
-      })
-
-      remainingQuantity -= quantityTaken
-    }
-
-    if (remainingQuantity > 0) {
-      throw new OrderServiceError(
-        ORDER_ERRORS.INSUFFICIENT_STOCK,
-        'Some products do not have enough stock',
-        400,
-        {
-          items: [{
-            productId: item.productId,
-            productName: item.product.name,
-            remainingQuantity,
-          }],
-        },
-      )
-    }
   }
 }
 

@@ -79,7 +79,7 @@ function DesktopAddressOptions({ addresses, selectedAddressId, onAddressChange, 
         <span>Pilih salah satu alamat</span>
         <div className="flex items-center gap-3">
           <strong>{addressCountLabel}</strong>
-          <button type="button" onClick={onAddAddress} className="flex items-center gap-1 text-[0.85rem] text-[var(--accent)] font-medium hover:underline bg-transparent border-none cursor-pointer p-0">
+          <button type="button" onClick={onAddAddress} className="flex items-center gap-1 text-[0.85rem] text-(--accent) font-medium hover:underline bg-transparent border-none cursor-pointer p-0">
             <Plus size={14} /> Tambah
           </button>
         </div>
@@ -127,8 +127,8 @@ function MobileAddressSelector({ addresses, selectedAddressId, onAddressChange, 
   return (
     <div className="checkout-address-mobile-selector">
       <div className="flex items-center justify-between mb-2 px-1">
-        <span className="text-[0.85rem] font-medium text-[var(--ink-soft)]">{addressCountLabel}</span>
-        <button type="button" onClick={onAddAddress} className="flex items-center gap-1 text-[0.85rem] text-[var(--accent)] font-medium bg-transparent border-none cursor-pointer p-0">
+        <span className="text-[0.85rem] font-medium text-(--ink-soft)">{addressCountLabel}</span>
+        <button type="button" onClick={onAddAddress} className="flex items-center gap-1 text-[0.85rem] text-(--accent) font-medium bg-transparent border-none cursor-pointer p-0">
           <Plus size={14} /> Tambah
         </button>
       </div>
@@ -159,7 +159,7 @@ function EmptyAddressAlert({ onAddAddress }: { onAddAddress: () => void }) {
       <button 
         type="button" 
         onClick={onAddAddress}
-        className="w-full sm:w-auto self-start px-5 py-2.5 rounded-full bg-[var(--accent)] text-white font-semibold border-none cursor-pointer hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(232,107,79,0.25)] transition-all flex items-center justify-center gap-2"
+        className="w-full sm:w-auto self-start px-5 py-2.5 rounded-full bg-(--accent) text-white font-semibold border-none cursor-pointer hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(232,107,79,0.25)] transition-all flex items-center justify-center gap-2"
       >
         <Plus size={18} />
         Tambah Alamat Baru

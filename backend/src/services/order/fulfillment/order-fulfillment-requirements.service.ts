@@ -14,26 +14,26 @@ export const deriveRequirements = async (
   const candidateStocks = productIds.length === 0
     ? []
     : await db.stock.findMany({
-        where: {
-          productId: { in: productIds },
-          storeId: { not: order.storeId },
-          store: { status: true },
-        },
-        select: {
-          productId: true,
-          storeId: true,
-          quantity: true,
-          store: {
-            select: {
-              id: true,
-              name: true,
-              city: true,
-              latitude: true,
-              longitude: true,
-            },
+      where: {
+        productId: { in: productIds },
+        storeId: { not: order.storeId },
+        store: { status: true },
+      },
+      select: {
+        productId: true,
+        storeId: true,
+        quantity: true,
+        store: {
+          select: {
+            id: true,
+            name: true,
+            city: true,
+            latitude: true,
+            longitude: true,
           },
         },
-      })
+      },
+    })
 
   const requirements: FulfillmentRequirement[] = []
 
@@ -77,7 +77,8 @@ export const deriveRequirements = async (
       inTransitQuantity,
       hasRejectedMutation: latestMutation?.status === MutationStatus.REJECTED,
     })
-    const sources = candidateStocks
+
+    const sourceOptions = candidateStocks
       .filter((stock) => (
         stock.productId === item.productId &&
         !rejectedSourceStoreIds.has(stock.storeId)
@@ -87,14 +88,19 @@ export const deriveRequirements = async (
           0,
           reservedQuantities.get(`${item.productId}:${stock.storeId}`) ?? 0,
         )
-        const sentQuantity = mutations
+        const activeReservedQuantity = mutations
           .filter((mutation) => (
             mutation.sourceStoreId === stock.storeId &&
-            (mutation.status === MutationStatus.IN_TRANSIT ||
+            (mutation.status === MutationStatus.PENDING ||
+              mutation.status === MutationStatus.IN_TRANSIT ||
               mutation.status === MutationStatus.COMPLETED)
           ))
           .reduce((total, mutation) => total + mutation.quantity, 0)
-        const availableReservedQuantity = Math.max(0, reservedQuantity - sentQuantity)
+        const availableReservedQuantity = Math.max(0, reservedQuantity - activeReservedQuantity)
+        const unreservedActiveQuantity = Math.max(0, activeReservedQuantity - reservedQuantity)
+        const availableStockQuantity = (
+          Math.max(0, stock.quantity - unreservedActiveQuantity) + availableReservedQuantity
+        )
 
         return {
           storeId: stock.storeId,
@@ -106,10 +112,12 @@ export const deriveRequirements = async (
             stock.store.latitude,
             stock.store.longitude,
           ).toFixed(2)),
-          availableQuantity: stock.quantity + availableReservedQuantity,
+          availableQuantity: availableStockQuantity,
           reservedQuantity: availableReservedQuantity,
         }
       })
+
+    const sources = sourceOptions
       .filter((source) => source.availableQuantity > 0)
       .sort((firstSource, secondSource) => (
         firstSource.distanceKm - secondSource.distanceKm ||
