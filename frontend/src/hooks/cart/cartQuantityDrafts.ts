@@ -26,8 +26,10 @@ export const getCartQuantityValidationMessage = (
     return 'Jumlah produk minimal 1'
   }
 
-  if (nextQuantity > item.product.totalStock) {
-    return `Stok ${item.product.name} hanya ${item.product.totalStock}`
+  const availableStock = item.product.activeStoreStock ?? item.product.totalStock
+
+  if (nextQuantity > availableStock) {
+    return `Stok ${item.product.name} di cabang ini hanya ${availableStock}`
   }
 
   return null
