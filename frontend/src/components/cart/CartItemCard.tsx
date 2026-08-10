@@ -44,6 +44,7 @@ export function CartItemCard({
   const image = getPrimaryImage(item)
   const isDeleting = deletingItemId === item.id
   const productDetailPath = `/products/${item.product.id}`
+  const availableStock = item.product.activeStoreStock ?? item.product.totalStock
 
   return (
     <article className={`cart-item ${stockUnavailable ? 'out-of-stock' : ''}`} aria-busy={itemBusy}>
@@ -131,7 +132,7 @@ export function CartItemCard({
           <button
             type="button"
             className="button ghost"
-            disabled={itemBusy || stockUnavailable || item.displayQuantity >= item.product.totalStock}
+            disabled={itemBusy || stockUnavailable || item.displayQuantity >= availableStock}
             aria-label={`Tambah jumlah ${item.product.name}`}
             onClick={() => onQuantityUpdate(item, item.displayQuantity + 1)}
           >

@@ -154,8 +154,6 @@ export const createCheckoutOrder = async ({
       orderNumber: order.orderNumber,
       userId,
       nearestStoreId: nearestStore.id,
-      latitude,
-      longitude,
     })
 
     await tx.cartItem.deleteMany({

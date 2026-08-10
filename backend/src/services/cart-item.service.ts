@@ -31,10 +31,11 @@ type DeleteCartItemParams = {
   itemId: number
 }
 
-const getProductTotalStock = async (productId: number, db: DatabaseClient) => {
+const getProductTotalStock = async (productId: number, storeId: number, db: DatabaseClient) => {
   const stockAgg = await db.stock.aggregate({
     where: {
       productId,
+      storeId,
       deletedAt: null,
       store: {
         status: true,
@@ -104,6 +105,10 @@ export const addCartItem = async ({ userId, productId, quantity, storeId }: AddC
 
     await assertProductListedInStore(productId, storeId, tx)
 
+    if (!storeId) {
+      throw new Error(CART_ITEM_ERRORS.STORE_NOT_FOUND)
+    }
+
     const cart = await getOrCreateCart(userId, tx)
     const existingItem = await tx.cartItem.findUnique({
       where: {
@@ -118,7 +123,7 @@ export const addCartItem = async ({ userId, productId, quantity, storeId }: AddC
       },
     })
 
-    const availableStock = await getProductTotalStock(productId, tx)
+    const availableStock = await getProductTotalStock(productId, storeId, tx)
     const nextQuantity = (existingItem?.quantity ?? 0) + quantity
     if (nextQuantity > availableStock) {
       throw new Error(CART_ITEM_ERRORS.INSUFFICIENT_STOCK)
@@ -190,8 +195,12 @@ export const updateCartItem = async ({ userId, itemId, quantity, storeId }: Upda
     }
 
     const activeStoreId = storeId ?? existingItem.cart.storeId ?? undefined
+    if (!activeStoreId) {
+      throw new Error(CART_ITEM_ERRORS.STORE_NOT_FOUND)
+    }
+
     await assertProductListedInStore(existingItem.productId, activeStoreId, tx)
-    const totalStock = await getProductTotalStock(existingItem.productId, tx)
+    const totalStock = await getProductTotalStock(existingItem.productId, activeStoreId, tx)
     if (quantity > totalStock) {
       throw new Error(CART_ITEM_ERRORS.INSUFFICIENT_STOCK)
     }
