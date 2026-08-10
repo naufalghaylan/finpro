@@ -245,7 +245,5 @@ npm run dev
 
 ## 📖 Key Project References
 
-- [Project Scope & Feature Boundary](project_scope.md)
-- [Agent & Developer Guidelines](AGENTS.md)
 - [Authentication Flow Details](docs/auth_flow_details.md)
 - [Shipping & Checkout Specs](docs/shipping_and_checkout.md)
