@@ -36,3 +36,6 @@ dist-ssr
 
 /scripts
 scripts 
+
+# Custom Docs
+docs/GH/

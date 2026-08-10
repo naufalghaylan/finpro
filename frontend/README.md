@@ -1,73 +1,102 @@
-# React + TypeScript + Vite
+<div align="center">
+  <h1>💻 Frontend - Online Grocery</h1>
+  <p>The interactive client application for the Online Grocery Web Platform.</p>
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+  <img src="https://img.shields.io/badge/React_19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React 19" />
+  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Vite_8-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E" alt="Vite" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/Zustand-764ABC?style=for-the-badge&logo=react&logoColor=white" alt="Zustand" />
+</div>
 
-Currently, two official plugins are available:
+<br/>
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+> **Overview:** This directory contains the Single Page Application (SPA) built with React 19 and Vite. It consumes the backend REST API to provide a seamless, mobile-responsive e-commerce experience including location-based store routing, robust cart management, and real-time checkout flows.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## ✨ Features & Architecture
 
-## Expanding the ESLint configuration
+- **Modern React Stack**: Built using React 19, React Router v7, and bundled with lightning-fast Vite 8.
+- **Global State Management**: Uses Zustand 5 for lightweight, scalable management of authentication state, cart data, and user location contexts.
+- **Geolocation & Mapping**: Integrates `leaflet`, `react-leaflet`, and `leaflet-geosearch` to pinpoint user locations for nearest-store routing.
+- **Responsive UI & Styling**: Styled completely with Tailwind CSS v4. Pre-built components leverage Flowbite React and iconography is powered by Lucide React.
+- **Authentication**: Native UI for email/password registration and Google OAuth support (`@react-oauth/google`).
+- **Axios Interceptors**: Centralized API request handling inside `src/api/` with interceptors to handle token injection and refreshing.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 📂 Directory Structure
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```text
+frontend/
+├── public/                  # Static assets that bypass Vite's asset pipeline
+├── src/
+│   ├── api/                 # Axios clients and API route call definitions
+│   ├── assets/              # Static files (images, icons) imported via Vite
+│   ├── components/          # Reusable, modular UI components (buttons, cards, modals)
+│   ├── hooks/               # Custom React hooks for business logic abstraction
+│   ├── pages/               # Page-level route views (Home, Checkout, Profile, etc.)
+│   ├── store/               # Zustand global state slices
+│   ├── types/               # TypeScript interfaces and global type definitions
+│   ├── utils/               # Pure helper functions and formatters
+│   ├── App.tsx              # Application root and React Router definitions
+│   └── main.tsx             # Vite entry point
+├── .env.example             # Environment variable template
+├── eslint.config.js         # ESLint configuration
+├── vite.config.ts           # Vite bundler configuration
+└── package.json
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🚀 Getting Started
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Prerequisites
+- [Node.js](https://nodejs.org/) v18+
+- Backend API running locally (refer to the `backend` setup guide)
+
+### Installation & Setup
+
+```bash
+# 1. Install dependencies
+npm install
 ```
+
+**2. Configure Environment Variables**
+Copy the `.env.example` file to `.env`:
+```bash
+cp .env.example .env
+```
+Fill in the necessary credentials:
+```env
+VITE_API_URL="http://localhost:3000/api"
+VITE_GOOGLE_CLIENT_ID="your_google_client_id_here"
+```
+
+**3. Start the Development Server**
+```bash
+# Start Vite with HMR (Hot Module Replacement)
+npm run dev
+```
+The application will be accessible at `http://localhost:5173`.
+
+---
+
+## 📜 NPM Scripts
+
+| Script | Command | Description |
+| :--- | :--- | :--- |
+| `npm run dev` | `vite` | Starts Vite dev server with HMR |
+| `npm run build` | `tsc -b && vite build` | Type-checks and builds the production bundle |
+| `npm run lint` | `eslint .` | Runs ESLint over the frontend codebase |
+| `npm run preview` | `vite preview` | Previews the production build locally |
+
+---
+
+## 🛡️ Frontend Development Guidelines
+
+1. **Component Modularity**: Keep components inside `src/components/` small and reusable. Do not put page-level routing logic in standard components.
+2. **State Management**: If a piece of state is only needed in one component, use `useState`. If it needs to be accessed globally (like the user token or cart count), use `src/store/` (Zustand).
+3. **API Calls**: Do not use raw `fetch` or `axios` directly in components. Define API calls in `src/api/` and import them to maintain clean architecture.
+4. **Validation**: All user inputs (forms, image uploads) must be validated on the client side before being sent to the backend.
